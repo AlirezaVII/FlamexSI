@@ -87,24 +87,16 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /**
- * Upload size limits, checked before sending so the user gets a clear message instead of
- * a proxy error. Vercel rejects request bodies over 4.5 MB (a platform limit); the droplet
- * accepts up to 100 MB through the Next.js proxy (next.config.ts).
+ * Upload size limit, checked before sending so the user gets a clear message instead of a
+ * proxy error. The server accepts up to 100 MB. Uploads through flamexsi.vercel.app are
+ * passed straight to the server (an external rewrite, not a Vercel function), so Vercel's
+ * 4.5 MB function limit does not apply: checked with 10, 15 and 40 MB files on 2026-11-15.
  */
-export const DROPLET_UPLOAD_URL = "http://129.212.254.115:3000/data";
 function checkUploadSize(file: File) {
-  const mb = file.size / 1_000_000;
-  const onVercel =
-    typeof window !== "undefined" && window.location.hostname.endsWith("vercel.app");
-  if (onVercel && file.size > 4_400_000)
-    throw new ApiError(
-      413,
-      `${file.name} is ${mb.toFixed(1)} MB. Files over 4.5 MB cannot be uploaded through flamexsi.vercel.app; upload it at ${DROPLET_UPLOAD_URL} (same workspace).`,
-    );
   if (file.size > 100_000_000)
     throw new ApiError(
       413,
-      `${file.name} is ${mb.toFixed(0)} MB; the limit is 100 MB. Split the file or export only the needed columns.`,
+      `${file.name} is ${(file.size / 1_000_000).toFixed(0)} MB; the limit is 100 MB. Split the file or export only the needed columns.`,
     );
 }
 
