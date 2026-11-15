@@ -56,3 +56,24 @@ def test_findings_roundtrip(store):
     assert store.list_findings("d1")[0]["score"] == 2
     store.save_findings("d1", [])
     assert store.get_finding("f1") is None
+
+
+def test_delete_dataset_removes_table_findings_and_unused_sources(tmp_path):
+    import pandas as pd
+
+    from falmex.storage import Store
+
+    store = Store(tmp_path)
+    src = store.save_raw("a.csv", b"x,y\n1,2\n")
+    keep = store.create_dataset("keep", pd.DataFrame({"x": [1]}), synthetic=False,
+                                source_ids=[src.source_id], report={})
+    drop = store.create_dataset("drop", pd.DataFrame({"x": [2]}), synthetic=True,
+                                source_ids=[src.source_id], report={})
+    store.save_findings(drop.dataset_id, [{"finding_id": "f1", "created_at": "2026-01-01"}])
+    assert store.delete_dataset(drop.dataset_id)
+    assert store.get_dataset(drop.dataset_id) is None
+    assert store.list_findings(drop.dataset_id) == []
+    assert store.get_sources([src.source_id])  # still used by "keep"
+    assert store.delete_dataset(keep.dataset_id)
+    assert store.get_sources([src.source_id]) == []
+    assert not store.delete_dataset("missing")

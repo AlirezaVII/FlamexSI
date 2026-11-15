@@ -8,11 +8,16 @@ import { Team } from "@/components/landing/team";
 import { TrustCard } from "@/components/landing/trust-card";
 import { BrandLogo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import psi from "@/lib/psi/catalog.json";
+
+// counts shown on the page come from the PSI catalog itself
+const INVESTIGATIONS = psi as { acronym: string; pillars: string[] }[];
+const byPillar = (p: string) => INVESTIGATIONS.filter((i) => i.pillars.includes(p));
 
 export const metadata: Metadata = {
   title: "Falmex — Findings you can verify",
   description:
-    "Falmex is built to find associations in NASA microgravity combustion data, re-test each one on experiments it never saw, and show the evidence behind it. Explore measured FLEX results and BASS-II image evidence.",
+    "Falmex summarises, ranks and interprets NASA PSI combustion investigations for spacecraft, Moon and Mars fire safety, and tests the flight data itself: findings re-tested on experiments they never saw, with the evidence behind each.",
 };
 
 // A pre-rendered Earth, inlined into the HTML: the globe is on screen the moment the page
@@ -50,25 +55,25 @@ const SKY = [
 const STEPS = [
   [
     "01",
-    "Data",
-    "NASA files kept unchanged, standardised and quality-checked. Every change has a reason.",
+    "Find",
+    "Every combustion investigation in NASA's PSI repository, summarised from NASA's own records: objective, fuel, conditions, sensors.",
   ],
   [
     "02",
-    "Finding",
-    "Associations between conditions and flame behaviour, found on 70% of experiments.",
+    "Rank",
+    "Ordered for your crew environment and fire-safety question, with the scoring criteria on the page.",
   ],
   [
     "03",
-    "Validation",
-    "Re-tested on the 30% never seen, against random shuffles, and for hidden third variables.",
+    "Test",
+    "Associations in the flight data, re-tested on later experiments, against random shuffles and hidden third variables.",
   ],
   [
     "04",
-    "Evidence",
-    "Which experiments, which files, how stable, what limits. AI explains it in plain words.",
+    "Interpret",
+    "Evidence, limits and what it means for spacecraft fire safety. AI explains only the computed facts.",
   ],
-];
+]
 
 export default function Landing() {
   return (
@@ -128,6 +133,9 @@ export default function Landing() {
           <Link href="/" className="brand serif">
             <BrandLogo size={34} /> Falmex
           </Link>
+          <a className="nl" href="#pillars">
+            Fire safety
+          </a>
           <a className="nl" href="#trust">
             Why trust it
           </a>
@@ -183,17 +191,19 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="lead">
-                Compare oxygen conditions using 274 FLEX experiments, inspect competing
-                flame annotations on BASS-II footage, and generate a scientific report
-                that records where each measurement stops supporting a conclusion.
+                Falmex summarises, ranks and interprets all {INVESTIGATIONS.length}{" "}
+                combustion investigations in NASA&apos;s PSI repository, then tests
+                the flight measurements themselves (274 FLEX experiments, BASS-II
+                footage) to deliver fire-safety evidence for spacecraft, Moon and
+                Mars bases, and pressurized rovers.
               </p>
               <div className="cta">
-                <Link className="btn primary" href="/flight-evidence">
-                  Explore the flight evidence →
+                <Link className="btn primary" href="/investigations">
+                  Rank the investigations →
                 </Link>
-                <a className="btn ghost" href="#how">
-                  How it works
-                </a>
+                <Link className="btn ghost" href="/flight-evidence">
+                  Flight evidence
+                </Link>
               </div>
               <p className="note">
                 Statistical associations, never causal claims · AI explains,
@@ -260,7 +270,7 @@ export default function Landing() {
             {[
               [
                 "Scattered",
-                "Results live across many experiments, files and formats.",
+                `${INVESTIGATIONS.length} combustion investigations in NASA PSI, thousands of files, many formats.`,
               ],
               [
                 "Hard to compare",
@@ -275,6 +285,36 @@ export default function Landing() {
                 <h3 className="serif">{t}</h3>
                 <p>{d}</p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="wrap block" id="pillars">
+          <div className="eyebrow">NASA&apos;s three fire-safety questions</div>
+          <h2 className="serif" data-reveal>
+            Prevent it, detect it, put it out.
+          </h2>
+          <p className="sub">
+            NASA&apos;s spacecraft fire-safety work rests on three pillars. Each card
+            lists the PSI investigations that inform it.
+          </p>
+          <div className="grid3">
+            {(
+              [
+                ["prevention", "Prevention", "Which materials burn, and at what oxygen and airflow? Flammability limits decide material selection, more so in oxygen-rich Moon-base air."],
+                ["detection", "Detection", "Smoke in microgravity has different particle sizes, so detectors built for Earth can look for the wrong signature."],
+                ["suppression", "Suppression", "How much inert gas puts a flame out? In FLEX, flames survived at lower oxygen in microgravity than on the ground."],
+              ] as const
+            ).map(([key, title, text]) => (
+              <Link key={key} href="/investigations" className="card" data-reveal>
+                <h3 className="serif">{title}</h3>
+                <p>{text}</p>
+                <p style={{ marginTop: 12, fontSize: 13, color: "var(--l-hl)" }}>
+                  {byPillar(key).length} investigations:{" "}
+                  {byPillar(key).slice(0, 6).map((i) => i.acronym).join(", ")}
+                  {byPillar(key).length > 6 ? "…" : ""}
+                </p>
+              </Link>
             ))}
           </div>
         </section>
@@ -327,7 +367,9 @@ export default function Landing() {
                 className="sub"
                 style={{ marginTop: 14, fontSize: 14, color: "var(--l-muted)" }}
               >
-                This controlled example uses synthetic data with a known confounder.
+                A teaching example: synthetic data with a planted confounder, so the
+                right answer is known in advance. The same checks run on every finding
+                from the real FLEX flight data.
               </p>
             </div>
             <TrustCard />
@@ -341,7 +383,6 @@ export default function Landing() {
           </h2>
           <p className="sub">
             So that this page never claims more than the program can do.
-            The flight evidence section uses NASA FLEX measurements and BASS-II frames. Synthetic examples exercise the discovery workflow.
           </p>
           <div className="statusgrid">
             <div className="card" data-reveal>
@@ -354,32 +395,29 @@ export default function Landing() {
               </h3>
               <ul>
                 <li>
-                  Load CSV, Excel, JSON and Parquet files; the original is
-                  stored untouched
+                  Catalog of all {INVESTIGATIONS.length} PSI combustion investigations,
+                  ranked by crew environment and fire-safety question, compared side
+                  by side
                 </li>
                 <li>
-                  Cleaning, unit conversion and a data-quality report with a
-                  reason for every change
+                  274 FLEX flight experiments analysed: associations found, then
+                  re-tested on later test dates and against random shuffles
                 </li>
                 <li>
-                  Filters, comparison and discovery goals generated from the
-                  dataset&apos;s own columns
-                </li>
-                <li>
-                  Associations found on 70% of experiments, re-tested on the
-                  unseen 30% (split by experiment or by source, with a leakage
-                  check)
-                </li>
-                <li>
-                  Random-shuffle test, multiple-testing correction, bootstrap
-                  uncertainty
-                </li>
-                <li>
-                  Third-variable checks, evidence and limitations on every
+                  Third-variable checks, uncertainty, sources and limitations on every
                   finding
                 </li>
                 <li>
-                  AI explanations written only from the computed statistics
+                  Scientific report and Gemini interpretation written only from the
+                  computed statistics
+                </li>
+                <li>
+                  BASS-II camera frames annotated independently by two reviewers;
+                  image models scored against both
+                </li>
+                <li>
+                  Upload of PSI tables (CSV, TSV, TXT, Excel, JSON, Parquet); the
+                  original file is kept untouched
                 </li>
               </ul>
             </div>
@@ -393,12 +431,18 @@ export default function Landing() {
               </h3>
               <ul>
                 <li>
-                  Independent evaluation on a new flight campaign
+                  Partial-gravity data: none exists in PSI yet (LUCI and FM2 will add
+                  it); microgravity and 1 g results only bound the Moon and Mars
                 </li>
-                <li>Operational flame or smoke alarms</li>
-                <li>Non-linear and multi-variable (interaction) analyses</li>
                 <li>
-                  Expert-reviewed insights — none exist yet; expert sign-off is separate from internal evaluation
+                  Raw instrument logs (for example FLEX-2) summarised per test before
+                  analysis
+                </li>
+                <li>Numerical smoke-particle analysis of SAME / SAME-R</li>
+                <li>Reliable flame detection in camera images (current models are weak)</li>
+                <li>
+                  Expert-reviewed insights: none yet; expert sign-off is separate from
+                  internal evaluation
                 </li>
               </ul>
             </div>
@@ -415,11 +459,10 @@ export default function Landing() {
               <div className="ficon">
                 <BrandLogo size={30} />
               </div>
-              <h3 className="serif">Explore &amp; compare</h3>
+              <h3 className="serif">Rank &amp; compare investigations</h3>
               <p>
-                Filters and comparisons are generated from your dataset&apos;s
-                own variables. See what differs between experiments — and where
-                similar conditions led to different flames.
+                Objectives, fuels, oxygen, pressure, airflow and sensors of every PSI
+                investigation side by side, ranked for the habitat you design for.
               </p>
             </div>
             <div className="card" data-reveal>
@@ -458,8 +501,11 @@ export default function Landing() {
               Let it tell you what to look for.
             </h2>
             <div className="cta" style={{ justifyContent: "center" }}>
-              <Link className="btn primary" href="/flight-evidence">
-                Explore the flight evidence →
+              <Link className="btn primary" href="/investigations">
+                Rank the investigations →
+              </Link>
+              <Link className="btn ghost" href="/flight-evidence">
+                Flight evidence
               </Link>
               <Link className="btn ghost" href="/data">
                 Load NASA data

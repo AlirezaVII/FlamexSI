@@ -272,6 +272,27 @@ class Store:
         return records(frame), int(total)
 
     # ---- findings ----------------------------------------------------------
+    def delete_dataset(self, dataset_id: str) -> bool:
+        """Remove a dataset with its processed table, findings and insights.
+
+        Raw source files are content-addressed and may be shared, so only sources that no
+        remaining dataset uses are removed (file and record).
+        """
+        rec = self.get_dataset(dataset_id)
+        if rec is None:
+            return False
+        self._exec("DELETE FROM findings WHERE dataset_id = ?", [dataset_id])
+        self._exec("DELETE FROM insights WHERE dataset_id = ?", [dataset_id])
+        self._exec("DELETE FROM datasets WHERE dataset_id = ?", [dataset_id])
+        self._parquet(dataset_id).unlink(missing_ok=True)
+        still_used = {s for d in self.list_datasets() for s in d.source_ids}
+        for source in self.get_sources(rec.source_ids):
+            if source.source_id in still_used:
+                continue
+            self.raw_path(source).unlink(missing_ok=True)
+            self._exec("DELETE FROM sources WHERE source_id = ?", [source.source_id])
+        return True
+
     def save_findings(self, dataset_id: str, findings: list[dict]) -> None:
         """Replace all findings for a dataset with a fresh discovery run."""
         self._exec("DELETE FROM findings WHERE dataset_id = ?", [dataset_id])

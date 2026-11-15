@@ -70,6 +70,7 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {}
     throw new ApiError(res.status, detail);
   }
+  if (res.status === 204) return null as T;
   return res.json() as Promise<T>;
 }
 
@@ -127,6 +128,10 @@ export const api = {
       assets: unknown[];
     }>("/api/datasets", { method: "POST", body: form });
   },
+  loadFlex: () =>
+    request<{ dataset: Dataset }>("/api/datasets/nasa/flex", { method: "POST" }),
+  deleteDataset: (id: string) =>
+    request<null>(`/api/datasets/${id}`, { method: "DELETE" }),
   createSynthetic: (n_experiments = 200, seed = 0) =>
     request<{ dataset: Dataset }>(
       "/api/datasets/synthetic",

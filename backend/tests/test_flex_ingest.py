@@ -118,3 +118,20 @@ def test_open_discovery_runs_on_an_uploaded_flex_table(tmp_path):
         result = client.post(f"/api/datasets/{dataset}/discover", json={})
         assert result.status_code == 200, result.text
         assert result.json()["tested"] > 0
+
+
+def test_load_bundled_flex_table_once(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from falmex.ai.providers import MockProvider
+    from falmex.api import create_app
+    from falmex.settings import Settings
+
+    app = create_app(Settings(data_dir=tmp_path, llm_provider="mock"), provider=MockProvider())
+    with TestClient(app) as client:
+        first = client.post("/api/datasets/nasa/flex").json()["dataset"]
+        again = client.post("/api/datasets/nasa/flex").json()["dataset"]
+        assert first["dataset_id"] == again["dataset_id"]
+        assert first["n_rows"] == 274 and first["synthetic"] is False
+        assert client.delete(f"/api/datasets/{first['dataset_id']}").status_code == 204
+        assert client.get("/api/datasets").json() == []

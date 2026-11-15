@@ -80,6 +80,7 @@ export default function DataPage() {
       return res.dataset.dataset_id;
     });
 
+  const flex = () => run(async () => (await api.loadFlex()).dataset.dataset_id);
   const synthetic = () =>
     run(
       async () =>
@@ -128,6 +129,18 @@ export default function DataPage() {
           )}
           <Button className="mt-4" onClick={upload} disabled={!file || busy}>
             {busy ? "Working…" : "Upload & standardize"}
+          </Button>
+        </Card>
+
+        <Card title="NASA flight data: FLEX (PSI-69)">
+          <p className="text-sm text-ink-2">
+            The Flame Extinguishment Experiment&apos;s experimental table from NASA&apos;s
+            Physical Sciences Informatics repository: 274 heptane and methanol droplet
+            tests on the ISS with oxygen, pressure, diluent (CO₂, helium) and measured
+            burning rate, burn time and extinction diameters. Loaded as published.
+          </p>
+          <Button className="mt-4" onClick={flex} disabled={busy}>
+            Load the FLEX table
           </Button>
         </Card>
 

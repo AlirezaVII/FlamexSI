@@ -51,19 +51,19 @@ const SAFETY: Record<string, string> = {
 // oxygen fraction. FLEX ran at its own pressures, so this compares oxygen fraction only.
 const ATMOSPHERES = [
   {
-    name: "ISS / Orion cabin",
+    name: "Spacecraft & ISS cabin",
     o2: 0.21,
-    note: "Sea-level air: about 21% oxygen at 101 kPa (14.7 psia).",
+    note: "Sea-level air: about 21% oxygen at 14.7 psi.",
   },
   {
-    name: "NASA exploration atmosphere",
-    o2: 0.34,
-    note: "About 34% oxygen at 56.5 kPa (8.2 psia), proposed for lunar landers and surface habitats to shorten spacewalk pre-breathe.",
+    name: "Moon base & pressurized rover",
+    o2: 0.3,
+    note: "Expected 30% oxygen or more at 10.2 psi or less, to shorten spacewalk pre-breathe (challenge text). More than 40% above Earth's oxygen: materials are much more flammable.",
   },
   {
-    name: "Apollo 1 cabin on the pad",
+    name: "Spacesuit / Apollo 1 cabin",
     o2: 1.0,
-    note: "Pure oxygen above sea-level pressure, the atmosphere of the 1967 fire.",
+    note: "Suits hold 100% oxygen at 4.3 psi; Apollo 1 burned in pure oxygen on the pad (1967). FLEX did not go this high; ACME CFI-G tested gas flames with up to 85% oxygen (see Investigations).",
   },
 ];
 
@@ -127,6 +127,7 @@ export default function FlightEvidence() {
           </a>
         ))}
       </nav>
+      <NasaLessons />
       <ExtinctionCurve />
       <AtmosphereCheck />
       <Ranking />
@@ -141,6 +142,54 @@ export default function FlightEvidence() {
 }
 
 /* ---------------------------------------------------------------------------------- */
+
+/** What NASA concluded from these experiments, next to what Falmex re-tested in the data. */
+function NasaLessons() {
+  return (
+    <Card title="What microgravity fire experiments changed" className="print:hidden">
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-3 text-sm text-ink-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-accent">
+            NASA&apos;s conclusion from FLEX
+          </p>
+          <p className="font-display text-xl text-ink">
+            Flames survive at lower oxygen in microgravity, so ground standards for
+            inert-gas suppressants do not give the same margin of safety in space.
+          </p>
+          <p>
+            FLEX showed that the flammability limit of heptane and methanol droplets is
+            lower in reduced gravity. It also recorded combustion continuing as a
+            &quot;cool flame&quot; after the visible flame went out.
+          </p>
+          <p className="text-xs text-muted">
+            Source: NASA, A Researcher&apos;s Guide to ISS Combustion Science (2015).
+          </p>
+        </div>
+        <div className="space-y-3 text-sm text-ink-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-accent">
+            Three assumptions the experiments overturned
+          </p>
+          <ol className="list-decimal space-y-1.5 pl-5">
+            <li>&quot;A steady fire cannot exist in still air in microgravity.&quot; A candle on Mir burned for 45 minutes.</li>
+            <li>&quot;A fire goes out if ventilation is shut off.&quot;</li>
+            <li>&quot;Microgravity is inherently safer, so ground tests are conservative.&quot; NASA-STD-6001&apos;s 1 g flame test may not be conservative in low gravity (BASS, SoFIE, FLARE).</li>
+          </ol>
+          <p className="text-xs font-medium uppercase tracking-wider text-accent">
+            Re-tested here on the FLEX flight table (suppression)
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Higher carbon dioxide fraction is associated with a lower droplet burning rate.</li>
+            <li>Higher helium fraction is associated with a higher droplet burning rate.</li>
+          </ul>
+          <p className="text-xs text-muted">
+            Associations validated on experiments the engine did not use to find them
+            (Findings page, PSI-69). They describe FLEX droplets, not cabin fires.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 function ExtinctionCurve() {
   const task = TASKS.find((t) => t.title.startsWith("Oxygen → extinction")) ?? TASKS[0];
@@ -272,8 +321,10 @@ function AtmosphereCheck() {
                 </div>
               ) : (
                 <p className="mt-3 rounded-lg border border-dashed border-line p-3 text-xs text-ink-2">
-                  Outside the flight data: FLEX did not test this oxygen level, so Falmex makes
-                  no estimate. This is where new experiments are needed.
+                  Outside the FLEX data: FLEX did not test this oxygen level, so Falmex makes
+                  no estimate here. Higher-oxygen evidence exists only for gas flames
+                  (ACME CFI-G, up to 85%); droplet and solid-material data at this level
+                  is where new experiments are needed.
                 </p>
               )}
             </div>

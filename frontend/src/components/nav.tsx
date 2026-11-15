@@ -57,6 +57,12 @@ const STAGES: Stage[] = [
     ),
     items: [
       {
+        href: "/investigations",
+        label: "Investigations",
+        hint: "All PSI combustion investigations: rank, compare, read",
+        icon: icon("M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 17h6M17 14v6"),
+      },
+      {
         href: "/data",
         label: "Data",
         hint: "Load, standardize, check quality",

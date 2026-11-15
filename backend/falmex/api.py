@@ -299,6 +299,23 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             raise HTTPException(422, f"Could not read file: {exc}") from exc
         return {"dataset": dataset, "source": source, "assets": assets}
 
+    @app.post("/api/datasets/nasa/flex", status_code=201)
+    def load_flex(request: Request):
+        """Load NASA's PSI-69 FLEX experimental table shipped with Falmex (274 tests)."""
+        from pathlib import Path
+
+        table = (Path(__file__).resolve().parents[1] / "review_seed"
+                 / "PSI-69_Experimental table_FLEX.csv")
+        existing = next((d for d in store(request).list_datasets()
+                         if d.name.startswith("NASA PSI-69 FLEX")), None)
+        if existing:
+            return {"dataset": existing}
+        dataset, _, _ = services.ingest_upload(
+            store(request), schema(request), table.name, table.read_bytes(),
+            name="NASA PSI-69 FLEX experimental table (274 tests)", synthetic=False,
+        )
+        return {"dataset": dataset}
+
     @app.post("/api/datasets/synthetic", status_code=201)
     def create_synthetic(request: Request, body: SyntheticRequest):
         frame = synthetic.generate(body.n_experiments, body.seed)
@@ -370,6 +387,11 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         if review is None:
             raise HTTPException(404, "No verified scientific review bundle for this dataset")
         return review
+
+    @app.delete("/api/datasets/{dataset_id}", status_code=204)
+    def delete_dataset(request: Request, dataset_id: str):
+        if not store(request).delete_dataset(dataset_id):
+            raise HTTPException(404, "Unknown dataset")
 
     @app.get("/api/datasets/{dataset_id}/scientific-review")
     def get_scientific_review(request: Request, dataset_id: str):
