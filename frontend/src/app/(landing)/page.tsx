@@ -84,7 +84,7 @@ export default function Landing() {
       <header className="topbar">
         <nav className="navrow" aria-label="Main">
           <Link href="/" className="brand serif">
-            <BrandLogo size={34} variant="glow" /> Falmex
+            <BrandLogo size={34} /> Falmex
           </Link>
           <a className="nl" href="#trust">
             Why trust it
@@ -369,7 +369,7 @@ export default function Landing() {
           <div className="grid3">
             <div className="card" data-reveal>
               <div className="ficon">
-                <BrandLogo size={30} variant="glow" />
+                <BrandLogo size={30} />
               </div>
               <h3 className="serif">Explore &amp; compare</h3>
               <p>

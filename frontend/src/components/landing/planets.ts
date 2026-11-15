@@ -1,5 +1,16 @@
 // Scroll choreography for the landing-page planets (rendered in WebGL by space.ts).
 
+
+/**
+ * The tiny (~10 KB) maps that let every planet appear at once, even on a slow connection.
+ * The loading screen waits for these; the sharp maps and extra layers stream in afterwards.
+ */
+export const TEXTURES = [
+  "/textures/earth-lo.webp",
+  "/textures/moon-lo.webp",
+  "/textures/mars-lo.webp",
+];
+
 export const PLANETS = { earth: 0, moon: 1, mars: 2 } as const;
 
 type Key = [p: number, x: number, y: number, r: number, spin: number];

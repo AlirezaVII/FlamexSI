@@ -31,15 +31,6 @@ export interface Space {
 // sunlight from the upper left, slightly towards the viewer (y up, z towards the camera)
 const SUN = new THREE.Vector3(-0.62, 0.38, 0.68).normalize();
 
-/**
- * The tiny (~10 KB) maps that let every planet appear at once, even on a slow connection.
- * The loading screen waits for these; the sharp maps and extra layers stream in afterwards.
- */
-export const TEXTURES = [
-  "/textures/earth-lo.webp",
-  "/textures/moon-lo.webp",
-  "/textures/mars-lo.webp",
-];
 
 const TILT: Record<PlanetKey, number> = { earth: 0.41, moon: 0.03, mars: 0.44 };
 // turn each globe so the interesting side faces the reader at spin 0
@@ -171,6 +162,11 @@ export function createSpace(
   onTexture?: () => void,
   onReady?: () => void,
 ): Space | null {
+  // three.js needs WebGL2: probe on a scratch canvas so the real one stays free for the
+  // 2D fallback when it is missing (old GPU, blocklisted driver, hardware acceleration off)
+  const probe = document.createElement("canvas").getContext("webgl2");
+  if (!probe) return null;
+  probe.getExtension("WEBGL_lose_context")?.loseContext();
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({
@@ -180,7 +176,7 @@ export function createSpace(
       powerPreference: "high-performance",
     });
   } catch {
-    return null; // no WebGL: the page still works, just without planets
+    return null;
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;

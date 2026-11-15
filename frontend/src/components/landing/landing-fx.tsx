@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { along, DESKTOP_PATH, MOBILE_PATH, PLANETS, STAGES } from "./planets";
+import { create2DSpace } from "./planets2d";
 import { createSpace, type PlanetPose } from "./space";
 
 type Key = keyof typeof PLANETS;
@@ -29,15 +30,14 @@ export function LandingFX() {
     // planets stay hidden until every map has arrived, then make a cinematic entrance
     let ready = false;
     let introStart = 0;
-    const space = createSpace(
-      canvas,
-      () => render(),
-      () => {
-        ready = true;
-        canvas.classList.add("ready");
-        maybeIntro();
-      },
-    );
+    const onReady = () => {
+      ready = true;
+      canvas?.classList.add("ready");
+      maybeIntro();
+    };
+    // real 3D when the browser has WebGL2; otherwise the 2D projection, so a planet always shows
+    // (createSpace probes WebGL2 on a scratch canvas, so this canvas is still free for 2D)
+    const space = createSpace(canvas, () => render(), onReady) ?? create2DSpace(canvas, onReady);
     // the entrance waits for the loading screen to lift
     function maybeIntro() {
       if (!ready || introStart) return;

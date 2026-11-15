@@ -2,9 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { FLAME_FRAGMENT, FLAME_VERTEX } from "@/components/flame-shader";
-import { TEXTURES } from "@/components/landing/space";
+import { FLAME_FRAGMENT } from "@/components/flame-shader";
+import { createQuad } from "@/components/gl-quad";
+import { TEXTURES } from "@/components/landing/planets";
 import { api } from "@/lib/api";
 import { useWorkspace } from "@/lib/workspace";
 import "./splash.css";
@@ -89,36 +89,7 @@ export function Splash() {
     const canvas = canvasRef.current;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    let renderer: THREE.WebGLRenderer | null = null;
-    let uniforms: Record<string, THREE.IUniform> | null = null;
-    let scene: THREE.Scene | null = null;
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    let mat: THREE.ShaderMaterial | null = null;
-    if (canvas) {
-      try {
-        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, premultipliedAlpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x000000, 0);
-        uniforms = {
-          res: { value: new THREE.Vector2(1, 1) },
-          g: { value: 1 },
-          time: { value: 0 },
-          mode: { value: 1 },
-          bg: { value: 1 },
-          zoom: { value: 1.75 },
-        };
-        mat = new THREE.ShaderMaterial({
-          vertexShader: FLAME_VERTEX,
-          fragmentShader: FLAME_FRAGMENT,
-          uniforms,
-          transparent: true,
-        });
-        scene = new THREE.Scene();
-        scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
-      } catch {
-        renderer = null;
-      }
-    }
+    const quad = canvas ? createQuad(canvas, FLAME_FRAGMENT, true) : null;
 
     const start = performance.now();
     let depth = 0; // 0..1 of the shaft
@@ -157,18 +128,7 @@ export function Splash() {
       if (r.v) r.v.textContent = (9.80665 * Math.min(t, DROP_S)).toFixed(1);
       if (capsuleRef.current) capsuleRef.current.style.setProperty("--depth", String(depth));
 
-      if (renderer && uniforms && scene && canvas) {
-        const w = canvas.clientWidth;
-        const hh = canvas.clientHeight;
-        const pr = renderer.getPixelRatio();
-        if (canvas.width !== Math.round(w * pr) || canvas.height !== Math.round(hh * pr)) {
-          renderer.setSize(w, hh, false);
-        }
-        renderer.getDrawingBufferSize(uniforms.res.value);
-        uniforms.g.value = gNow;
-        uniforms.time.value = reduce ? 2 : el / 1000;
-        renderer.render(scene, camera);
-      }
+      quad?.draw({ g: gNow, time: reduce ? 2 : el / 1000, mode: 1, bg: 1, zoom: 1.75 });
 
       if (depth >= 0.999 && readyRef.current) {
         if (!landedAt) {
@@ -187,8 +147,7 @@ export function Splash() {
     raf = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(raf);
-      renderer?.dispose();
-      mat?.dispose();
+      quad?.dispose();
     };
   }, []);
 

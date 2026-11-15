@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { FLAME_FRAGMENT, FLAME_VERTEX } from "@/components/flame-shader";
+import { FLAME_FRAGMENT } from "@/components/flame-shader";
+import { createQuad } from "@/components/gl-quad";
 
 // An illustrative (not simulated) flame whose shape follows gravity: with buoyancy hot gas
 // rises, so a candle flame is tall, flickering and yellow with soot; in freefall oxygen
@@ -45,30 +45,9 @@ export function FlameLab() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
-    } catch {
-      return;
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const uniforms = {
-      res: { value: new THREE.Vector2(1, 1) },
-      g: { value: 1 },
-      time: { value: 0 },
-      mode: { value: 0 },
-      bg: { value: 0 },
-      zoom: { value: 1 },
-    };
-    const mat = new THREE.ShaderMaterial({
-      fragmentShader: FLAME_FRAGMENT,
-      vertexShader: FLAME_VERTEX,
-      uniforms,
-    });
-    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
-    scene.add(quad);
+    const quad = createQuad(canvas, FLAME_FRAGMENT);
+    if (!quad) return;
+    const u = { g: 1, mode: 0 };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let visible = true;
@@ -87,20 +66,12 @@ export function FlameLab() {
       const dt = Math.min(now - last, 50) / 1000;
       last = now;
       sim += reduce ? 0 : dt;
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      const pr = renderer.getPixelRatio();
-      if (canvas.width !== Math.round(w * pr) || canvas.height !== Math.round(h * pr)) {
-        renderer.setSize(w, h, false);
-      }
-      renderer.getDrawingBufferSize(uniforms.res.value);
       // ease the flame towards the chosen gravity, so changes read as a transformation
       const k = reduce ? 1 : 1 - Math.pow(0.02, dt);
-      uniforms.g.value += (target.current.g - uniforms.g.value) * k;
-      uniforms.mode.value += (target.current.mode - uniforms.mode.value) * (reduce ? 1 : Math.min(1, dt * 8));
-      if (Math.abs(uniforms.mode.value - target.current.mode) < 0.02) uniforms.mode.value = target.current.mode;
-      uniforms.time.value = sim;
-      renderer.render(scene, camera);
+      u.g += (target.current.g - u.g) * k;
+      u.mode += (target.current.mode - u.mode) * (reduce ? 1 : Math.min(1, dt * 8));
+      if (Math.abs(u.mode - target.current.mode) < 0.02) u.mode = target.current.mode;
+      quad.draw({ g: u.g, mode: u.mode, time: sim, bg: 0, zoom: 1 });
       if (sim - lastClock > 0.1) {
         lastClock = sim;
         setClock(sim);
@@ -120,9 +91,7 @@ export function FlameLab() {
       cancelAnimationFrame(raf);
       io.disconnect();
       document.removeEventListener("visibilitychange", wake);
-      renderer.dispose();
-      mat.dispose();
-      quad.geometry.dispose();
+      quad.dispose();
     };
   }, []);
 

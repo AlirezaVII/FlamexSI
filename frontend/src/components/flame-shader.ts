@@ -1,10 +1,12 @@
 // Illustrative flame shader shared by the loading screen and the landing-page chamber.
 // Uniforms: res (drawing-buffer px), g (0..1 gravity), time (s), mode (0 candle, 1 droplet),
 // bg (0 = opaque experiment chamber, 1 = transparent background for overlays).
-export const FLAME_VERTEX = "void main(){gl_Position=vec4(position.xy,0.0,1.0);}";
-
 export const FLAME_FRAGMENT = /* glsl */ `
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
+  #else
+  precision mediump float;
+  #endif
   uniform vec2 res;
   uniform float g;
   uniform float time;

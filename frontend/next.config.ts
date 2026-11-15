@@ -8,6 +8,7 @@ const backend = process.env.FALMEX_BACKEND_URL;
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: __dirname,
+  images: { qualities: [75, 90] },
   devIndicators: false,
   // planet maps rarely change: let browsers keep them for a week (revalidate in background)
   async headers() {
