@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button, Card, ErrorNote, NoDataset, PageHeader, SyntheticBanner } from "@/components/ui";
+import { LoadingLabel, TableSkeleton } from "@/components/loading";
+import {
+  Button,
+  Card,
+  ErrorNote,
+  NoDataset,
+  PageHeader,
+  SyntheticBanner,
+} from "@/components/ui";
 import { api, fmt, label } from "@/lib/api";
 import type { Row } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
@@ -12,6 +20,7 @@ export default function ComparePage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [manual, setManual] = useState("");
+  const [rowsFor, setRowsFor] = useState<string | null>(null);
 
   const datasetId = dataset?.dataset_id;
   const key = compareIds.join(",");
@@ -22,6 +31,7 @@ export default function ComparePage() {
       .compare(datasetId, key.split(","))
       .then((r) => {
         setRows(r.experiments);
+        setRowsFor(`${datasetId}|${key}`);
         setError(null);
       })
       .catch((e) => setError(e.message));
@@ -29,6 +39,8 @@ export default function ComparePage() {
 
   if (!dataset) return <NoDataset />;
   const shown = compareIds.length ? rows : [];
+  const fetching =
+    compareIds.length > 0 && rowsFor !== `${datasetId}|${key}` && !error;
   const fields = shown.length
     ? Object.keys(shown[0]).filter((k) => k !== "experiment_id")
     : [];
@@ -36,8 +48,8 @@ export default function ComparePage() {
   return (
     <>
       <PageHeader eyebrow="Compare" title="Compare experiments">
-        Side-by-side view of selected experiments. Rows with several measurements are averaged
-        (n rows shows how many).
+        Side-by-side view of selected experiments. Rows with several
+        measurements are averaged (n rows shows how many).
       </PageHeader>
       {dataset.synthetic && <SyntheticBanner />}
 
@@ -82,15 +94,33 @@ export default function ComparePage() {
             </Link>{" "}
             or add IDs above.
           </p>
+        ) : fetching && rowsFor === null ? (
+          <div className="space-y-4" aria-busy="true">
+            <TableSkeleton
+              rows={10}
+              cols={Math.min(compareIds.length + 1, 6)}
+            />
+            <LoadingLabel>
+              Loading {compareIds.length} experiments…
+            </LoadingLabel>
+          </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div
+            className={`overflow-x-auto transition-opacity ${fetching ? "opacity-50" : "fade-in"}`}
+            aria-busy={fetching}
+          >
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="text-xs text-muted">
                   <th className="py-2 pr-4 font-medium">Variable</th>
                   {shown.map((r) => (
-                    <th key={String(r.experiment_id)} className="py-2 pr-4 font-medium">
-                      <span className="text-ink">{String(r.experiment_id)}</span>
+                    <th
+                      key={String(r.experiment_id)}
+                      className="py-2 pr-4 font-medium"
+                    >
+                      <span className="text-ink">
+                        {String(r.experiment_id)}
+                      </span>
                       <button
                         className="ml-1.5 text-muted hover:text-ink"
                         aria-label={`Remove ${r.experiment_id}`}

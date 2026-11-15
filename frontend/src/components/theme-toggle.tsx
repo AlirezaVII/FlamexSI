@@ -1,12 +1,10 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { THEME_KEY as KEY } from "@/lib/boot-scripts";
 
 type Theme = "light" | "dark";
-const KEY = "falmex.theme";
 
-// Runs before first paint (see layout.tsx) so the page never flashes the wrong theme.
-export const themeInitScript = `(function(){try{var t=localStorage.getItem("${KEY}");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 function current(): Theme {
   const set = document.documentElement.dataset.theme;

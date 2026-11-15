@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { StatSkeleton } from "@/components/loading";
 import { Card, ErrorNote, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useWorkspace } from "@/lib/workspace";
@@ -36,8 +37,8 @@ const QUESTIONS = [
 ];
 
 export default function Home() {
-  const { dataset, datasets, error } = useWorkspace();
-  const [llm, setLlm] = useState<string | null>(null);
+  const { dataset, datasets, error, loading } = useWorkspace();
+  const [llm, setLlm] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     api
@@ -52,12 +53,14 @@ export default function Home() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
           NASA Microgravity Combustion
         </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Falmex</h1>
+        <h1 className="mt-2 font-display text-5xl font-medium tracking-tight sm:text-6xl">
+          Falmex
+        </h1>
         <p className="mt-3 max-w-2xl text-ink-2">
-          Decades of flame experiments in microgravity, made searchable, comparable and
-          explainable. Falmex surfaces relationships between experiment conditions and flame
-          behavior, checks whether they hold up on unseen data, and shows the evidence behind
-          every claim.
+          Decades of flame experiments in microgravity, made searchable,
+          comparable and explainable. Falmex surfaces relationships between
+          experiment conditions and flame behavior, checks whether they hold up
+          on unseen data, and shows the evidence behind every claim.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {QUESTIONS.map((q) => (
@@ -81,8 +84,11 @@ export default function Home() {
             href={s.href}
             className="group rounded-xl border border-line bg-surface p-5 transition hover:border-accent"
           >
-            <h2 className="font-semibold text-ink">
-              {s.title} <span className="text-accent transition group-hover:translate-x-0.5">→</span>
+            <h2 className="font-display text-xl font-medium text-ink">
+              {s.title}{" "}
+              <span className="text-accent transition group-hover:translate-x-0.5">
+                →
+              </span>
             </h2>
             <p className="mt-1.5 text-sm text-ink-2">{s.text}</p>
           </Link>
@@ -91,15 +97,35 @@ export default function Home() {
 
       <Card title="Workspace">
         <div className="grid gap-4 sm:grid-cols-4">
-          <Stat label="Datasets" value={datasets.length} />
-          <Stat label="Active dataset" value={dataset ? dataset.name : "—"} />
-          <Stat label="Rows" value={dataset?.n_rows ?? "—"} />
-          <Stat label="AI model" value={llm ?? "offline"} />
+          {loading ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              <Stat label="Datasets" value={datasets.length} />
+              <Stat
+                label="Active dataset"
+                value={dataset ? dataset.name : "—"}
+              />
+              <Stat label="Rows" value={dataset?.n_rows ?? "—"} />
+            </>
+          )}
+          {llm === undefined ? (
+            <StatSkeleton />
+          ) : (
+            <Stat label="AI model" value={llm ?? "offline"} />
+          )}
         </div>
-        {!dataset && (
+        {!loading && !dataset && (
           <p className="mt-4 text-sm text-ink-2">
             Start on the{" "}
-            <Link href="/data" className="font-medium text-accent underline underline-offset-2">
+            <Link
+              href="/data"
+              className="font-medium text-accent underline underline-offset-2"
+            >
               Data page
             </Link>
             .

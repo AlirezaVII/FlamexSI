@@ -2,7 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FindingList } from "@/components/finding-list";
-import { Button, Card, ErrorNote, NoDataset, PageHeader, SyntheticBanner } from "@/components/ui";
+import { ListSkeleton, LoadingLabel, Skeleton } from "@/components/loading";
+import {
+  Button,
+  Card,
+  ErrorNote,
+  NoDataset,
+  PageHeader,
+  SyntheticBanner,
+} from "@/components/ui";
 import { api, label } from "@/lib/api";
 import type { Finding, Variable } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
@@ -28,7 +36,9 @@ export default function RelationshipsPage() {
           (v) => v.role === "outcome" && dataset.columns.includes(v.name),
         );
         setOutcomes(present);
-        setOutcome((o) => (present.some((v) => v.name === o) ? o : (present[0]?.name ?? o)));
+        setOutcome((o) =>
+          present.some((v) => v.name === o) ? o : (present[0]?.name ?? o),
+        );
       })
       .catch((e) => setError(e.message));
   }, [dataset]);
@@ -66,21 +76,34 @@ export default function RelationshipsPage() {
     () => findings.filter((f) => f.outcome === outcome),
     [findings, outcome],
   );
-  const strong = forOutcome.filter((f) => f.status === "validated" || f.status === "candidate");
-  const weak = forOutcome.filter((f) => f.status === "rejected" || f.status === "not_significant");
+  const strong = forOutcome.filter(
+    (f) => f.status === "validated" || f.status === "candidate",
+  );
+  const weak = forOutcome.filter(
+    (f) => f.status === "rejected" || f.status === "not_significant",
+  );
 
   if (!dataset) return <NoDataset />;
 
   return (
     <>
       <PageHeader eyebrow="Discover" title={`What affects ${label(outcome)}?`}>
-        Every condition is tested against the outcome on 70% of experiments. Relationships that
-        look significant are then re-tested on the 30% the engine never saw, and against random
-        shuffles. Only relationships that survive both are marked validated.
+        Every condition is tested against the outcome on 70% of experiments.
+        Relationships that look significant are then re-tested on the 30% the
+        engine never saw, and against random shuffles. Only relationships that
+        survive both are marked validated.
       </PageHeader>
       {dataset.synthetic && <SyntheticBanner />}
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        {outcomes.length === 0 &&
+          [72, 96, 80, 88].map((w, i) => (
+            <Skeleton
+              key={i}
+              className="h-8 rounded-full"
+              style={{ width: w }}
+            />
+          ))}
         {outcomes.map((o) => (
           <button
             key={o.name}
@@ -91,21 +114,44 @@ export default function RelationshipsPage() {
           </button>
         ))}
         <Button className="ml-auto" onClick={discover} disabled={busy}>
-          {busy ? "Analyzing…" : findings.length ? "Re-run discovery" : "Run discovery"}
+          {busy
+            ? "Analyzing…"
+            : findings.length
+              ? "Re-run discovery"
+              : "Run discovery"}
         </Button>
       </div>
 
       {error && <ErrorNote message={error} />}
 
-      {loaded && findings.length === 0 ? (
+      {busy ? (
+        <Card title="Running discovery">
+          <div className="space-y-4" aria-busy="true">
+            <LoadingLabel>
+              Testing every condition against every outcome, then re-testing on
+              held-out experiments and random shuffles…
+            </LoadingLabel>
+            <ListSkeleton rows={5} />
+          </div>
+        </Card>
+      ) : !loaded ? (
+        <div className="space-y-4" aria-busy="true">
+          <Card title={<Skeleton className="h-4 w-48" />}>
+            <ListSkeleton rows={3} />
+          </Card>
+          <Card title={<Skeleton className="h-4 w-32" />}>
+            <Skeleton className="h-4 w-3/4" />
+          </Card>
+        </div>
+      ) : findings.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-2">
-            No analysis yet for this dataset. Run discovery to test every condition against every
-            outcome.
+            No analysis yet for this dataset. Run discovery to test every
+            condition against every outcome.
           </p>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="fade-in space-y-4">
           <Card title={`Supported relationships (${strong.length})`}>
             <FindingList findings={strong} />
           </Card>
@@ -121,8 +167,9 @@ export default function RelationshipsPage() {
               <FindingList findings={weak} />
             ) : (
               <p className="text-sm text-muted">
-                Conditions with no evidence of an effect, or effects that failed validation.
-                Knowing what does <em>not</em> matter is a result too.
+                Conditions with no evidence of an effect, or effects that failed
+                validation. Knowing what does <em>not</em> matter is a result
+                too.
               </p>
             )}
           </Card>

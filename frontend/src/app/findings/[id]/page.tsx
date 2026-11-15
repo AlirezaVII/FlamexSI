@@ -5,6 +5,13 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GroupBars, ScatterChart } from "@/components/charts";
 import {
+  ChartSkeleton,
+  LoadingLabel,
+  Skeleton,
+  StatSkeleton,
+  TextSkeleton,
+} from "@/components/loading";
+import {
   Button,
   Card,
   ErrorNote,
@@ -20,7 +27,7 @@ import type { Finding, Row } from "@/lib/types";
 export default function FindingPage() {
   const { id } = useParams<{ id: string }>();
   const [finding, setFinding] = useState<Finding | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -51,20 +58,25 @@ export default function FindingPage() {
   }
 
   if (error) return <ErrorNote message={error} />;
-  if (!finding) return <p className="text-sm text-muted">Loading…</p>;
+  if (!finding) return <FindingSkeleton />;
 
   const f = finding;
   const groups = (f.details.median_by_group ?? f.details.rate_by_group) as
-    | Record<string, number>
-    | undefined;
+    Record<string, number> | undefined;
   const ai = f.interpretation;
 
   return (
     <>
-      <Link href="/relationships" className="mb-4 inline-block text-sm text-ink-2 hover:text-ink">
+      <Link
+        href="/relationships"
+        className="mb-4 inline-block text-sm text-ink-2 hover:text-ink"
+      >
         ← All relationships
       </Link>
-      <PageHeader eyebrow={`${label(f.condition)} → ${label(f.outcome)}`} title={f.headline}>
+      <PageHeader
+        eyebrow={`${label(f.condition)} → ${label(f.outcome)}`}
+        title={f.headline}
+      >
         <span className="inline-flex items-center gap-2">
           <StatusBadge status={f.status} /> {statusHint(f.status)}
         </span>
@@ -77,19 +89,36 @@ export default function FindingPage() {
             <GroupBars
               values={groups}
               xLabel={label(f.condition)}
-              yLabel={f.details.rate_by_group ? `${label(f.outcome)} rate` : `median ${label(f.outcome)}`}
+              yLabel={
+                f.details.rate_by_group
+                  ? `${label(f.outcome)} rate`
+                  : `median ${label(f.outcome)}`
+              }
+            />
+          ) : rows === null ? (
+            <ChartSkeleton
+              variant="scatter"
+              label="Loading experiment data for the chart…"
             />
           ) : (
-            <ScatterChart rows={rows} x={f.condition} y={f.outcome} />
+            <div className="fade-in">
+              <ScatterChart rows={rows} x={f.condition} y={f.outcome} />
+            </div>
           )}
         </Card>
 
         <Card title="Statistics">
           <div className="grid grid-cols-2 gap-4">
-            <Stat label={label(f.effect_metric)} value={fmt(f.effect_size, 3)}
-              hint="Effect size on the discovery split" />
-            <Stat label="q-value (FDR)" value={fmt(f.q_value)}
-              hint="p-value corrected for testing many relationships at once" />
+            <Stat
+              label={label(f.effect_metric)}
+              value={fmt(f.effect_size, 3)}
+              hint="Effect size on the discovery split"
+            />
+            <Stat
+              label="q-value (FDR)"
+              value={fmt(f.q_value)}
+              hint="p-value corrected for testing many relationships at once"
+            />
             <Stat label="Discovery rows" value={f.n_train} />
             <Stat label="Rank score" value={fmt(f.score, 3)} />
           </div>
@@ -109,7 +138,8 @@ export default function FindingPage() {
         <Card title="Validation">
           {f.validations.length === 0 ? (
             <p className="text-sm text-ink-2">
-              Not validated: the relationship was not significant in the discovery data.
+              Not validated: the relationship was not significant in the
+              discovery data.
             </p>
           ) : (
             <ul className="space-y-3">
@@ -121,7 +151,13 @@ export default function FindingPage() {
                     </span>
                     {label(v.method)}{" "}
                     <span className="font-normal text-muted">
-                      ({v.passed === true ? "passed" : v.passed === false ? "failed" : "inconclusive"})
+                      (
+                      {v.passed === true
+                        ? "passed"
+                        : v.passed === false
+                          ? "failed"
+                          : "inconclusive"}
+                      )
                     </span>
                   </p>
                   <p className="text-ink-2">{v.message}</p>
@@ -138,24 +174,30 @@ export default function FindingPage() {
 
         <Card title="Evidence">
           <p className="text-sm text-ink-2">
-            Based on <strong className="text-ink">{f.evidence.n_experiments}</strong> experiments
-            ({f.evidence.n_rows} rows).
+            Based on{" "}
+            <strong className="text-ink">{f.evidence.n_experiments}</strong>{" "}
+            experiments ({f.evidence.n_rows} rows).
           </p>
           <ul className="mt-2 text-xs text-muted">
             {f.evidence.sources.map((s) => (
               <li key={s.source_id}>
-                Source file: <span className="text-ink-2">{s.filename}</span> · sha256{" "}
-                <code>{s.sha256.slice(0, 12)}…</code>
+                Source file: <span className="text-ink-2">{s.filename}</span> ·
+                sha256 <code>{s.sha256.slice(0, 12)}…</code>
               </li>
             ))}
           </ul>
           <div className="mt-3 flex max-h-40 flex-wrap gap-1 overflow-y-auto">
             {f.evidence.experiment_ids.map((e) => (
-              <span key={e} className="rounded border border-line px-1.5 py-0.5 text-xs text-ink-2">
+              <span
+                key={e}
+                className="rounded border border-line px-1.5 py-0.5 text-xs text-ink-2"
+              >
                 {e}
               </span>
             ))}
-            {f.evidence.truncated && <span className="text-xs text-muted">…and more</span>}
+            {f.evidence.truncated && (
+              <span className="text-xs text-muted">…and more</span>
+            )}
           </div>
         </Card>
       </div>
@@ -164,13 +206,27 @@ export default function FindingPage() {
         className="mt-4"
         title="AI interpretation"
         action={
-          <Button onClick={() => interpret(!!ai)} disabled={aiBusy} variant={ai ? "ghost" : "primary"}>
+          <Button
+            onClick={() => interpret(!!ai)}
+            disabled={aiBusy}
+            variant={ai ? "ghost" : "primary"}
+          >
             {aiBusy ? "Thinking…" : ai ? "Regenerate" : "Explain this finding"}
           </Button>
         }
       >
         {aiError && <ErrorNote message={aiError} />}
-        {ai ? (
+        {aiBusy ? (
+          <div className="space-y-4" aria-busy="true">
+            <TextSkeleton lines={2} />
+            <div className="rounded-lg border border-line bg-surface-2 p-3">
+              <TextSkeleton lines={2} />
+            </div>
+            <LoadingLabel>
+              Gemini is reading the statistics and evidence…
+            </LoadingLabel>
+          </div>
+        ) : ai ? (
           <div className="space-y-3 text-sm">
             <p className="font-medium text-ink">{ai.summary}</p>
             <p className="text-ink-2">{ai.interpretation}</p>
@@ -188,17 +244,60 @@ export default function FindingPage() {
               </ul>
             )}
             <p className="text-xs text-muted">
-              Generated by {ai.provider} ({ai.model}) from the statistics above only. Check every
-              statement against the evidence.
+              Generated by {ai.provider} ({ai.model}) from the statistics above
+              only. Check every statement against the evidence.
             </p>
           </div>
         ) : (
           <p className="text-sm text-ink-2">
-            The AI explains the computed statistics and evidence in plain language. It does not
-            create findings and cannot see anything beyond this page.
+            The AI explains the computed statistics and evidence in plain
+            language. It does not create findings and cannot see anything beyond
+            this page.
           </p>
         )}
       </Card>
     </>
+  );
+}
+
+function FindingSkeleton() {
+  return (
+    <div aria-busy="true">
+      <Skeleton className="mb-5 h-4 w-32" />
+      <div className="mb-6 space-y-2.5">
+        <Skeleton className="h-3 w-40" />
+        <Skeleton className="h-7 w-full max-w-lg" />
+        <Skeleton className="h-5 w-72 max-w-full rounded-full" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card title="Data" className="lg:col-span-2">
+          <ChartSkeleton />
+        </Card>
+        <Card title="Statistics">
+          <div className="grid grid-cols-2 gap-4">
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </div>
+          <div className="mt-5 border-t border-line pt-4">
+            <TextSkeleton lines={4} />
+          </div>
+        </Card>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Card title="Validation">
+          <TextSkeleton lines={4} />
+        </Card>
+        <Card title="Evidence">
+          <TextSkeleton lines={2} />
+          <div className="mt-3 flex flex-wrap gap-1">
+            {Array.from({ length: 12 }, (_, i) => (
+              <Skeleton key={i} className="h-5 w-16" />
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 }

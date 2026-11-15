@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace";
+import { Skeleton } from "./loading";
 import { ThemeToggle } from "./theme-toggle";
 
 const icon = (d: string) => (
@@ -53,7 +54,9 @@ const LINKS = [
 ];
 
 function DatasetPicker({ className = "" }: { className?: string }) {
-  const { datasets, dataset, selectDataset } = useWorkspace();
+  const { datasets, dataset, selectDataset, loading } = useWorkspace();
+  if (loading)
+    return <Skeleton className={`h-8 w-44 max-w-full ${className}`} />;
   return (
     <div className={`flex min-w-0 items-center gap-2 text-sm ${className}`}>
       <label htmlFor="dataset" className="hidden text-muted sm:inline">
@@ -91,7 +94,7 @@ function CompareCount() {
 const Logo = () => (
   <Link
     href="/"
-    className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
+    className="flex shrink-0 items-center gap-2 font-display text-xl font-medium tracking-tight"
   >
     <span aria-hidden className="text-accent">
       ◆

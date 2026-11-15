@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { Status } from "@/lib/types";
+import { useWorkspace } from "@/lib/workspace";
+import { ListSkeleton, Skeleton } from "./loading";
 
 export function Card({
   title,
@@ -13,7 +17,9 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-line bg-surface p-5 ${className}`}>
+    <section
+      className={`rounded-xl border border-line bg-surface p-5 ${className}`}
+    >
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {title && <h2 className="text-sm font-semibold text-ink">{title}</h2>}
@@ -37,10 +43,16 @@ export function PageHeader({
   return (
     <header className="mb-6">
       {eyebrow && (
-        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-accent">{eyebrow}</p>
+        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-accent">
+          {eyebrow}
+        </p>
       )}
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
-      {children && <div className="mt-2 max-w-3xl text-sm text-ink-2">{children}</div>}
+      <h1 className="font-display text-3xl font-medium tracking-tight text-ink sm:text-4xl">
+        {title}
+      </h1>
+      {children && (
+        <div className="mt-2 max-w-3xl text-sm text-ink-2">{children}</div>
+      )}
     </header>
   );
 }
@@ -49,7 +61,9 @@ export function Button({
   children,
   variant = "primary",
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "ghost";
+}) {
   const styles =
     variant === "primary"
       ? "bg-accent text-accent-ink hover:opacity-90"
@@ -64,7 +78,10 @@ export function Button({
   );
 }
 
-const STATUS: Record<Status, { label: string; icon: string; color: string; hint: string }> = {
+const STATUS: Record<
+  Status,
+  { label: string; icon: string; color: string; hint: string }
+> = {
   validated: {
     label: "Validated",
     icon: "✓",
@@ -118,8 +135,9 @@ export function SyntheticBanner() {
       role="note"
       className="mb-5 rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink-2"
     >
-      <strong className="text-ink">Synthetic test data.</strong> This dataset is fake and only
-      exercises the engine. Nothing shown here is a scientific result.
+      <strong className="text-ink">Synthetic test data.</strong> This dataset is
+      fake and only exercises the engine. Nothing shown here is a scientific
+      result.
     </div>
   );
 }
@@ -138,12 +156,33 @@ export function ErrorNote({ message }: { message: string }) {
   );
 }
 
+/** Skeleton of a page header + card, shown while the workspace is still loading. */
+export function PageSkeleton() {
+  return (
+    <div aria-busy="true">
+      <div className="mb-6 space-y-2.5">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-7 w-72 max-w-full" />
+        <Skeleton className="h-4 w-full max-w-xl" />
+      </div>
+      <Card>
+        <ListSkeleton rows={4} />
+      </Card>
+    </div>
+  );
+}
+
 export function NoDataset() {
+  const { loading } = useWorkspace();
+  if (loading) return <PageSkeleton />;
   return (
     <Card>
       <p className="text-sm text-ink-2">
         No dataset loaded yet.{" "}
-        <Link href="/data" className="font-medium text-accent underline underline-offset-2">
+        <Link
+          href="/data"
+          className="font-medium text-accent underline underline-offset-2"
+        >
           Upload NASA data or generate a synthetic test set
         </Link>
         .
@@ -152,11 +191,21 @@ export function NoDataset() {
   );
 }
 
-export function Stat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
+export function Stat({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+}) {
   return (
     <div title={hint}>
       <p className="text-xs text-muted">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink">{value}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink">
+        {value}
+      </p>
     </div>
   );
 }

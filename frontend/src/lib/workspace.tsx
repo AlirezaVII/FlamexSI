@@ -13,6 +13,8 @@ interface Workspace {
   toggleCompare: (experimentId: string) => void;
   clearCompare: () => void;
   error: string | null;
+  /** true until the dataset list has been fetched once */
+  loading: boolean;
 }
 
 const Ctx = createContext<Workspace | null>(null);
@@ -31,6 +33,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
@@ -43,6 +46,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -74,6 +79,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     toggleCompare,
     clearCompare: () => setCompareIds([]),
     error,
+    loading,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

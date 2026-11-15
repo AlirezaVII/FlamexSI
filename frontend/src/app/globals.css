@@ -67,10 +67,298 @@
   --color-critical: var(--critical);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* ---- Loading states ---------------------------------------------------- */
+:root {
+  --skeleton: color-mix(in oklab, var(--ink) 7%, var(--surface));
+  --skeleton-shine: color-mix(in oklab, var(--ink) 13%, var(--surface));
+}
+
+.skeleton {
+  background: linear-gradient(
+      100deg,
+      var(--skeleton) 30%,
+      var(--skeleton-shine) 50%,
+      var(--skeleton) 70%
+    )
+    0 0 / 250% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+
+/* chart loader: marks rise and settle in a travelling wave */
+.chart-loader-mark {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: chart-rise 1.6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.chart-loader-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chart-pop 1.6s ease-in-out infinite;
+}
+.chart-loader-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chart-draw 1.6s ease-in-out infinite;
+}
+
+@keyframes chart-rise {
+  0%, 100% { transform: scaleY(0.25); opacity: 0.35; }
+  45% { transform: scaleY(1); opacity: 0.9; }
+}
+@keyframes chart-pop {
+  0%, 100% { transform: scale(0.4); opacity: 0.2; }
+  45% { transform: scale(1); opacity: 0.85; }
+}
+@keyframes chart-draw {
+  0% { stroke-dashoffset: 1; opacity: 0.2; }
+  55% { stroke-dashoffset: 0; opacity: 0.8; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+.fade-in { animation: fade-in 0.35s ease-out both; }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .chart-loader-mark, .chart-loader-dot, .chart-loader-line, .fade-in {
+    animation: none;
+  }
+  .chart-loader-line { stroke-dashoffset: 0; opacity: 0.5; }
+}
+
+/* ---- Splash: "flame in freefall" ------------------------------------- */
+/* A fixed space scene, the same in light and dark mode. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  color: #e8eeff;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 42%, #0d1a3a 0%, transparent 70%),
+    radial-gradient(ellipse at 50% 120%, #1a1030 0%, transparent 60%),
+    #04060d;
+  /* fallback: disappears even if the app script never runs */
+  animation: splash-auto-hide 0.01s linear 15s forwards;
+}
+:root[data-splash="active"] .splash { animation: none; }
+:root[data-splash="gone"] .splash { display: none; }
+:root[data-splash="leaving"] .splash {
+  animation: splash-out 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+@keyframes splash-out {
+  to { opacity: 0; transform: scale(1.05); filter: blur(6px); }
+}
+@keyframes splash-auto-hide {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+.splash-stars { position: absolute; inset: 0; width: 100%; height: 100%; }
+.splash-stars circle {
+  fill: #cfdcff;
+  opacity: 0;
+  animation: star-in 0.8s ease-out forwards, twinkle 2.6s ease-in-out 0.8s infinite;
+}
+@keyframes star-in { to { opacity: 0.55; } }
+@keyframes twinkle { 50% { opacity: 0.15; } }
+
+.splash-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px;
+  text-align: center;
+}
+.splash-flame { width: min(58vw, 260px); height: auto; overflow: visible; }
+.splash-flame * { transform-box: view-box; }
+
+/* Earth flame: appears, flickers, then buoyancy fades out and it collapses */
+.splash-earth {
+  transform-origin: 100px 118px;
+  animation: earth-flame 1.9s cubic-bezier(0.5, 0, 0.3, 1) 0.1s both;
+}
+@keyframes earth-flame {
+  0% { opacity: 0; transform: scale(0.6, 0.3); }
+  15% { opacity: 1; transform: scale(1, 1); }
+  28% { transform: scale(0.97, 1.04); }
+  40% { transform: scale(1.02, 0.98); }
+  52% { opacity: 1; transform: scale(1, 1); }
+  100% { opacity: 0; transform: scale(1.35, 0.35); }
+}
+.splash-rise {
+  fill: #6b5a4a;
+  opacity: 0;
+  animation: soot-rise 0.9s ease-out 2;
+}
+@keyframes soot-rise {
+  0% { opacity: 0; transform: translateY(8px); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-62px); }
+}
+
+/* microgravity flame: a sphere blooms around the droplet, then breathes */
+.splash-sphere {
+  transform-origin: 100px 100px;
+  opacity: 0;
+  animation:
+    sphere-in 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.95s forwards,
+    sphere-breathe 2.4s ease-in-out 1.9s infinite;
+}
+@keyframes sphere-in {
+  0% { opacity: 0; transform: scale(0.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes sphere-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+.splash-drift {
+  fill: #9fc4ff;
+  opacity: 0;
+  animation: soot-drift 1.5s ease-out forwards;
+}
+@keyframes soot-drift {
+  0% { opacity: 0; transform: translate(0, 0); }
+  25% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+}
+
+.splash-orbit { opacity: 0; animation: fade-to 0.8s ease-out 1.3s forwards; }
+.splash-sat {
+  offset-path: path("M186,100 A86,30 0 1,1 14,100 A86,30 0 1,1 186,100");
+  animation: orbit 4s linear infinite;
+}
+@keyframes orbit { to { offset-distance: 100%; } }
+@keyframes fade-to { to { opacity: 1; } }
+
+.splash-readout {
+  margin-top: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  opacity: 0;
+  animation: fade-to 0.5s ease-out 0.15s forwards;
+}
+.splash-readout-label {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #7f8db3;
+}
+.splash-readout-value {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  color: #ffd35a;
+  animation: readout-cool 1.2s ease-in-out 0.5s forwards;
+}
+@keyframes readout-cool { to { color: #8fc0ff; text-shadow: 0 0 14px #3f8dff; } }
+
+.splash-captions { position: relative; height: 22px; width: min(92vw, 460px); margin-top: 10px; }
+.splash-cap {
+  position: absolute;
+  inset: 0;
+  font-size: 13px;
+  color: #a9b6d8;
+  opacity: 0;
+}
+.splash-cap-1 { animation: cap 1.25s ease-in-out 0.25s both; }
+.splash-cap-2 { animation: fade-to 0.5s ease-out 1.55s forwards; }
+@keyframes cap { 15%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+.splash-title {
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 11vw, 76px);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  padding-left: 0.22em; /* optically recentre the tracked word */
+  line-height: 1;
+}
+.splash-title span {
+  display: inline-block;
+  opacity: 0;
+  background: linear-gradient(180deg, #ffffff 20%, #9fc4ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: letter-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes letter-in {
+  from { opacity: 0; transform: translateY(14px); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.splash-tagline {
+  margin-top: 14px;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8e9cc4;
+  opacity: 0;
+  animation: fade-to 0.7s ease-out 2.45s forwards;
+}
+
+.splash-status {
+  margin-top: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #8e9cc4;
+  opacity: 0;
+  animation: fade-to 0.5s ease-out 2.6s forwards;
+}
+.splash-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #ffb347;
+  box-shadow: 0 0 0 0 #ffb34788;
+  animation: status-pulse 1.2s ease-out infinite;
+}
+.splash-status.is-ready { color: #bfe0ff; }
+.splash-status.is-ready .splash-status-dot { background: #5fd38a; animation: none; box-shadow: 0 0 10px #5fd38a; }
+.splash-status.is-offline .splash-status-dot { background: #ff6b6b; animation: none; }
+@keyframes status-pulse {
+  to { box-shadow: 0 0 0 8px #ffb34700; }
+}
+
+.splash-skip {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #a9b6d8;
+  border: 1px solid #2a3553;
+  border-radius: 999px;
+  background: #0b1224aa;
+}
+.splash-skip:hover { color: #fff; border-color: #4a5a85; }
+
+@media (prefers-reduced-motion: reduce) {
+  .splash *, .splash { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
+  .splash-earth, .splash-cap-1, .splash-rise, .splash-drift { display: none; }
 }
