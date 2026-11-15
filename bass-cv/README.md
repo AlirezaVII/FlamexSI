@@ -23,7 +23,6 @@ The mask is not a chemical or thermal boundary, reaction zone, extinction label,
 - Confirmation selection/freeze records, coarse annotations and masks, 24 source frames, and all 96 frozen prediction masks.
 - Original per-frame confirmation metrics and comparison plot.
 - Two-reviewer agreement summaries, A/B masks, provenance, adjudication queue, and contact sheet.
-- Near-final competition drafts and status files.
 
 ## What is deliberately excluded
 
@@ -75,10 +74,11 @@ To rerun historical training/inference, restore the excluded raw data and cache/
 - `confirmation-v6/metrics.json` — original untouched confirmation metrics.
 - `independent-review-results-v6/review-processing.json` — real two-reviewer processing status.
 - `independent-review-results-v6/adjudication-queue.csv` — all 24 pending frames.
-- `submission-v6/فرم-مسابقه-پیش‌نویس.md` — editable competition draft.
-- `submission-v6/submission-status.json` — remaining external requirements.
 
 
 ## Dual-reference decision
 
 The team adopted separate A and B scores for this release. B covers more pixels in all 24 frames. Six frames contain A-only pixels. In the reviewed example, the shared region covers the brighter emission and B extends into the halo and isolated luminous spots. Their physical origin is unresolved. No third pixel mask was drawn.
+
+The v6 competition draft (`submission-v6/`) and its packaging script were removed on
+2026-11-13: the text was out of date. Restore with `git checkout 493ad54 -- bass-cv/submission-v6`.
