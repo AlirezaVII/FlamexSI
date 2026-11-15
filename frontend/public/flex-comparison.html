@@ -1,4 +1,75 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FLEX experimental comparison | Falmex</title><style>body{max-width:56rem;margin:4vw auto;padding:1rem;font:17px/1.55 system-ui;color:#17332e}h1{line-height:1.12}summary{cursor:pointer;font-weight:bold;padding:1rem;background:#e7f4ec}details{margin:1rem 0}table{border-collapse:collapse;width:100%}td,th{padding:.55rem;border-bottom:1px solid #cddbd6;text-align:left}</style><main><p>Falmex · NASA FLEX / PSI-69</p><h1>Compare droplet burning rates by oxygen level</h1><p>Choose a fuel to compare observations at each initial oxygen mole fraction. Sample counts show where a median rests on only a few experiments.</p>
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FLEX experimental comparison | Falmex</title><style>body{max-width:56rem;margin:4vw auto;padding:1rem;font:17px/1.55 system-ui;color:#17332e}h1{line-height:1.12}summary{cursor:pointer;font-weight:bold;padding:1rem;background:#e7f4ec}details{margin:1rem 0}table{border-collapse:collapse;width:100%}td,th{padding:.55rem;border-bottom:1px solid #cddbd6;text-align:left}</style><main><p>Falmex · NASA FLEX / PSI-69</p><section aria-labelledby="review"><h1 id="review">From FLEX evidence to an experiment</h1>
+<h2>4 · Compare and rank findings</h2><p>Three candidate relationships, ranked by reduction in mean absolute error against the training median for each fuel. The final 20% of experiment dates were reserved for evaluation. This ranking measures predictive usefulness in FLEX. Safety importance requires team judgment.</p>
+<table><thead><tr><th>Finding</th><th>Training / test</th><th>Error reduction</th></tr></thead><tbody id="ranks"></tbody></table>
+<h2>5 · Select a scientific insight</h2><label>Finding for team review <select id="finding"></select></label><p id="insight"></p><p id="evidence"></p>
+<button type="button" id="analyze">Generate AI interpretation</button>
+<p id="analysis" role="status" style="white-space:pre-line"></p><a id="record">Review evidence and save the team insight</a>
+<h2>6 · Explore the selected application</h2><p>Choose a fuel and an observed training condition to estimate a droplet outcome for experiment planning. Compare the estimate with the validation error before using it to choose your next test.</p>
+<label>Fuel <select id="fuel"></select></label> <label><span id="axis"></span> <select id="condition"></select></label>
+<p id="prediction" aria-live="polite"></p><p id="performance"></p>
+<details><summary>Model, source and limits</summary><p>The regressor returns the median outcome among the five nearest training experiments within the selected fuel, including distance ties. Training dates precede the cutoff shown above the controls. Errors include every usable test row, including conditions beyond training support. Pressure, gas mixture and other covariates can differ. These observational estimates apply to PSI-69 droplet experiments. They cannot establish cabin limits, extinction commands or detector sensitivity.</p></details></section>
+<script type="application/json" id="models">[{"id": "9b3b08af88bf", "title": "Oxygen → extinction diameter ratio", "xname": "Initial oxygen mole fraction", "yname": "Extinction / initial diameter", "insight": "Compare normalized extinction diameters within one fuel. The ratio shares a measurement with extinction diameter, so the two results provide overlapping evidence.", "options": {"Methanol": [[0.12, 0.7272727272727272, 7], [0.13, 0.841549295774648, 5], [0.14, 0.7931034482758622, 5], [0.15, 0.8312342569269521, 11], [0.16, 0.8101011179947305, 20], [0.17, 0.7857142857142856, 5], [0.18, 0.4744027303754266, 11], [0.19, 0.47327563574474246, 26], [0.2, 0.4834834834834835, 13], [0.21, 0.5161453163311189, 18], [0.23, 0.48474742473227894, 8], [0.24, 0.47961630695443647, 9], [0.3, 0.33855713959252554, 6], [0.34, 0.33855713959252554, 6]], "Heptane": [[0.13, 0.9822313807163181, 6], [0.14, 0.9822313807163181, 6], [0.15, 0.9520958083832336, 7], [0.16, 0.9850107066381155, 9], [0.17, 0.9381470295560482, 18], [0.18, 0.8698717948717949, 12], [0.19, 0.7987421383647798, 25], [0.2, 0.7825947533929163, 10], [0.21, 0.8034682080924855, 9], [0.23, 0.542097634890309, 12], [0.24, 0.2519232469714387, 8], [0.25, 0.20152091254752855, 9], [0.3, 0.12661538461538463, 12], [0.34, 0.12661538461538463, 12]]}, "train": 158, "test": 39, "mae": 0.1824228202688794, "baseline": 0.21064130105977447, "cutoff": "2011-09-21", "rho": -0.5401, "finding": "3"}, {"id": "6bf6599a3c5a", "title": "Initial diameter → extinction diameter", "xname": "Initial diameter (mm)", "yname": "Visible extinction diameter (mm)", "insight": "Account for starting droplet size when comparing visible extinction. Match initial diameters across experiments before interpreting differences.", "options": {"Methanol": [[1.61, 0.92, 5], [1.66, 0.92, 5], [1.69, 0.92, 5], [1.76, 0.97, 6], [1.84, 0.94, 5], [1.86, 1.04, 5], [1.92, 1.04, 5], [1.94, 1.04, 5], [2.25, 1.67, 7], [2.32, 1.67, 7], [2.35, 1.545, 6], [2.38, 1.42, 5], [2.4, 1.29, 5], [2.42, 1.29, 5], [2.47, 1.32, 9], [2.52, 1.2650000000000001, 6], [2.54, 1.58, 6], [2.57, 1.63, 7], [2.59, 1.63, 5], [2.6, 1.63, 5], [2.62, 1.71, 6], [2.64, 1.4649999999999999, 6], [2.66, 1.34, 5], [2.67, 1.34, 5], [2.71, 1.27, 5], [2.74, 1.3050000000000002, 6], [2.75, 1.27, 5], [2.77, 1.23, 6], [2.78, 1.3, 6], [2.8, 1.33, 7], [2.83, 1.84, 5], [2.84, 2.115, 6], [2.86, 2.39, 5], [2.87, 2.39, 5], [2.91, 2.39, 5], [2.93, 2.39, 7], [3.02, 1.57, 5], [3.03, 1.57, 5], [3.05, 1.75, 7], [3.07, 1.75, 5], [3.08, 1.75, 5], [3.16, 2.53, 5], [3.21, 2.105, 6], [3.22, 2.53, 5], [3.23, 2.53, 5], [3.26, 1.68, 5], [3.3, 1.42, 5], [3.33, 1.61, 7], [3.37, 1.56, 5], [3.38, 1.56, 5], [3.4, 1.56, 5], [3.46, 1.5750000000000002, 6], [3.49, 1.59, 5], [3.53, 1.59, 7], [3.56, 1.58, 7], [3.6, 1.74, 5], [3.63, 1.74, 5], [3.64, 1.74, 5], [3.68, 2.6100000000000003, 6], [3.7, 2.0, 7], [3.72, 2.0, 5], [3.77, 2.0, 5], [3.89, 2.61, 5], [3.97, 2.61, 5], [3.98, 2.61, 5], [3.99, 2.61, 5], [4.13, 3.3200000000000003, 6], [4.17, 3.3200000000000003, 6], [4.2, 2.85, 5], [4.24, 2.85, 5], [4.25, 2.85, 5], [4.28, 2.6, 5], [4.35, 2.6, 5]], "Heptane": [[1.1, 0.47, 5], [1.34, 0.47, 5], [1.35, 0.47, 5], [1.64, 0.49, 5], [1.72, 0.49, 5], [1.96, 0.48, 5], [2.07, 0.48, 5], [2.12, 0.48, 5], [2.15, 0.48, 5], [2.21, 0.48, 5], [2.4, 1.68, 5], [2.41, 1.68, 5], [2.45, 0.945, 6], [2.48, 1.68, 5], [2.5, 1.9049999999999998, 6], [2.52, 1.68, 5], [2.55, 2.13, 5], [2.58, 2.13, 5], [2.6, 2.13, 5], [2.63, 2.07, 5], [2.69, 1.77, 5], [2.72, 1.77, 5], [2.73, 1.77, 5], [2.74, 1.77, 5], [2.78, 1.77, 5], [2.9, 2.79, 5], [2.91, 2.79, 5], [2.92, 2.79, 5], [2.96, 0.47, 5], [2.97, 1.665, 6], [3.03, 2.3049999999999997, 6], [3.04, 2.33, 5], [3.06, 2.33, 5], [3.1, 2.49, 5], [3.18, 2.41, 6], [3.25, 2.61, 5], [3.32, 3.13, 5], [3.33, 3.13, 5], [3.34, 3.15, 6], [3.4, 3.17, 5], [3.43, 3.13, 7], [3.46, 2.78, 5], [3.53, 2.98, 5], [3.56, 2.98, 5], [3.57, 3.01, 6], [3.6, 3.04, 5], [3.66, 3.2350000000000003, 6], [3.7, 3.6, 5], [3.74, 3.68, 5], [3.76, 3.68, 5], [3.84, 3.68, 5], [3.85, 3.68, 5], [3.88, 3.71, 5], [4.0, 3.825, 6], [4.14, 3.88, 5], [4.16, 3.88, 5], [4.64, 4.15, 5], [4.67, 4.15, 5]]}, "train": 158, "test": 39, "mae": 0.762051282051282, "baseline": 0.7741025641025641, "cutoff": "2011-09-21", "rho": 0.7347, "finding": "2"}, {"id": "0c4c0f8dcdad", "title": "Oxygen → burning rate", "xname": "Initial oxygen mole fraction", "yname": "Burning rate (source scale)", "insight": "Compare the two fuels at the same oxygen fraction. Their positive associations differ in strength, so fuel matters when planning a follow-up test.", "options": {"Methanol": [[0.12, 0.35, 7], [0.13, 0.36, 5], [0.14, 0.345, 6], [0.15, 0.37, 13], [0.16, 0.38, 24], [0.17, 0.39, 7], [0.18, 0.42, 14], [0.19, 0.44, 30], [0.2, 0.455, 14], [0.21, 0.48, 23], [0.23, 0.5, 12], [0.24, 0.51, 18], [0.25, 0.515, 6], [0.3, 0.64, 8], [0.34, 0.66, 5]], "Heptane": [[0.13, 0.41, 9], [0.14, 0.41, 9], [0.15, 0.52, 5], [0.16, 0.37, 11], [0.17, 0.385, 18], [0.18, 0.42500000000000004, 12], [0.19, 0.485, 26], [0.2, 0.52, 11], [0.21, 0.52, 15], [0.23, 0.56, 16], [0.24, 0.56, 12], [0.25, 0.56, 14], [0.3, 0.68, 7], [0.34, 0.715, 10]]}, "train": 210, "test": 48, "mae": 0.1690625, "baseline": 0.14635416666666667, "cutoff": "2011-09-21", "rho": 0.7032, "finding": "1"}]</script>
+<script>
+const tasks = JSON.parse(document.getElementById('models').textContent);
+const el = id => document.getElementById(id);
+function choices(id, labels) {
+  el(id).replaceChildren(...labels.map((label, index) => new Option(label, String(index))));
+}
+const current = () => tasks[Number(el('finding').value)];
+const samples = () => current().options[el('fuel').selectedOptions[0].text];
+function predict() {
+  const [,value,count] = samples()[Number(el('condition').value)];
+  el('prediction').textContent = current().yname + ': estimated ' + value.toFixed(3) + ' from ' + count + ' neighboring training experiments.';
+}
+function selectFuel() {
+  choices('condition', samples().map(row => row[0]));
+  predict();
+}
+function selectFinding() {
+  const t = current();
+  el('analysis').textContent = '';
+  el('record').href = '/findings/' + encodeURIComponent(t.id);
+  el('insight').textContent = t.insight;
+  el('evidence').textContent = 'Scientific review finding ' + t.finding + ' · Date-split holdout rank correlation: ' + t.rho.toFixed(3) + '. Prediction test dates start ' + t.cutoff + '.';
+  el('performance').textContent = 'Held-out mean absolute error: ' + t.mae.toFixed(3) + '. Fuel-only baseline: ' + t.baseline.toFixed(3) + ' (same outcome scale).';
+  el('axis').textContent = t.xname;
+  choices('fuel', Object.keys(t.options));
+  selectFuel();
+}
+for (const t of tasks) {
+  const tr = el('ranks').insertRow();
+  for (const text of [t.title, t.train + ' / ' + t.test, (100*(1-t.mae/t.baseline)).toFixed(1)+'%']) tr.insertCell().textContent = text;
+}
+choices('finding', tasks.map(t => t.title));
+el('finding').onchange = selectFinding;
+el('fuel').onchange = selectFuel;
+el('condition').onchange = predict;
+selectFinding();
+let generation = 0;
+el('analyze').onclick = async () => {
+  const selected = current(), run = ++generation;
+  const output = message => {
+    if (run === generation && current() === selected) el('analysis').textContent = message;
+  };
+  output('Requesting model interpretation…');
+  try {
+    const health = await fetch('/health');
+    if (!health.ok) throw Error();
+    const {llm} = await health.json();
+    if (llm.provider === 'mock') {
+      output('Live language analysis requires a configured Gemini provider on the server. The trained FLEX predictions below work offline.');
+      return;
+    }
+    const response = await fetch('/api/findings/' + encodeURIComponent(selected.id) + '/interpret?force=true', {method:'POST'});
+    if (!response.ok) throw Error();
+    const {interpretation: result} = await response.json();
+    output([result.model, result.summary, result.interpretation, result.safety_relevance, ...result.caveats].filter(Boolean).join('\n\n'));
+  } catch {
+    output('Live interpretation is unavailable. Open this page from the integrated Falmex server and check the model connection.');
+  }
+};
+</script>
+<h2>Measured burning rates by oxygen level</h2><p>Choose a fuel to compare observations at each initial oxygen mole fraction. Sample counts show where a median rests on only a few experiments.</p>
 <details><summary>Heptane</summary><table><thead><tr><th>Oxygen mole fraction</th><th>Experiments</th><th>Median burning rate (source scale)</th></tr></thead><tbody>
 <tr><td>0.13</td><td>1</td><td>0.250</td></tr>
 <tr><td>0.14</td><td>3</td><td>0.390</td></tr>
