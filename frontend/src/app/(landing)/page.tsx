@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingFX } from "@/components/landing/landing-fx";
-import { LogoMark } from "@/components/logo";
+import { BrandLogo } from "@/components/logo";
 
 export const metadata: Metadata = {
   title: "Falmex — Findings you can verify",
@@ -80,7 +80,7 @@ export default function Landing() {
       <header className="topbar">
         <nav className="navrow" aria-label="Main">
           <Link href="/" className="brand serif">
-            <LogoMark className="h-6 w-6 text-[#e8703e]" /> Falmex
+            <BrandLogo size={34} variant="glow" /> Falmex
           </Link>
           <a className="nl" href="#how">
             How it works
@@ -334,7 +334,7 @@ export default function Landing() {
           <div className="grid3">
             <div className="card" data-reveal>
               <div className="ficon">
-                <LogoMark className="h-5 w-5 text-[#e8703e]" />
+                <BrandLogo size={30} variant="glow" />
               </div>
               <h3 className="serif">Explore &amp; compare</h3>
               <p>

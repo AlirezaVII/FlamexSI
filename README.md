@@ -97,5 +97,5 @@ and PR (`.github/workflows/ci.yml`). No API keys are needed in CI.
    the decorators) and, if the team decides so, set ranking weights.
 5. Run discovery goals. Promote a finding to an insight only after expert review.
 
-Brand: logo files are in `brand/logo/` (concept "Freefall": a flame's Earth shape with the sphere
-it becomes in microgravity carved into it).
+Brand: logo files are in `brand/logo/`: the original artwork, a transparent "glow" cut-out for dark
+surfaces and a "badge" cut-out (artwork on its navy disc) for light ones; the app switches with the theme.

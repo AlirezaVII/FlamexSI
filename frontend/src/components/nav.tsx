@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace";
 import { Skeleton } from "./loading";
-import { LogoMark } from "./logo";
+import { BrandLogo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 
 const icon = (d: string) => (
@@ -119,7 +119,7 @@ const Logo = () => (
     href="/"
     className="flex shrink-0 items-center gap-2 font-display text-xl font-medium tracking-tight"
   >
-    <LogoMark className="h-[22px] w-[22px] text-accent" />
+    <BrandLogo size={30} />
     Falmex
   </Link>
 );

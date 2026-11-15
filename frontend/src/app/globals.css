@@ -386,3 +386,22 @@ body {
   .splash *, .splash { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
   .splash-earth, .splash-cap-1, .splash-rise, .splash-drift { display: none; }
 }
+
+/* ---- logo: badge on light surfaces, glow on dark ones (same rules as the colour theme) */
+.logo-on-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-on-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .logo-on-dark {
+    display: inline-block;
+  }
+}
+:root[data-theme="dark"] .logo-on-light {
+  display: none;
+}
+:root[data-theme="dark"] .logo-on-dark {
+  display: inline-block;
+}

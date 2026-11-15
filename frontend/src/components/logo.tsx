@@ -1,16 +1,40 @@
+import Image from "next/image";
+
 /**
- * Falmex mark — "Freefall": a flame's Earth shape (buoyancy stretches it into a teardrop)
- * with the sphere it becomes in microgravity carved into its core. Uses currentColor.
- * Source files: brand/logo/.
+ * The Falmex logo (raster artwork, see brand/logo/). Two cut-outs of the same artwork:
+ * - "glow":  transparent background, soft glows kept — for dark surfaces
+ * - "badge": the artwork on its own navy disc — keeps its colours on light surfaces
+ * `variant="auto"` follows the app theme (light/dark, incl. the system setting) in CSS,
+ * so the right one is visible from the first paint.
  */
-export function LogoMark({ className = "h-5 w-5" }: { className?: string }) {
+export function BrandLogo({
+  size = 28,
+  variant = "auto",
+  className = "",
+}: {
+  size?: number;
+  variant?: "auto" | "glow" | "badge";
+  className?: string;
+}) {
+  const src = (v: "glow" | "badge") =>
+    `/brand/falmex-logo-${v}-${size > 64 ? 256 : 128}.png`;
+  const img = (v: "glow" | "badge", extra = "") => (
+    <Image
+      src={src(v)}
+      alt=""
+      width={size}
+      height={size}
+      unoptimized
+      priority
+      className={`${extra} ${className}`}
+      style={{ width: size, height: size }}
+    />
+  );
+  if (variant !== "auto") return img(variant);
   return (
-    <svg viewBox="0 0 256 256" aria-hidden className={className}>
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M128.00 12.00 C134.20 72.80 190.00 72.80 190.00 172.00 A62 62 0 0 1 66.00 172.00 C66.00 72.80 121.80 72.80 128.00 12.00 Z M101.00 170.00 a27 27 0 1 0 54.00 0 a27 27 0 1 0 -54.00 0 Z"
-      />
-    </svg>
+    <>
+      {img("badge", "logo-on-light")}
+      {img("glow", "logo-on-dark")}
+    </>
   );
 }
