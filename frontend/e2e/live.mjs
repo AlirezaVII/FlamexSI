@@ -16,7 +16,7 @@
 const BASE = (process.env.E2E_BASE || "http://129.212.254.115:3000").replace(/\/$/, "");
 const ROUTES = ["/", "/overview", "/investigations", "/data", "/bass-review", "/footage",
   "/explorer", "/compare", "/relationships", "/findings", "/review", "/insights",
-  "/flight-evidence", "/simulator", "/innovation"];
+  "/flight-evidence", "/flame-lab", "/simulator", "/innovation"];
 const BAD_TEXT = /\{"detail"|"loc":\s*\[|Traceback|\[object Object\]|\bundefined\b|\bNaN\b|string_too_short|Internal Server Error|Unhandled Runtime Error|Application error/;
 
 export default async function run(page) {
@@ -216,7 +216,12 @@ export default async function run(page) {
   const tryUpload = async (name, buffer, mimeType = "text/csv") => {
     await fileInput.setInputFiles({ name, mimeType, buffer });
     await upload.click();
-    await page.waitForTimeout(4000);
+    // the answer can take a while on a slow link: wait for a message or a settled page
+    for (let i = 0; i < 20; i++) {
+      await page.waitForTimeout(1000);
+      if ((await alerts()).length > 5) break;
+      if (i >= 5 && !(await upload.isDisabled().catch(() => false))) break;
+    }
     await page.waitForLoadState("networkidle", { timeout: 60000 }).catch(() => {});
     return { alert: await alerts(), text: await visibleText() };
   };
