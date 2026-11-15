@@ -1,5 +1,6 @@
 "use client";
 
+import { EvidenceChat } from "./evidence-chat";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, PageHeader, Stat } from "@/components/ui";
 import burning from "@/lib/flight/burning.json";
@@ -745,6 +746,7 @@ function ImageEvidence() {
           </p>
         </div>
       </div>
+      <EvidenceChat key={name} frame={name} />
       <div className="mt-5 overflow-x-auto" data-lenis-prevent>
         <table className="w-full min-w-[28rem] text-xs tabular-nums">
           <thead className="text-muted">
@@ -793,6 +795,7 @@ function FrameTester() {
   const worker = useRef<Worker | null>(null);
   const run = useRef(0);
   const [status, setStatus] = useState("");
+  const [counts, setCounts] = useState<{ a: number; b: number; shared: number } | null>(null);
   const [shown, setShown] = useState(false);
   useEffect(() => () => worker.current?.terminate(), []);
 
@@ -800,6 +803,7 @@ function FrameTester() {
     const token = ++run.current;
     worker.current?.terminate();
     worker.current = null;
+    setCounts(null);
     setShown(false);
     try {
       if (file.size > 4_000_000) throw Error("Choose a PNG under 4 MB.");
@@ -832,6 +836,7 @@ function FrameTester() {
           const c = colors[v]!;
           for (let k = 0; k < 3; k++) pixels.data[4 * p + k] = 0.4 * pixels.data[4 * p + k] + 0.6 * c[k];
         });
+        setCounts({ a, b, shared: both });
         ctx.putImageData(pixels, 0, 0);
         setStatus(
           `${a && b ? (both ? "Both models flag overlapping regions." : "Spatial disagreement: both models flag different regions.") : a || b ? "Single-model flag." : "No optical signal flagged."} A: ${a} pixels. B: ${b} pixels. Shared: ${both}. Research review only.`,
@@ -879,6 +884,7 @@ function FrameTester() {
           {status}
         </p>
       )}
+      {counts && <EvidenceChat counts={counts} />}
       <canvas ref={canvas} width={720} height={480} hidden={!shown} className="mt-3 h-auto w-full max-w-[720px] rounded-lg" />
       <p className="mt-2 text-xs text-muted">
         Blue marks A only, coral B only, green both. The sample comes from training for this

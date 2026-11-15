@@ -33,6 +33,7 @@ from falmex.ai import (
 from falmex.ai.providers import LLMError, LLMProvider
 from falmex.analysis.base import available_analyzers
 from falmex.engine import DiscoveryConfig, run_discovery
+from falmex.evidence_chat import chat_router
 from falmex.findings import (
     DEFAULT_WEIGHTS,
     Finding,
@@ -228,6 +229,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         app.state.store.close()
 
     app = FastAPI(title="Falmex API", version=__version__, lifespan=lifespan)
+    app.include_router(chat_router())
     app.add_middleware(
         CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"],
         allow_headers=["*"],
