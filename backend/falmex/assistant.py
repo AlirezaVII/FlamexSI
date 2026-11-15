@@ -13,6 +13,7 @@ reported as invalid and removed from the source list.
 """
 
 import json
+import os
 import re
 from collections import defaultdict, deque
 from functools import lru_cache
@@ -156,6 +157,7 @@ def pick(question: str, history: list[Turn], cards: list[dict]) -> list[dict]:
     return chosen[:MAX_CARDS]
 
 
+PLAN_MODEL = os.environ.get("FALMEX_PLAN_MODEL", "gemini-flash-lite-latest")
 PLAN = """You choose tools for a research assistant about NASA microgravity combustion data.
 Act as a careful data scientist. When the question is about a relationship, a difference or
 whether one condition affects another, test it with correlate (add a control when another
@@ -171,12 +173,15 @@ def plan(provider, question: str) -> list[dict]:
     """Gemini picks the tools; without Gemini (or if it fails) a keyword plan is used."""
     chosen = None
     if provider.name == "gemini":
-        try:
-            out = provider.generate_json(PLAN, json.dumps({"question": question},
-                                                          ensure_ascii=False))
-            chosen = out.get("tools") if isinstance(out, dict) else None
-        except Exception:
-            chosen = None
+        ask = json.dumps({"question": question}, ensure_ascii=False)
+        for model in (PLAN_MODEL, None):  # the fast model first; the main model if it fails
+            try:
+                out = provider.generate_json(PLAN, ask, model=model)
+                chosen = out.get("tools") if isinstance(out, dict) else None
+            except Exception:
+                chosen = None
+            if isinstance(chosen, list):
+                break
     if not isinstance(chosen, list):
         chosen = tools.keyword_plan(question)
     ok = [t for t in chosen if isinstance(t, dict) and t.get("name") in tools.TOOLS]

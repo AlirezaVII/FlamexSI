@@ -12,7 +12,7 @@ import {
   SyntheticBanner,
 } from "@/components/ui";
 import { api, fmt } from "@/lib/api";
-import type { FootageAnalysis, MediaItem } from "@/lib/types";
+import type { FootageAnalysis, FootageComparison, FootageDetector, MediaItem } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
 const input =
@@ -82,8 +82,9 @@ export default function FootagePage() {
         Turns flame video or images into numbers, frame by frame: the flame
         outline&apos;s circularity Ψ (a proxy for sphericity), its equivalent
         radius and growth rate dR/dt, the radius when it went out, and how much
-        of it looks blue versus soot-like yellow-orange. The colour measure is a
-        chromatic proxy from an uncalibrated camera, not radiometry.
+        of it looks blue versus soot-like yellow-orange. Choose how the flame is found
+        (OpenCV by default) or compare the methods on the same footage. The colour measure
+        is a chromatic proxy from an uncalibrated camera, not radiometry.
       </PageHeader>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
@@ -178,6 +179,14 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [fps, setFps] = useState("");
   const [mmPerPx, setMmPerPx] = useState("");
+  const [detectors, setDetectors] = useState<FootageDetector[]>([]);
+  const [detector, setDetector] = useState("opencv");
+  const [comparison, setComparison] = useState<FootageComparison | null>(null);
+  const [comparing, setComparing] = useState(false);
+
+  useEffect(() => {
+    api.meta().then((m) => setDetectors(m.footage_detectors ?? [])).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!item.analyzed) return;
@@ -185,6 +194,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
       .mediaAnalysis(id)
       .then((a) => {
         setAnalysis(a);
+        if (a.detector) setDetector(a.detector);
         if (a.fps_source === "override" && a.fps) setFps(String(a.fps));
         if (a.mm_per_px) setMmPerPx(String(a.mm_per_px));
       })
@@ -200,6 +210,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
         await api.analyzeMedia(id, {
           fps: fps ? Number(fps) : null,
           mm_per_px: mmPerPx ? Number(mmPerPx) : null,
+          detector,
         }),
       );
       onDone();
@@ -210,18 +221,63 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
     }
   }
 
+  async function compare() {
+    setComparing(true);
+    setError(null);
+    try {
+      setComparison(await api.compareMedia(id, {
+        fps: fps ? Number(fps) : null,
+        mm_per_px: mmPerPx ? Number(mmPerPx) : null,
+      }));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setComparing(false);
+    }
+  }
+
   const s = analysis?.summary;
+  const usable = detectors.filter((d) => !(d.video_only && item.kind === "image"));
+  const chosen = detectors.find((d) => d.id === detector);
   return (
     <div className="space-y-4">
       {item.source.synthetic && <SyntheticBanner />}
       <Card
         title={item.source.filename}
         action={
-          <Button onClick={run} disabled={busy}>
-            {busy ? "Analyzing…" : analysis ? "Re-analyze" : "Analyze"}
-          </Button>
+          <span className="flex flex-wrap gap-2">
+            <Button variant="ghost" onClick={compare} disabled={busy || comparing}>
+              {comparing ? "Comparing…" : "Compare methods"}
+            </Button>
+            <Button onClick={run} disabled={busy || comparing}>
+              {busy ? "Analyzing…" : analysis ? "Re-analyze" : "Analyze"}
+            </Button>
+          </span>
         }
       >
+        {usable.length > 0 && (
+          <fieldset className="mb-4">
+            <legend className="mb-1.5 text-xs text-muted">How to find the flame</legend>
+            <div className="flex flex-wrap gap-2">
+              {usable.map((d) => (
+                <label key={d.id}
+                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs transition ${
+                    detector === d.id ? "border-accent bg-accent/10 text-ink" : "border-line text-ink-2 hover:text-ink"}`}>
+                  <input type="radio" name={`det-${id}`} value={d.id} checked={detector === d.id}
+                    onChange={() => setDetector(d.id)} className="sr-only" />
+                  {d.label}
+                </label>
+              ))}
+            </div>
+            {chosen && <p className="mt-2 text-xs text-muted">{chosen.note}</p>}
+            {item.kind === "image" && (
+              <p className="mt-1 text-xs text-ink-2">
+                This is a single image. A video of the burn gives more reliable results: the
+                scene without the flame can then be learned from the other frames.
+              </p>
+            )}
+          </fieldset>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
             <span className="mb-1 block text-xs text-muted">
@@ -251,9 +307,11 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
             />
           </label>
         </div>
-        {busy && (
+        {(busy || comparing) && (
           <div className="mt-3">
-            <LoadingLabel>Measuring every frame…</LoadingLabel>
+            <LoadingLabel>
+              {comparing ? "Running every method on the same footage…" : "Measuring every frame…"}
+            </LoadingLabel>
           </div>
         )}
         {error && (
@@ -263,6 +321,8 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
         )}
       </Card>
 
+      {comparison && <CompareCard c={comparison} detectors={detectors} />}
+
       {loading ? (
         <Card>
           <ListSkeleton rows={3} />
@@ -271,7 +331,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
         analysis &&
         s && (
           <>
-            <Card title="Flame overlay">
+            <Card title={`Flame overlay · ${detectors.find((d) => d.id === (analysis.detector ?? "classic"))?.label ?? "Classic brightness threshold"}`}>
               <FlameOverlay sourceId={id} analysis={analysis} />
             </Card>
             <Card title="Measurements">
@@ -512,6 +572,75 @@ function AttachCard({
         </div>
       )}
       {msg && <p className="mt-2 text-sm text-ink-2">{msg}</p>}
+    </Card>
+  );
+}
+
+const COLORS: Record<string, string> = { opencv: "#4f7cff", classic: "#ff8a3d", v6: "#22a06b" };
+
+/** Every detector on the same footage: their numbers side by side and their radius curves. */
+function CompareCard({ c, detectors }: { c: FootageComparison; detectors: FootageDetector[] }) {
+  const entries = Object.entries(c.detectors);
+  const name = (id: string) => detectors.find((d) => d.id === id)?.label ?? id;
+  const all = entries.flatMap(([, d]) => d.radius.filter((p) => p[1] != null)) as [number, number][];
+  const x0 = Math.min(...all.map((p) => p[0]), 0);
+  const x1 = Math.max(...all.map((p) => p[0]), 1);
+  const y1 = Math.max(...all.map((p) => p[1]), 1);
+  const X = (v: number) => 44 + ((v - x0) / (x1 - x0 || 1)) * 530;
+  const Y = (v: number) => 170 - (v / y1) * 150;
+  const rows: [string, (s: FootageComparison["detectors"][string]["summary"]) => string][] = [
+    ["Flame frames", (s) => `${s.flame_frames} / ${s.frames}`],
+    ["Max radius", (s) => (s.max_radius != null ? `${fmt(s.max_radius, 3)} ${s.length_unit}` : "—")],
+    ["Growth rate", (s) => (s.growth_rate != null ? `${fmt(s.growth_rate, 3)} ${s.growth_rate_unit}` : "—")],
+    ["Growth fit R²", (s) => fmt(s.growth_fit_r2 ?? null, 3)],
+    ["Went out", (s) => (s.extinguished_in_clip
+      ? `yes${s.extinction_time_s != null ? ` at ${fmt(s.extinction_time_s, 3)} s` : ""}, last radius ${fmt(s.extinction_radius ?? null, 3)} ${s.length_unit}`
+      : "no")],
+    ["Circularity Ψ", (s) => fmt(s.circularity_median ?? null, 3)],
+  ];
+  return (
+    <Card title="Methods compared on this footage">
+      <div className="overflow-x-auto" data-lenis-prevent>
+        <table className="w-full min-w-[30rem] text-left text-sm tabular-nums">
+          <thead>
+            <tr className="border-b border-line text-xs text-muted">
+              <th className="py-1.5 pr-3 font-medium">Measure</th>
+              {entries.map(([id]) => (
+                <th key={id} className="py-1.5 pr-3 font-medium">
+                  <span style={{ color: COLORS[id] }}>●</span> {name(id)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([label, f]) => (
+              <tr key={label} className="border-b border-line/60">
+                <td className="py-1.5 pr-3 text-ink-2">{label}</td>
+                {entries.map(([id, d]) => <td key={id} className="py-1.5 pr-3 text-ink">{f(d.summary)}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <svg viewBox="0 0 600 196" className="mt-4 w-full" role="img" aria-label="Flame radius over time for each method">
+        {[0, 0.5, 1].map((k) => (
+          <g key={k}>
+            <line x1={44} x2={574} y1={Y(y1 * k)} y2={Y(y1 * k)} stroke="var(--line)" />
+            <text x={38} y={Y(y1 * k) + 3} fontSize={10} textAnchor="end" fill="var(--muted)">{fmt(y1 * k, 3)}</text>
+          </g>
+        ))}
+        {entries.map(([id, d]) => (
+          <polyline key={id} fill="none" stroke={COLORS[id] ?? "var(--accent)"} strokeWidth={2}
+            points={d.radius.filter((p) => p[1] != null).map((p) => `${X(p[0]).toFixed(1)},${Y(p[1] as number).toFixed(1)}`).join(" ")} />
+        ))}
+        <text x={309} y={192} fontSize={11} textAnchor="middle" fill="var(--ink-2)">
+          {c.x === "time_s" ? "time (s)" : "frame"} · equivalent radius (px)
+        </text>
+      </svg>
+      <p className="mt-2 text-xs text-muted">
+        Same footage, same measurements; only the way the flame is found differs. Where the
+        curves disagree, open the overlay with each method to see why.
+      </p>
     </Card>
   );
 }

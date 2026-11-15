@@ -37,6 +37,24 @@ SOOT_HUES = ((0, 35), (165, 180))  # red, orange, yellow
 VIDEO_EXT = {".mp4", ".avi", ".mov"}
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
+DETECTORS = ("opencv", "classic")
+DETECTOR_INFO = {
+    "opencv": {"label": "OpenCV (recommended)",
+               "note": "Background subtraction + hysteresis, no training. On the 24 reserved "
+                       "BASS-II frames it overlaps reviewer A by 53% (leave-one-video-out). "
+                       "Video works best: a single image has no background to compare with."},
+    "classic": {"label": "Classic brightness threshold",
+                "note": "One Otsu threshold on brightness for the whole clip. Fast and simple; "
+                        "bright scenes, LEDs and screens confuse it."},
+}
+# OpenCV detector (bass-cv/scripts/opencv_flame_v3.py, colour-free variant for new footage):
+# a pixel seeds the flame when it is bright AND changed from the scene's background, any
+# colour (microgravity flames are often blue); saturated warm points also seed. Connected,
+# dimmer, changed pixels around a seed are added (hysteresis). Settings chosen once on the 24
+# reserved BASS-II frames (leave-one-video-out pixel IoU: reviewer A 0.53, reviewer B 0.31).
+CV_SEED, CV_LOW, CV_CHANGE, CV_MIN_AREA = 230, 60, 180, 50
+BG_FRAMES = 40  # frames sampled across a video for its median background
+
 
 @dataclass
 class Calibration:
@@ -83,7 +101,36 @@ def _threshold(frames: list[np.ndarray]) -> float:
     return max(float(t), 40.0)
 
 
-def _not_a_flame(v: np.ndarray, mask: np.ndarray, c, area: float, thresh: float) -> str | None:
+def background(frames: list[np.ndarray]) -> np.ndarray:
+    """The scene without the flame. Video: per-pixel median of frames spread through it, so
+    static handrails, screens and LEDs cancel out. A single image has no other frames: a wide
+    median blur stands in, keeping only small, bright, local structure as 'changed'."""
+    if len(frames) >= 3:
+        pick = np.linspace(0, len(frames) - 1, min(BG_FRAMES, len(frames))).astype(int)
+        return np.median(np.stack([frames[i] for i in pick]), axis=0).astype(np.int16)
+    img = frames[0]
+    h, w = img.shape[:2]
+    small = cv2.resize(img, (max(8, w // 4), max(8, h // 4)), interpolation=cv2.INTER_AREA)
+    k = min(255, max(3, (min(small.shape[:2]) // 2) | 1))  # wider than any plausible flame
+    blur = cv2.medianBlur(small, k)
+    return cv2.resize(blur, (w, h), interpolation=cv2.INTER_LINEAR).astype(np.int16)
+
+
+def opencv_mask(frame: np.ndarray, bg: np.ndarray) -> np.ndarray:
+    im = frame.astype(np.int16)
+    v = im.max(axis=2)
+    diff = np.abs(im - bg).max(axis=2)
+    warm = im[..., 2] - im[..., 0]
+    low = ((v >= CV_LOW) & (diff >= CV_CHANGE * 0.5)).astype(np.uint8)
+    seed = ((v >= CV_SEED) & (diff >= CV_CHANGE)) | ((v >= 250) & (warm >= 0))
+    k, lab, st, _ = cv2.connectedComponentsWithStats(low, 8)
+    ids = [i for i in np.unique(lab[seed & (low > 0)]) if i > 0
+           and st[i, cv2.CC_STAT_AREA] >= CV_MIN_AREA]
+    return np.isin(lab, ids).astype(np.uint8)
+
+
+def _not_a_flame(v: np.ndarray, mask: np.ndarray, c, area: float, thresh: float,
+                 check_background: bool = True) -> str | None:
     """Flames are imaged as a luminous region on a darker scene. Screenshots, slides and
     daylight photos are bright almost everywhere, and thresholding them outlines the page."""
     h, w = v.shape
@@ -96,17 +143,22 @@ def _not_a_flame(v: np.ndarray, mask: np.ndarray, c, area: float, thresh: float)
     if bw * bh and area / (bw * bh) > MAX_EXTENT:
         return "the bright region is a filled rectangle (a button, panel or screen), not a flame"
     outside = v[mask == 0]
-    if outside.size and float(np.median(outside)) > BACKGROUND_SHARE * thresh:
+    if check_background and outside.size and \
+            float(np.median(outside)) > BACKGROUND_SHARE * thresh:
         return "the background is nearly as bright as the brightest region"
     return None
 
 
-def _measure(frame: np.ndarray, thresh: float) -> dict:
+def _measure(frame: np.ndarray, thresh: float, mask: np.ndarray | None = None) -> dict:
+    """Metrics of the largest flame region. `mask` comes from a detector; without one the
+    classic brightness threshold is used (and the bright-background check applies)."""
     h, w = frame.shape[:2]
     v = frame.max(axis=2)
-    mask = (v > thresh).astype(np.uint8)
+    classic = mask is None
+    if classic:
+        mask = (v > thresh).astype(np.uint8)
     kernel = np.ones((3, 3), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     contours = [c for c in contours if cv2.contourArea(c) >= MIN_AREA_SHARE * h * w]
@@ -114,7 +166,7 @@ def _measure(frame: np.ndarray, thresh: float) -> dict:
         return {"present": False}
     c = max(contours, key=cv2.contourArea)
     area = float(cv2.contourArea(c))
-    reason = _not_a_flame(v, mask, c, area, thresh)
+    reason = _not_a_flame(v, mask, c, area, thresh, check_background=classic)
     if reason:
         return {"present": False, "rejected": reason}
     # a slightly simplified outline: the raw pixel staircase overstates the perimeter
@@ -176,10 +228,14 @@ def _measure(frame: np.ndarray, thresh: float) -> dict:
     }
 
 
-def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None) -> dict:
+def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
+            detector: str = "opencv") -> dict:
     """Measure every analyzed frame, save overlay frames as JPEG, return the analysis."""
+    if detector not in DETECTORS:
+        raise ValueError(f"Unknown detector '{detector}'")
     cal = calibration or Calibration()
     sampled, file_fps, n_total = _frames(path)
+    bg = background([f for _, f in sampled]) if detector == "opencv" else None
     fps = cal.fps or file_fps
     thresh = _threshold([f for _, f in sampled])
     h, w = sampled[0][1].shape[:2]
@@ -192,7 +248,7 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None) -
 
     frames, saved = [], 0
     for k, (idx, img) in enumerate(sampled):
-        m = _measure(img, thresh)
+        m = _measure(img, thresh, opencv_mask(img, bg) if bg is not None else None)
         m.update(index=idx, time_s=round(idx / fps, 6) if fps else None)
         if k in keep:
             name = f"frame_{saved:04d}.jpg"
@@ -210,6 +266,7 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None) -
         "fps_source": "override" if cal.fps else ("file" if file_fps else None),
         "mm_per_px": cal.mm_per_px,
         "threshold": thresh,
+        "detector": detector,
         "summary": summarize(frames, fps, cal.mm_per_px),
         "frames": frames,
         "method": __doc__.strip(),

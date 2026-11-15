@@ -11,6 +11,7 @@ export interface Variable {
 }
 
 export interface Meta {
+  footage_detectors?: FootageDetector[];
   variables: Variable[];
   analyzers: { name: string; description: string }[];
   validators: { name: string; description: string }[];
@@ -686,6 +687,19 @@ export interface FootageSummary {
   growth_frames?: number;
 }
 
+export interface FootageDetector {
+  id: string;
+  label: string;
+  note: string;
+  video_only?: boolean;
+}
+
+export interface FootageComparison {
+  source_id: string;
+  x: "time_s" | "frame";
+  detectors: Record<string, { summary: FootageSummary; radius: [number, number | null][] }>;
+}
+
 export interface FootageAnalysis {
   frame_size: [number, number];
   overlay_scale: number;
@@ -697,6 +711,7 @@ export interface FootageAnalysis {
   summary: FootageSummary;
   frames: FootageFrame[];
   method: string;
+  detector?: string;
   synthetic: boolean;
   source: Source & { synthetic?: boolean | null };
   analyzed_at: string;

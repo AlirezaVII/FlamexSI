@@ -19,8 +19,9 @@ class LLMProvider(ABC):
     model: str = ""
 
     @abstractmethod
-    def generate_json(self, system: str, prompt: str) -> dict:
-        """Return the model's answer parsed as a JSON object."""
+    def generate_json(self, system: str, prompt: str, model: str | None = None) -> dict:
+        """Return the model's answer parsed as a JSON object (optionally from another,
+        e.g. faster, model of the same provider)."""
 
     def stream_text(self, system: str, prompt: str) -> Iterator[str]:
         """Yield the answer as it is written. Default: one piece, not streamed."""
@@ -55,7 +56,7 @@ class GeminiProvider(LLMProvider):
         code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
         return code == 429 or "resource_exhausted" in text or "quota" in text or "429" in text
 
-    def generate_json(self, system: str, prompt: str) -> dict:
+    def generate_json(self, system: str, prompt: str, model: str | None = None) -> dict:
         from google.genai import types
 
         config = types.GenerateContentConfig(
@@ -69,7 +70,7 @@ class GeminiProvider(LLMProvider):
             index = (self._active + step) % len(self._clients)
             try:
                 response = self._clients[index].models.generate_content(
-                    model=self.model, contents=prompt, config=config
+                    model=model or self.model, contents=prompt, config=config
                 )
                 self._active = index
                 return json.loads(response.text)
@@ -124,7 +125,7 @@ class MockProvider(LLMProvider):
         yield from ["Template answer (mock provider) ", "built only from the evidence ",
                     "cards [S1]."]
 
-    def generate_json(self, system: str, prompt: str) -> dict:
+    def generate_json(self, system: str, prompt: str, model: str | None = None) -> dict:
         facts = json.loads(prompt.split("FACTS:", 1)[1])
         if facts.get("task") == "search":
             base = f"{facts['condition']} {facts['outcome']}".replace("_", " ")

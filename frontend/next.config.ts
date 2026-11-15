@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   // 30 s proxy timeout cut it off
   experimental: { proxyClientMaxBodySize: "100mb", proxyTimeout: 300_000 },
   devIndicators: false,
+  // baked in at build time so server route handlers (e.g. the streaming assistant route)
+  // know the backend on hosts where only build-time variables are set (Vercel)
+  env: { FALMEX_BACKEND_URL: backend ?? "" },
   // planet maps rarely change: let browsers keep them for a week (revalidate in background)
   async headers() {
     return [

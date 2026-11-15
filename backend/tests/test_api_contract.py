@@ -495,3 +495,61 @@ def test_delete_media(client, settings):
     assert client.delete(f"/api/media/{table}").status_code == 404  # tables are not footage
     for bad in ["..", "nope", "a" * 300]:
         _ok_json_error(client.delete(f"/api/media/{bad}"))
+
+
+@pytest.mark.parametrize("detector", ["opencv", "classic"])
+def test_footage_detectors_find_the_synthetic_flame(client, detector):
+    sid = client.post("/api/media/synthetic").json()["source"]["source_id"]
+    res = client.post(f"/api/media/{sid}/analyze", json={"detector": detector})
+    assert res.status_code == 200, res.text
+    s = res.json()["summary"]
+    assert res.json()["detector"] == detector
+    assert s["flame_frames"] >= 55, "the synthetic flame is lit in 62 of 72 frames"
+    assert 30 < s["growth_rate"] < 55, "true growth is 40 px/s"
+    assert s["extinguished_in_clip"] is True
+
+
+def test_footage_detector_choice_is_validated(client):
+    sid = client.post("/api/media/synthetic").json()["source"]["source_id"]
+    assert client.post(f"/api/media/{sid}/analyze", json={"detector": "magic"}).status_code == 422
+
+
+def test_compare_runs_every_detector(client):
+    sid = client.post("/api/media/synthetic").json()["source"]["source_id"]
+    res = client.post(f"/api/media/{sid}/compare", json={})
+    assert res.status_code == 200, res.text
+    det = res.json()["detectors"]
+    assert set(det) == {"opencv", "classic"}
+    for d in det.values():
+        assert d["summary"]["flame_frames"] >= 55 and len(d["radius"]) == 72
+    assert client.get(f"/api/media/{sid}/analysis").status_code == 404, "compare saves nothing"
+    assert client.post("/api/media/nope/compare", json={}).status_code == 404
+
+
+def test_opencv_detector_on_single_images(tmp_path):
+    import cv2
+    import numpy as np
+
+    from falmex import vision
+
+    blue = np.zeros((300, 400, 3), np.uint8)
+    cv2.circle(blue, (200, 150), 40, (255, 140, 40), -1)  # microgravity flames are blue
+    cv2.imwrite(str(tmp_path / "blue.png"), blue)
+    r = vision.analyze(tmp_path / "blue.png", tmp_path / "o1")["frames"][0]
+    assert r["present"] and abs(r["radius_px"] - 40) < 3
+    page = np.full((300, 400, 3), 245, np.uint8)
+    cv2.imwrite(str(tmp_path / "page.png"), page)
+    assert vision.analyze(tmp_path / "page.png", tmp_path / "o2")["frames"][0]["present"] is False
+
+
+def test_deleting_a_dataset_removes_ideas_that_rest_only_on_its_insights(client, finding):
+    did, fid = finding
+    iid = client.post(f"/api/findings/{fid}/insight", json=VALID_INSIGHT).json()["insight_id"]
+    kind = client.get("/api/meta").json()["innovation_kinds"][0]
+    res = client.post("/api/innovations", json={
+        "title": "Orphan check", "kind": kind, "enables": "a test idea", "insight_ids": [iid],
+        "proposed_by": "QA"})
+    nid = res.json()["innovation_id"]
+    assert any(i["innovation_id"] == nid for i in client.get("/api/innovations").json())
+    assert client.delete(f"/api/datasets/{did}").status_code == 204
+    assert not any(i["innovation_id"] == nid for i in client.get("/api/innovations").json())

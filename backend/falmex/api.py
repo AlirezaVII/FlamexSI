@@ -7,6 +7,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from functools import lru_cache
+from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -135,6 +136,7 @@ class InnovationUpdate(BaseModel):
 class AnalyzeMediaRequest(BaseModel):
     fps: float | None = Field(None, gt=0, le=1_000_000)  # overrides the file's frame rate
     mm_per_px: float | None = Field(None, gt=0)  # calibration; lengths stay in px without it
+    detector: Literal["opencv", "classic"] = "opencv"  # how the flame is found in each frame
 
 
 class AttachMediaRequest(BaseModel):
@@ -302,6 +304,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             "safety_areas": [a.value for a in SafetyArea],
             "innovation_kinds": [k.value for k in InnovationKind],
             "innovation_stages": [s.value for s in Stage],
+            "footage_detectors": [{"id": k, **v} for k, v in vision.DETECTOR_INFO.items()],
         }
 
     # ---- datasets -----------------------------------------------------------
@@ -755,6 +758,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             result = vision.analyze(
                 store(request).raw_path(source), store(request).media_dir(source_id),
                 vision.Calibration(fps=body.fps, mm_per_px=body.mm_per_px),
+                detector=body.detector,
             )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
@@ -762,6 +766,32 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                       synthetic=bool(source.synthetic), analyzed_at=datetime.now(UTC))
         store(request).save_media_analysis(source_id, result)
         return result
+
+    @app.post("/api/media/{source_id}/compare")
+    def compare_media(request: Request, source_id: str, body: AnalyzeMediaRequest | None = None):
+        """Run every detector on the same footage: summaries and radius curves side by side.
+        Nothing is saved; the stored analysis keeps the detector chosen on the page."""
+        import tempfile
+        from pathlib import Path
+
+        body = body or AnalyzeMediaRequest()
+        source = media_or_404(request, source_id)
+        out = {}
+        for det in vision.DETECTORS:
+            with tempfile.TemporaryDirectory() as tmp:
+                try:
+                    r = vision.analyze(store(request).raw_path(source), Path(tmp),
+                                       vision.Calibration(fps=body.fps, mm_per_px=body.mm_per_px),
+                                       detector=det)
+                except ValueError as exc:
+                    raise HTTPException(422, str(exc)) from exc
+            out[det] = {"summary": r["summary"],
+                        "radius": [[f.get("time_s") if f.get("time_s") is not None else f["index"],
+                                    f.get("radius_px") if f.get("present") else None]
+                                   for f in r["frames"]]}
+        return {"source_id": source_id, "detectors": out,
+                "x": "time_s" if any(d["summary"].get("growth_rate_unit") for d in out.values())
+                else "frame"}
 
     @app.get("/api/media/{source_id}/analysis")
     def media_analysis(request: Request, source_id: str):

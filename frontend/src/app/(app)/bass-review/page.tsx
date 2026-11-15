@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { Card, PageHeader } from "@/components/ui";
 import evidence from "@/lib/bass-review.json";
@@ -27,6 +28,14 @@ export default function BassReview() {
       <PageHeader eyebrow="NASA BASS-II · PSI-25" title="Where does the flame appear?">
         Inspect 24 reserved frames from three videos. Reviewers agreed on flame visibility in seven frames and disagreed in seventeen; even the two people overlap only 26% (pixel IoU). A plain OpenCV method, with no training, overlaps reviewer A by 53% and reviewer B by 38%, against 3% for the earlier learned model (v6, kept below for comparison).
       </PageHeader>
+      <Link href="/footage" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/5 px-4 py-3 transition hover:border-accent">
+        <span className="text-sm text-ink-2">
+          <b className="text-ink">Try it on your own footage.</b> Upload a flame video or image: the same
+          OpenCV method finds the flame in every frame and measures its size, growth, shape and colour,
+          and you can compare it with the other methods.
+        </span>
+        <span className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white">Open Footage →</span>
+      </Link>
       <Card title="Frame and mask comparison">
         <div className="mb-4 flex flex-wrap gap-4">
           <label>Frame<select className={selectStyle} value={frame} onChange={e => setFrame(e.target.value)}>

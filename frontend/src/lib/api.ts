@@ -10,6 +10,7 @@ import type {
   FindingChart,
   FlammabilityMap,
   FootageAnalysis,
+  FootageComparison,
   Goals,
   MediaItem,
   ReferenceLimit,
@@ -334,8 +335,10 @@ export const api = {
   },
   analyzeMedia: (
     id: string,
-    body: { fps?: number | null; mm_per_px?: number | null },
+    body: { fps?: number | null; mm_per_px?: number | null; detector?: string },
   ) => request<FootageAnalysis>(`/api/media/${id}/analyze`, json(body)),
+  compareMedia: (id: string, body: { fps?: number | null; mm_per_px?: number | null }) =>
+    request<FootageComparison>(`/api/media/${id}/compare`, json(body)),
   mediaAnalysis: (id: string) =>
     request<FootageAnalysis>(`/api/media/${id}/analysis`),
   mediaFrameUrl: (id: string, name: string) =>

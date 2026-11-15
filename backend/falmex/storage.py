@@ -312,8 +312,19 @@ class Store:
         rec = self.get_dataset(dataset_id)
         if rec is None:
             return False
+        gone = {r["insight_id"] for r in self._fetch(
+            "SELECT insight_id FROM insights WHERE dataset_id = ?", [dataset_id])}
         self._exec("DELETE FROM findings WHERE dataset_id = ?", [dataset_id])
         self._exec("DELETE FROM insights WHERE dataset_id = ?", [dataset_id])
+        # an idea rests on insights: drop the deleted ones from it, and the idea itself when
+        # none of its insights is left (it would stand on nothing)
+        for inn in self.list_innovations() if gone else []:
+            keep = [i for i in inn.get("insight_ids", []) if i not in gone]
+            if not keep:
+                self._exec("DELETE FROM innovations WHERE innovation_id = ?",
+                           [inn["innovation_id"]])
+            elif len(keep) != len(inn.get("insight_ids", [])):
+                self.save_innovation({**inn, "insight_ids": keep})
         self._exec("DELETE FROM datasets WHERE dataset_id = ?", [dataset_id])
         self._parquet(dataset_id).unlink(missing_ok=True)
         still_used = {s for d in self.list_datasets() for s in d.source_ids}
