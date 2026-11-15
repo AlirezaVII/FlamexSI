@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     data_dir: Path = REPO_ROOT / "data"
     schema_path: Path | None = None
 
-    llm_provider: str = "mock"
+    llm_provider: str = "auto"
     gemini_api_key: str | None = Field(
         default=None, validation_alias=AliasChoices("GEMINI_API_KEY", "FALMEX_GEMINI_API_KEY")
     )

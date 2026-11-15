@@ -468,6 +468,26 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         findings.sort(key=lambda f: f.score, reverse=True)
         return findings[:limit]
 
+    @app.post("/api/flight-evidence/{finding_id}/interpret")
+    def interpret_flight_evidence(request: Request, finding_id: str):
+        # The packaged flight results remain available in synthetic-only workspaces.
+        import json
+        from pathlib import Path
+
+        folder = Path(__file__).resolve().parent / "review_artifacts" / "review"
+        source = folder / "planner_facts.json"
+        facts = json.loads(source.read_text(encoding="utf-8"))
+        if finding_id not in facts:
+            raise HTTPException(404, "Unknown flight finding")
+        provider = request.app.state.provider
+        if provider.name != "gemini":
+            raise HTTPException(503, "Gemini is not configured on this server")
+        try:
+            report = interpret_finding(Finding(**facts[finding_id]), provider)
+        except LLMError as exc:
+            raise HTTPException(502, "Gemini could not produce a report") from exc
+        return {"interpretation": report}
+
     @app.get("/api/findings/{finding_id}")
     def get_finding(request: Request, finding_id: str):
         return finding_or_404(request, finding_id)

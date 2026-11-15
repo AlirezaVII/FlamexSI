@@ -91,8 +91,9 @@ class MockProvider(LLMProvider):
 
 
 def get_provider(settings: Settings) -> LLMProvider:
-    if settings.llm_provider == "gemini":
+    if settings.llm_provider in {"auto", "gemini"}:
         if settings.gemini_api_key:
             return GeminiProvider(settings.gemini_api_key, settings.gemini_model)
-        log.warning("FALMEX_LLM_PROVIDER=gemini but GEMINI_API_KEY is missing; using mock.")
+        if settings.llm_provider == "gemini":
+            log.warning("FALMEX_LLM_PROVIDER=gemini but GEMINI_API_KEY is missing; using mock.")
     return MockProvider()

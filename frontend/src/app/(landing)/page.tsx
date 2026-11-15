@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const metadata: Metadata = {
   title: "Falmex — Findings you can verify",
   description:
-    "Falmex is built to find associations in NASA microgravity combustion data, re-test each one on experiments it never saw, and show the evidence behind it. Currently tested on synthetic data.",
+    "Falmex is built to find associations in NASA microgravity combustion data, re-test each one on experiments it never saw, and show the evidence behind it. Explore measured FLEX results and BASS-II image evidence.",
 };
 
 // Deterministic star layers (rendered on the server; moved by parallax on the client).
@@ -141,16 +141,14 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="lead">
-                Falmex is built to search NASA combustion data for patterns,
-                re-test every one on experiments it never saw, and show the
-                evidence behind it — so fire-safety researchers can trust what
-                they read. Today it runs on synthetic test data; NASA&apos;s
-                challenge data comes next.
+                Compare oxygen conditions using 274 FLEX experiments, inspect competing
+                flame annotations on BASS-II footage, and generate a scientific report
+                that records where each measurement stops supporting a conclusion.
               </p>
               <div className="cta">
-                <Link className="btn primary" href="/relationships">
-                  Start discovering →
-                </Link>
+                <a className="btn primary" href="/flex-comparison.html">
+                  Explore the flight evidence →
+                </a>
                 <a className="btn ghost" href="#how">
                   How it works
                 </a>
@@ -285,8 +283,7 @@ export default function Landing() {
                 className="sub"
                 style={{ marginTop: 14, fontSize: 14, color: "var(--l-muted)" }}
               >
-                Shown on synthetic test data, built with deliberate traps, until
-                NASA&apos;s challenge data is released.
+                This controlled example uses synthetic data with a known confounder.
               </p>
             </div>
             <TrustCard />
@@ -300,9 +297,7 @@ export default function Landing() {
           </h2>
           <p className="sub">
             So that this page never claims more than the program can do.
-            Everything in the first column runs and is covered by automated
-            tests — on synthetic test data, because NASA&apos;s challenge data
-            has not been released yet.
+            The flight evidence section uses NASA FLEX measurements and BASS-II frames. Synthetic examples exercise the discovery workflow.
           </p>
           <div className="statusgrid">
             <div className="card" data-reveal>
@@ -354,14 +349,12 @@ export default function Landing() {
               </h3>
               <ul>
                 <li>
-                  NASA&apos;s challenge data — not released yet; nothing here is
-                  a NASA result
+                  Independent evaluation on a new flight campaign
                 </li>
-                <li>Images and video are stored but not analysed</li>
+                <li>Operational flame or smoke alarms</li>
                 <li>Non-linear and multi-variable (interaction) analyses</li>
                 <li>
-                  Expert-reviewed insights — none exist yet; they can only come
-                  from real data
+                  Expert-reviewed insights — none exist yet; expert sign-off is separate from internal evaluation
                 </li>
               </ul>
             </div>
@@ -421,9 +414,9 @@ export default function Landing() {
               Let it tell you what to look for.
             </h2>
             <div className="cta" style={{ justifyContent: "center" }}>
-              <Link className="btn primary" href="/relationships">
-                Start discovering →
-              </Link>
+              <a className="btn primary" href="/flex-comparison.html">
+                Explore the flight evidence →
+              </a>
               <Link className="btn ghost" href="/data">
                 Load NASA data
               </Link>
