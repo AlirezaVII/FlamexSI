@@ -10,24 +10,35 @@ from datetime import UTC, datetime
 from falmex.ai.providers import LLMProvider
 from falmex.findings import Finding, Interpretation
 
-SYSTEM = """You help NASA combustion researchers understand results from an analysis engine
-over microgravity combustion experiments. Rules:
-- Use ONLY the facts provided. Never add numbers, experiments or mechanisms that are not there.
-- A correlation is not a cause. Say "is associated with", not "causes".
-- Respect the status: "validated" = replicated on held-out data; "candidate" = not yet
-  confirmed; "rejected" = failed validation (say it is likely a chance pattern);
-  "not_significant" = no evidence.
-- If "synthetic" is true, say clearly that the data is fake test data.
-- Be concise and plain. Researchers must be able to check every sentence against the facts.
+SYSTEM = """You explain results from a statistical analysis engine over microgravity
+combustion experiments to NASA combustion researchers. The engine already did the analysis;
+you only explain what it computed. Rules:
+- Use ONLY the facts provided. Never add numbers, experiments, variables or sources.
+- Describe associations observed in this data ("in these experiments, higher X was associated
+  with lower Y"). Never say or imply that one variable causes, controls, drives or affects
+  another.
+- Do NOT explain physical or chemical mechanisms, and do not cite outside knowledge. A
+  scientific explanation is a later, human step.
+- Respect the status: "validated" = observed in the discovery data AND confirmed on held-out
+  experiments and against random shuffles; "candidate" = not yet confirmed; "rejected" = an
+  initial signal that failed validation (likely chance); "not_significant" = no supported
+  relationship was found by this analysis, which does NOT show there is no effect.
+- Mention how the validation went (discovery vs unseen-data effect, shuffles) and the most
+  important limitations or third-variable checks when they are given.
+- If "synthetic" is true, say clearly that this is synthetic test data, not NASA data.
+- Be concise and plain; every sentence must be checkable against the facts.
 Answer as a JSON object."""
 
 FINDING_TASK = """Explain this finding. Return JSON with keys:
-"summary" (1 sentence), "interpretation" (2-4 sentences: what the statistics mean and how
-strong the evidence is), "safety_insight" (1-2 sentences on possible relevance for spacecraft
-fire safety, phrased as a hypothesis to review), "caveats" (list of short strings)."""
+"summary" (1 sentence: what association was observed, in non-causal words),
+"interpretation" (2-4 sentences: what the statistics and validation results mean and how
+strong the evidence is), "safety_relevance" (1 sentence phrased as an open question an expert
+could investigate for spacecraft fire safety; no claims, no mechanisms), "caveats" (list of
+short strings: limitations, possible third variables, data issues)."""
 
-SUMMARY_TASK = """Summarize these ranked findings for a researcher in 3-5 sentences.
-Return JSON with keys "summary" (string) and "caveats" (list of short strings)."""
+SUMMARY_TASK = """Summarize these ranked findings for a researcher in 3-5 sentences: which
+associations were observed and how well they held up on unseen data. Non-causal wording, no
+mechanisms. Return JSON with keys "summary" (string) and "caveats" (list of short strings)."""
 
 
 def _facts(finding: Finding) -> dict:
@@ -43,11 +54,13 @@ def interpret_finding(finding: Finding, provider: LLMProvider) -> Interpretation
     caveats = list(out.get("caveats") or [])
     if finding.synthetic and not any("synthetic" in c.lower() or "fake" in c.lower()
                                      for c in caveats):
-        caveats.insert(0, "Based on synthetic test data — not a scientific result.")
+        caveats.insert(
+            0, "Synthetic test data — not NASA laboratory data; not a scientific result."
+        )
     return Interpretation(
         summary=str(out.get("summary", "")),
         interpretation=str(out.get("interpretation", "")),
-        safety_insight=str(out.get("safety_insight", "")),
+        safety_relevance=str(out.get("safety_relevance") or out.get("safety_insight") or ""),
         caveats=[str(c) for c in caveats],
         provider=provider.name,
         model=provider.model,

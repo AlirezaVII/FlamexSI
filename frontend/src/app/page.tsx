@@ -5,40 +5,52 @@ import { useEffect, useState } from "react";
 import { StatSkeleton } from "@/components/loading";
 import { Card, ErrorNote, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
+import type { DiscoveryGoal } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
 const SECTIONS = [
   {
     href: "/explorer",
     title: "Explore",
-    text: "Search and filter experiments by oxygen, pressure, flow, material and gravity.",
+    text: "Find and filter experiments by any variable in the data. No conclusions here, just the data.",
   },
   {
     href: "/compare",
     title: "Compare",
-    text: "Put experiments side by side to see how conditions change flame behavior.",
+    text: "See which variables differ between experiments, with repeated measurements and their spread.",
   },
   {
     href: "/relationships",
     title: "Discover",
-    text: "Ask what affects a flame outcome. Every relationship is validated on unseen data.",
+    text: "Pick a goal or explore openly. Associations are found on part of the data and validated on the rest.",
+  },
+  {
+    href: "/findings",
+    title: "Findings",
+    text: "Validated findings, ranked, each with its evidence, uncertainty, limitations and checks.",
   },
   {
     href: "/insights",
     title: "Insights",
-    text: "Ranked, evidence-backed findings with AI explanations for fire safety review.",
+    text: "Findings a researcher reviewed and interpreted. Created by people, never automatically.",
   },
-];
-
-const QUESTIONS = [
-  "What affects flame extinction?",
-  "What controls the burning rate?",
-  "Which conditions make ignition more likely?",
 ];
 
 export default function Home() {
   const { dataset, datasets, error, loading } = useWorkspace();
   const [llm, setLlm] = useState<string | null | undefined>(undefined);
+  const [goals, setGoals] = useState<DiscoveryGoal[]>([]);
+  const datasetId = dataset?.dataset_id;
+
+  useEffect(() => {
+    if (!datasetId) return;
+    api
+      .goals(datasetId)
+      .then((g) =>
+        setGoals(g.goals.filter((x) => x.kind !== "open").slice(0, 3)),
+      )
+      .catch(() => setGoals([]));
+  }, [datasetId]);
 
   useEffect(() => {
     api
@@ -58,26 +70,37 @@ export default function Home() {
         </h1>
         <p className="mt-3 max-w-2xl text-ink-2">
           Decades of flame experiments in microgravity, made searchable,
-          comparable and explainable. Falmex surfaces relationships between
-          experiment conditions and flame behavior, checks whether they hold up
-          on unseen data, and shows the evidence behind every claim.
+          comparable and explainable. Falmex finds statistical associations
+          between experiment conditions and flame behaviour, checks whether they
+          hold up on data it never saw, and shows the evidence behind every
+          finding. Interpreting them scientifically stays with researchers.
         </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {QUESTIONS.map((q) => (
-            <Link
-              key={q}
-              href="/relationships"
-              className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-2 hover:border-accent hover:text-ink"
-            >
-              {q}
-            </Link>
-          ))}
-        </div>
+        {goals.length > 0 && (
+          <div className="mt-6">
+            <p className="mb-2 text-xs text-muted">
+              Example questions, generated from the columns of the current
+              dataset
+              {dataset?.synthetic ? " (synthetic test data)" : ""}. Discovery is
+              not limited to these.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {goals.map((g) => (
+                <Link
+                  key={g.id}
+                  href={`/relationships?goal=${encodeURIComponent(g.id)}`}
+                  className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-2 hover:border-accent hover:text-ink"
+                >
+                  {g.question}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {error && <ErrorNote message={error} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {SECTIONS.map((s) => (
           <Link
             key={s.href}

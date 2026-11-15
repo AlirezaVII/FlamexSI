@@ -85,8 +85,13 @@ class HoldoutReplication(Validator):
             return ValidationResult(
                 self.name, None, "Not enough held-out data to test this relationship."
             )
-        metrics = {"test_effect": result.effect_size, "test_p_value": result.p_value,
-                   "test_n": result.n}
+        base = abs(discovered.effect_size)
+        retained = abs(result.effect_size) / base if base else 0.0
+        metrics = {"discovery_effect": round(discovered.effect_size, 4),
+                   "test_effect": round(result.effect_size, 4),
+                   "effect_change": round(result.effect_size - discovered.effect_size, 4),
+                   "retained_share": round(retained, 3),
+                   "test_p_value": result.p_value, "test_n": result.n}
         same_direction = (not analyzer.signed) or result.direction == discovered.direction
         if not same_direction:
             return ValidationResult(
@@ -94,7 +99,10 @@ class HoldoutReplication(Validator):
             )
         if result.p_value < self.alpha:
             return ValidationResult(
-                self.name, True, f"Replicates on {result.n} held-out rows.", metrics
+                self.name, True,
+                f"Confirmed on {result.n} held-out rows the discovery step never saw "
+                f"(effect {discovered.effect_size:.2f} in discovery, {result.effect_size:.2f} "
+                "on unseen data).", metrics,
             )
         return ValidationResult(
             self.name, False, "Same direction, but not significant on held-out data.", metrics
@@ -124,10 +132,12 @@ class PermutationTest(Validator):
         if valid == 0:
             return ValidationResult(self.name, None, "Permutation test could not run.")
         p = (hits + 1) / (valid + 1)
-        metrics = {"permutation_p_value": p, "permutations": valid}
+        metrics = {"permutation_p_value": round(p, 4), "permutations": valid,
+                   "shuffles_as_strong": int(hits)}
         if p < self.alpha:
             return ValidationResult(
-                self.name, True, f"Stronger than {valid - hits}/{valid} random shuffles.", metrics
+                self.name, True,
+                f"Stronger than {valid - hits} of {valid} random shuffles of the outcome.", metrics
             )
         return ValidationResult(
             self.name, False, "Random shuffles often produce an effect this strong.", metrics

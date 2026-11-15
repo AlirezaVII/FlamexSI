@@ -68,12 +68,12 @@ class MockProvider(LLMProvider):
                 "caveats": ["Template summary (mock provider), not AI-generated."],
             }
         return {
-            "summary": f"{facts['headline']} (status: {facts['status']}).",
+            "summary": f"In this data: {facts['headline']} (status: {facts['status']}).",
             "interpretation": (
                 f"Measured with {facts['effect_metric']} = {facts['effect_size']} over "
                 f"{facts['evidence']['n_experiments']} experiments."
             ),
-            "safety_insight": "Requires expert review before any fire-safety conclusion.",
+            "safety_relevance": "Open question for expert review before any fire-safety use.",
             "caveats": ["Template interpretation (mock provider), not AI-generated."],
         }
 

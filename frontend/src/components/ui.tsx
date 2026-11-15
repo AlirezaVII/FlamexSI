@@ -83,28 +83,28 @@ const STATUS: Record<
   { label: string; icon: string; color: string; hint: string }
 > = {
   validated: {
-    label: "Validated",
+    label: "Validated finding",
     icon: "✓",
     color: "var(--good)",
-    hint: "Significant, replicated on held-out experiments and beat random shuffles.",
+    hint: "Observed in the discovery data, then confirmed on experiments the engine never saw and against random shuffles. Still a statistical association, not a causal or scientific conclusion.",
   },
   candidate: {
     label: "Candidate",
     icon: "?",
     color: "var(--warning)",
-    hint: "Significant in discovery data, but validation was inconclusive.",
+    hint: "Observed in the discovery data, but validation was inconclusive. A lead, not a validated finding.",
   },
   rejected: {
     label: "Rejected",
     icon: "✕",
     color: "var(--critical)",
-    hint: "Looked significant, but failed validation — likely a chance pattern.",
+    hint: "An initial signal was observed, but it failed validation on unseen data or against random shuffles. Likely a chance pattern.",
   },
   not_significant: {
-    label: "No evidence",
+    label: "No supported relationship",
     icon: "–",
     color: "var(--muted)",
-    hint: "No statistically significant relationship found.",
+    hint: "No supported relationship was found with this analysis and this data. This does not show the variable has no effect.",
   },
 };
 
@@ -135,9 +135,11 @@ export function SyntheticBanner() {
       role="note"
       className="mb-5 rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink-2"
     >
-      <strong className="text-ink">Synthetic test data.</strong> This dataset is
-      fake and only exercises the engine. Nothing shown here is a scientific
-      result.
+      <strong className="text-ink">
+        Synthetic test data — not NASA laboratory data.
+      </strong>{" "}
+      Generated only to test the engine. Nothing shown here is a scientific
+      result, and nothing from it can become an insight.
     </div>
   );
 }

@@ -1,25 +1,42 @@
-"""Discovery engine: data -> candidate relationships -> validation -> ranked findings.
+"""Discovery engine: data -> statistical analysis -> findings -> validation -> evidence.
 
-    split (by experiment)
-      -> every analyzer tests its (condition, outcome) pairs on TRAIN only
+    goal (which outcomes / conditions to examine)
+      -> split by experiment: discovery part + held-out part the analysis never sees
+      -> every analyzer tests its (condition, outcome) pairs on the discovery part only
       -> false-discovery-rate correction across all tests
-      -> significant ones go through every validator (holdout, permutation, ...)
-      -> status + evidence + transparent rank score
+      -> significant ones: every validator (held-out replication, permutation, ...),
+         bootstrap uncertainty, third-variable checks
+      -> status + evidence + limitations + transparent rank score
+
+The AI layer never runs here: it only explains findings after they exist.
 """
 
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+import numpy as np
 import pandas as pd
 
-from falmex.analysis import Analyzer, get_analyzers
-from falmex.findings import Evidence, Finding, SourceRef, Status, Validation, rank_score
+from falmex import deep
+from falmex.analysis import Analyzer, Evaluation, get_analyzers
+from falmex.findings import (
+    STATUS_EXPLANATION,
+    Evidence,
+    Finding,
+    SourceRef,
+    Split,
+    Status,
+    Uncertainty,
+    Validation,
+    rank_score,
+)
 from falmex.pipeline import SOURCE_COL
 from falmex.schema import Schema
 from falmex.validation import Validator, benjamini_hochberg, get_validators, split_by_experiment
 
 MAX_EVIDENCE_IDS = 200
+BOOTSTRAP_RESAMPLES = 200
 
 
 @dataclass
@@ -27,6 +44,9 @@ class DiscoveryConfig:
     analyzers: list[str] | None = None
     validators: list[str] | None = None
     outcomes: list[str] | None = None  # restrict to these outcomes
+    conditions: list[str] | None = None  # restrict to these conditions
+    goal: str = "Open exploration"
+    weights: dict | None = None  # ranking weights, see findings.DEFAULT_WEIGHTS
     test_fraction: float = 0.3
     alpha: float = 0.05
     min_samples: int = 8
@@ -35,14 +55,66 @@ class DiscoveryConfig:
 
 
 def _headline(condition: str, outcome: str, direction: str, details: dict) -> str:
+    """One neutral sentence. Says what was observed, never what causes what."""
     c, o = condition.replace("_", " "), outcome.replace("_", " ")
     if direction == "positive":
         return f"Higher {c} is associated with higher {o}"
     if direction == "negative":
         return f"Higher {c} is associated with lower {o}"
     if "highest" in details:
-        return f"{o.capitalize()} differs by {c} (highest: {details['highest']})"
-    return f"{o.capitalize()} differs by {c}"
+        return f"{o.capitalize()} differs across {c} groups (highest: {details['highest']})"
+    return f"{o.capitalize()} differs across {c} groups"
+
+
+def _bootstrap(analyzer: Analyzer, found: Evaluation, data: pd.DataFrame, x: str, y: str,
+               alpha: float, seed: int) -> Uncertainty | None:
+    rng = np.random.default_rng(seed)
+    pair = data[[x, y]].dropna().reset_index(drop=True)
+    effects, kept = [], 0
+    for _ in range(BOOTSTRAP_RESAMPLES):
+        ev = analyzer.evaluate(pair.iloc[rng.integers(0, len(pair), len(pair))], x, y)
+        if ev is None:
+            continue
+        effects.append(ev.effect_size)
+        if analyzer.signed:
+            kept += np.sign(ev.effect_size) == np.sign(found.effect_size)
+        else:
+            kept += ev.p_value < alpha
+    if len(effects) < BOOTSTRAP_RESAMPLES // 2:
+        return None
+    low, high = np.percentile(effects, [2.5, 97.5])
+    return Uncertainty(low=round(float(low), 4), high=round(float(high), 4),
+                       resamples=len(effects), stable_share=round(kept / len(effects), 3))
+
+
+def _limitations(f: Finding, frame: pd.DataFrame) -> list[str]:
+    x, y = f.condition, f.outcome
+    out = ["A statistical association in this data, not evidence of cause and effect."]
+    if f.synthetic:
+        out.append("Synthetic test data — not NASA laboratory data. Not a scientific result.")
+    if f.analyzer == "rank_correlation":
+        lo, hi = f.details.get("x_range", [None, None])
+        if lo is not None:
+            out.append(f"Only observed for {x.replace('_', ' ')} between {lo:.3g} and {hi:.3g}; "
+                       "behaviour outside this range is unknown.")
+        out.append("Rank correlation detects monotonic patterns; a non-monotonic relationship "
+                   "(e.g. rising then falling) could be missed or understated.")
+    else:
+        out.append("Shows that groups differ overall, not which specific groups differ; groups "
+                   "with fewer than 2 experiments were left out.")
+    if f.evidence.n_experiments and f.evidence.n_experiments < 30:
+        out.append(f"Based on only {f.evidence.n_experiments} experiments.")
+    total = len(frame)
+    if total and f.evidence.n_rows < 0.8 * total:
+        out.append(f"{x.replace('_', ' ')} or {y.replace('_', ' ')} is missing for "
+                   f"{100 * (1 - f.evidence.n_rows / total):.0f}% of rows.")
+    for probe in f.deep:
+        if probe.probe == "third_variable" and probe.verdict == "weakens":
+            out.append(f"May be largely explained by {probe.params['control'].replace('_', ' ')} "
+                       "(see the third-variable check).")
+    if f.status == Status.CANDIDATE:
+        out.append("Validation was inconclusive; treat as a lead, not a validated finding.")
+    return out
 
 
 def _status(significant: bool, validations: list[Validation]) -> Status:
@@ -87,11 +159,19 @@ def run_discovery(
     id_col = schema.id_column
 
     train, test = split_by_experiment(frame, id_col, cfg.test_fraction, cfg.seed)
+    split = Split(
+        discovery_rows=len(train), holdout_rows=len(test),
+        discovery_experiments=int(train[id_col].nunique()) if id_col in train else len(train),
+        holdout_experiments=int(test[id_col].nunique()) if id_col in test else len(test),
+        by=id_col if id_col in frame else "row",
+    )
 
     tested = []
     for analyzer in analyzers:
         for x, y in analyzer.pairs(frame, schema):
             if cfg.outcomes and y not in cfg.outcomes:
+                continue
+            if cfg.conditions and x not in cfg.conditions:
                 continue
             result = analyzer.evaluate(train, x, y)
             if result is not None:
@@ -109,12 +189,16 @@ def run_discovery(
                 for v in validators
             ]
         status = _status(significant, validations)
+        metrics = {k: v for val in validations for k, v in val.metrics.items()}
         outcome_var = schema.get(y)
-        score, components = rank_score(
-            result.effect_size, result.n, status,
-            outcome_var.safety_weight if outcome_var else 0.5,
+        score, factors, weights = rank_score(
+            effect_size=result.effect_size, n=result.n, status=status,
+            test_effect=metrics.get("test_effect"),
+            chance_p=metrics.get("permutation_p_value", q if significant else None),
+            relevance=outcome_var.relevance if outcome_var else 1.0,
+            weights=cfg.weights,
         )
-        findings.append(Finding(
+        finding = Finding(
             finding_id=uuid.uuid4().hex[:12],
             dataset_id=dataset_id,
             created_at=now,
@@ -131,12 +215,39 @@ def run_discovery(
             q_value=q,
             n_train=result.n,
             details=result.details,
+            goal=cfg.goal,
+            goal_spec=cfg.extra,
+            split=split,
             validations=validations,
+            uncertainty=(_bootstrap(analyzer, result, train, x, y, cfg.alpha, cfg.seed)
+                         if significant else None),
             status=status,
+            status_explanation=STATUS_EXPLANATION[status],
             score=score,
-            score_components=components,
+            score_components=factors,
+            score_weights=weights,
             evidence=_evidence(frame, x, y, id_col, sources),
-        ))
+        )
+        if significant:
+            # third-variable checks always run: whether another variable explains the
+            # association belongs in the evidence, not in an optional extra
+            finding.deep = [
+                deep.run_probe(finding, frame, schema, spec.probe, spec.params, cfg.min_samples)
+                for spec in deep.suggest(finding, frame, schema) if spec.probe == "third_variable"
+            ]
+            retained = [p.metrics.get("retained_share") for p in finding.deep
+                        if p.probe == "third_variable" and p.verdict != "inconclusive"]
+            if retained:
+                # re-rank: an association carried by another variable should not top the list
+                finding.score, finding.score_components, finding.score_weights = rank_score(
+                    effect_size=result.effect_size, n=result.n, status=status,
+                    test_effect=metrics.get("test_effect"),
+                    chance_p=metrics.get("permutation_p_value", q),
+                    relevance=outcome_var.relevance if outcome_var else 1.0,
+                    independence=min(retained), weights=cfg.weights,
+                )
+        finding.limitations = _limitations(finding, frame)
+        findings.append(finding)
 
     findings.sort(key=lambda f: f.score, reverse=True)
     return findings

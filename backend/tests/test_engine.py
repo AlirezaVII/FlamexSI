@@ -31,8 +31,8 @@ def test_findings_are_ranked_and_carry_evidence(synthetic_frame, schema):
     assert top.evidence.n_experiments > 100
     assert all(e.startswith("SYN-") for e in top.evidence.experiment_ids)
     assert {v.method for v in top.validations} == {"holdout_replication", "permutation_test"}
-    assert set(top.score_components) == {"strength", "support", "reliability",
-                                         "safety_relevance"}
+    assert set(top.score_components) == {"strength", "data", "validation", "stability",
+                                         "not_chance", "relevance", "independence"}
 
 
 def test_outcome_filter(synthetic_frame, schema):
@@ -40,8 +40,21 @@ def test_outcome_filter(synthetic_frame, schema):
     assert findings and {f.outcome for f in findings} == {"extinction"}
 
 
-def test_rank_score_orders_by_reliability():
-    validated, _ = rank_score(0.5, 100, Status.VALIDATED, 1.0)
-    rejected, _ = rank_score(0.5, 100, Status.REJECTED, 1.0)
-    none, _ = rank_score(0.5, 100, Status.NOT_SIGNIFICANT, 1.0)
-    assert validated > rejected > none == 0
+def _score(status, **kw):
+    args = {"effect_size": 0.5, "n": 100, "status": status, "test_effect": 0.45,
+            "chance_p": 0.01, "relevance": 1.0, **kw}
+    return rank_score(**args)[0]
+
+
+def test_rank_score_orders_by_validation():
+    assert _score(Status.VALIDATED) > _score(Status.REJECTED) > _score(Status.NOT_SIGNIFICANT)
+    assert _score(Status.NOT_SIGNIFICANT) == 0
+
+
+def test_rank_score_rewards_stability_and_weights_are_flexible():
+    stable = _score(Status.VALIDATED, test_effect=0.5)
+    shrunk = _score(Status.VALIDATED, test_effect=0.1)
+    assert stable > shrunk
+    # a weight of 0 removes a factor entirely
+    assert _score(Status.VALIDATED, test_effect=0.1, weights={"stability": 0}) == \
+        _score(Status.VALIDATED, test_effect=0.5, weights={"stability": 0})

@@ -42,7 +42,6 @@ const TITLE = "FALMEX".split("");
 
 type Engine = "connecting" | "ready" | "offline";
 
-
 function skip() {
   const root = document.documentElement;
   if (root.dataset.splash === "leaving" || root.dataset.splash === "gone")

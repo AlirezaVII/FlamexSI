@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { api } from "./api";
 import type { Dataset } from "./types";
 
@@ -12,6 +18,7 @@ interface Workspace {
   compareIds: string[];
   toggleCompare: (experimentId: string) => void;
   clearCompare: () => void;
+  setCompare: (ids: string[]) => void;
   error: string | null;
   /** true until the dataset list has been fetched once */
   loading: boolean;
@@ -42,7 +49,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setSelectedId((current) => {
         const wanted = current ?? readStored();
-        return list.some((d) => d.dataset_id === wanted) ? wanted : (list[0]?.dataset_id ?? null);
+        return list.some((d) => d.dataset_id === wanted)
+          ? wanted
+          : (list[0]?.dataset_id ?? null);
       });
     } catch (e) {
       setError((e as Error).message);
@@ -66,7 +75,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const toggleCompare = useCallback((experimentId: string) => {
     setCompareIds((ids) =>
-      ids.includes(experimentId) ? ids.filter((i) => i !== experimentId) : [...ids, experimentId],
+      ids.includes(experimentId)
+        ? ids.filter((i) => i !== experimentId)
+        : [...ids, experimentId],
     );
   }, []);
 
@@ -78,6 +89,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     compareIds,
     toggleCompare,
     clearCompare: () => setCompareIds([]),
+    setCompare: (ids: string[]) => setCompareIds(ids),
     error,
     loading,
   };
@@ -86,6 +98,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
 export function useWorkspace(): Workspace {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useWorkspace must be used inside <WorkspaceProvider>");
+  if (!ctx)
+    throw new Error("useWorkspace must be used inside <WorkspaceProvider>");
   return ctx;
 }

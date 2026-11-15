@@ -1,11 +1,17 @@
 import { progress } from "./progress";
 import type {
+  CompareResult,
   Dataset,
   DatasetDetail,
+  DeepSuggestion,
   DiscoverResult,
   Filter,
   Finding,
+  Goals,
+  Insight,
   Meta,
+  ProbeResult,
+  Quality,
   Row,
   Source,
   Status,
@@ -105,13 +111,48 @@ export const api = {
       findings: { finding_id: string; headline: string; status: Status }[];
     }>(`/api/datasets/${id}/experiments/${encodeURIComponent(experimentId)}`),
   compare: (id: string, experiment_ids: string[]) =>
-    request<{ experiments: Row[] }>(
+    request<CompareResult>(
       `/api/datasets/${id}/compare`,
       json({ experiment_ids }),
     ),
+  quality: (id: string) => request<Quality>(`/api/datasets/${id}/quality`),
+  addSource: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<{ dataset: Dataset | null; source: Source }>(
+      `/api/datasets/${id}/sources`,
+      { method: "POST", body: form },
+    );
+  },
+  goals: (id: string) => request<Goals>(`/api/datasets/${id}/goals`),
 
-  discover: (id: string, body: { outcomes?: string[] } = {}) =>
-    request<DiscoverResult>(`/api/datasets/${id}/discover`, json(body)),
+  discover: (
+    id: string,
+    body: {
+      goal?: string;
+      outcomes?: string[];
+      conditions?: string[];
+      extra_outcomes?: string[];
+      extra_conditions?: string[];
+    } = {},
+  ) => request<DiscoverResult>(`/api/datasets/${id}/discover`, json(body)),
+  deep: (id: string) =>
+    request<{ finding_id: string; suggestions: DeepSuggestion[] }>(
+      `/api/findings/${id}/deep`,
+    ),
+  runProbe: (id: string, probe: string, params: Record<string, string>) =>
+    request<ProbeResult>(`/api/findings/${id}/deep`, json({ probe, params })),
+  promote: (
+    id: string,
+    body: {
+      statement: string;
+      scientific_interpretation: string;
+      fire_safety_relevance: string;
+      reviewer: string;
+      references: string[];
+    },
+  ) => request<Insight>(`/api/findings/${id}/insight`, json(body)),
+  insights: () => request<Insight[]>("/api/insights"),
   findings: (params: {
     dataset_id?: string;
     status?: Status;

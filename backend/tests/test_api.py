@@ -55,8 +55,10 @@ def test_query_experiment_and_compare(client):
     assert client.get(f"/api/datasets/{did}/experiments/NOPE").status_code == 404
 
     cmp = client.post(f"/api/datasets/{did}/compare",
-                      json={"experiment_ids": ["SYN-0001", "SYN-0002"]}).json()
-    assert {e["experiment_id"] for e in cmp["experiments"]} == {"SYN-0001", "SYN-0002"}
+                      json={"experiment_ids": ["SYN-0001", "SYN-0002", "NOPE"]}).json()
+    assert cmp["experiments"] == ["SYN-0001", "SYN-0002"] and cmp["missing"] == ["NOPE"]
+    oxygen = next(v for v in cmp["variables"] if v["name"] == "oxygen")
+    assert oxygen["group"] == "condition" and oxygen["values"]["SYN-0001"]["n"] == 1
 
 
 def test_discover_findings_interpret_summary(client):
@@ -82,3 +84,53 @@ def test_discover_findings_interpret_summary(client):
 def test_not_found(client):
     assert client.get("/api/datasets/nope").status_code == 404
     assert client.get("/api/findings/nope").status_code == 404
+
+
+def test_data_quality_and_append_file(client):
+    csv1 = (b"Test ID,Pressure (atm),O2,burn_rate,Camera\n"
+            b"E1,1,21,1.2,a\nE2,0.5,15,x,b\nE2,0.5,15,x,b\n")
+    res = client.post("/api/datasets", files={"file": ("a.csv", csv1, "text/csv")})
+    ds = res.json()["dataset"]
+    q = client.get(f"/api/datasets/{ds['dataset_id']}/quality").json()
+    assert q["rows_removed"]["exact duplicate row"] == 1
+    assert q["unit_conversions"][0] == {"column": "pressure", "raw": "Pressure (atm)",
+                                        "from": "atm", "to": "kPa", "values": 2}
+    assert q["invalid_values_set_missing"] == 1
+    cam = next(v for v in q["variables"] if v["name"] == "camera")
+    assert cam["group"] == "unmapped" and not cam["mapped"]  # kept, not dropped
+
+    csv2 = b"Test ID,burn_rate\nE1,1.4\n"
+    res = client.post(f"/api/datasets/{ds['dataset_id']}/sources",
+                      files={"file": ("b.csv", csv2, "text/csv")})
+    assert res.status_code == 201 and len(res.json()["dataset"]["source_ids"]) == 2
+    q = client.get(f"/api/datasets/{ds['dataset_id']}/quality").json()
+    assert q["sources"] == 2 and q["experiments_with_repeated_measurements"] == 1
+    again = client.post(f"/api/datasets/{ds['dataset_id']}/sources",
+                        files={"file": ("b.csv", csv2, "text/csv")})
+    assert again.status_code == 422
+
+
+def test_goals_deep_analysis_and_insight_rules(client):
+    did = _synthetic(client, 300)["dataset_id"]
+    goals = client.get(f"/api/datasets/{did}/goals").json()
+    assert any(g["id"] == "column:sample_mass" for g in goals["goals"])
+    res = client.post(f"/api/datasets/{did}/discover", json={
+        "goal": "Which conditions are associated with changes in burning rate?",
+        "outcomes": ["burning_rate"], "extra_conditions": ["sample_mass"]}).json()
+    assert {f["outcome"] for f in res["findings"]} == {"burning_rate"}
+    f = next(x for x in res["findings"] if x["status"] == "validated")
+    assert f["goal"].startswith("Which conditions")
+
+    sugg = client.get(f"/api/findings/{f['finding_id']}/deep").json()["suggestions"]
+    sub = next(s for s in sugg if s["probe"] == "subgroup_consistency")
+    run = client.post(f"/api/findings/{f['finding_id']}/deep",
+                      json={"probe": sub["probe"], "params": sub["params"]})
+    assert run.status_code == 200 and run.json()["verdict"] in {"supports", "weakens"}
+    stored = client.get(f"/api/findings/{f['finding_id']}").json()
+    assert any(p["probe"] == "subgroup_consistency" for p in stored["deep"])
+
+    # synthetic findings can never become insights
+    body = {"statement": "x" * 12, "scientific_interpretation": "y" * 12,
+            "fire_safety_relevance": "z" * 6, "reviewer": "QA"}
+    assert client.post(f"/api/findings/{f['finding_id']}/insight", json=body).status_code == 409
+    assert client.get("/api/insights").json() == []

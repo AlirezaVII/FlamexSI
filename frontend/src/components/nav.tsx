@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace";
 import { Skeleton } from "./loading";
+import { LogoMark } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 
 const icon = (d: string) => (
@@ -40,9 +41,16 @@ const LINKS = [
     ),
   },
   {
+    href: "/findings",
+    label: "Findings",
+    icon: icon("M4 20V10M10 20V4M16 20v-7M22 20H2"),
+  },
+  {
     href: "/insights",
     label: "Insights",
-    icon: icon("M4 20V10M10 20V4M16 20v-7M22 20H2"),
+    icon: icon(
+      "M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.5 1 .5 1.6V16h6v-.5c0-.6 0-1.2.5-1.6A6 6 0 0 0 12 3z",
+    ),
   },
   {
     href: "/data",
@@ -70,12 +78,27 @@ function DatasetPicker({ className = "" }: { className?: string }) {
         className="w-full min-w-0 max-w-56 truncate rounded-md border border-line bg-surface px-2 py-1.5 text-ink"
       >
         {datasets.length === 0 && <option value="">none</option>}
-        {datasets.map((d) => (
-          <option key={d.dataset_id} value={d.dataset_id}>
-            {d.synthetic ? "[SYNTHETIC] " : ""}
-            {d.name}
-          </option>
-        ))}
+        {[
+          {
+            label: "NASA / real data",
+            list: datasets.filter((d) => !d.synthetic),
+          },
+          {
+            label: "Synthetic test data (not NASA)",
+            list: datasets.filter((d) => d.synthetic),
+          },
+        ]
+          .filter((g) => g.list.length)
+          .map((g) => (
+            <optgroup key={g.label} label={g.label}>
+              {g.list.map((d) => (
+                <option key={d.dataset_id} value={d.dataset_id}>
+                  {d.synthetic ? "[TEST] " : ""}
+                  {d.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
       </select>
     </div>
   );
@@ -96,9 +119,7 @@ const Logo = () => (
     href="/"
     className="flex shrink-0 items-center gap-2 font-display text-xl font-medium tracking-tight"
   >
-    <span aria-hidden className="text-accent">
-      ◆
-    </span>
+    <LogoMark className="h-[22px] w-[22px] text-accent" />
     Falmex
   </Link>
 );
@@ -138,7 +159,7 @@ export function Nav() {
         aria-label="Sections"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-6">
           {LINKS.map((l) => {
             const active = isActive(l.href);
             return (

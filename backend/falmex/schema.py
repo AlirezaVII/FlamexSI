@@ -1,10 +1,11 @@
 """Canonical variable schema, loaded from YAML (see config/variables.yaml)."""
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 
+import pandas as pd
 import yaml
 
 DEFAULT_SCHEMA_PATH = Path(__file__).parent / "config" / "variables.yaml"
@@ -42,7 +43,18 @@ class Variable:
     description: str = ""
     aliases: tuple[str, ...] = ()
     units: dict[str, UnitConversion] = field(default_factory=dict)
-    safety_weight: float = 0.5
+    # Weight of this outcome in the "relevance to the fire-safety question" ranking factor.
+    # Neutral (1.0) unless a team decision, made after seeing the real data, says otherwise.
+    relevance: float = 1.0
+
+
+def infer_type(series: pd.Series) -> VarType:
+    """Best guess for a column the schema does not describe."""
+    if pd.api.types.is_bool_dtype(series):
+        return VarType.BOOLEAN
+    if pd.api.types.is_numeric_dtype(series):
+        return VarType.NUMERIC
+    return VarType.CATEGORICAL if series.nunique(dropna=True) <= 30 else VarType.TEXT
 
 
 def normalize_name(name: str) -> str:
@@ -73,7 +85,7 @@ class Schema:
                 description=spec.get("description", ""),
                 aliases=tuple(spec.get("aliases", [])),
                 units={u: UnitConversion(**c) for u, c in (spec.get("units") or {}).items()},
-                safety_weight=float(spec.get("safety_weight", 0.5)),
+                relevance=float(spec.get("relevance", 1.0)),
             )
         return cls(variables)
 
@@ -86,6 +98,32 @@ class Schema:
 
     def by_role(self, role: Role) -> list[Variable]:
         return [v for v in self.variables.values() if v.role == role]
+
+    def extended(
+        self,
+        frame: pd.DataFrame,
+        extra_outcomes: list[str] | None = None,
+        extra_conditions: list[str] | None = None,
+    ) -> "Schema":
+        """A copy that also knows columns the YAML does not (e.g. new NASA variables).
+
+        Unmapped columns are never assumed to be a condition or an outcome: they join an
+        analysis only when a discovery goal names them in one of those roles.
+        """
+        variables = dict(self.variables)
+        for role, names in ((Role.OUTCOME, extra_outcomes), (Role.CONDITION, extra_conditions)):
+            for name in names or []:
+                if name not in frame or name.startswith("_"):
+                    raise ValueError(f"Unknown column '{name}'")
+                known = variables.get(name)
+                if known is not None:
+                    variables[name] = replace(known, role=role)
+                    continue
+                variables[name] = Variable(
+                    name=name, role=role, type=infer_type(frame[name]),
+                    description="Column from the data file (not in the standard schema)",
+                )
+        return Schema(variables)
 
     @property
     def id_column(self) -> str | None:

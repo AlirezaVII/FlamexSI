@@ -5,7 +5,6 @@ import { THEME_KEY as KEY } from "@/lib/boot-scripts";
 
 type Theme = "light" | "dark";
 
-
 function current(): Theme {
   const set = document.documentElement.dataset.theme;
   if (set === "light" || set === "dark") return set;

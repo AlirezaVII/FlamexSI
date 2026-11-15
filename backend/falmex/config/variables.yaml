@@ -7,7 +7,12 @@
 # role:  id | condition (experiment input) | outcome (flame behavior) | meta
 # type:  numeric | categorical | boolean | text
 # unit:  canonical unit; values in other units are converted via `units`
-# safety_weight: how directly the variable relates to fire safety (ranking input)
+# relevance: optional ranking weight for an outcome (default 1.0 = neutral). Leave it neutral
+#        until the real data shows which outcomes matter most for the fire-safety question.
+#
+# These variables only describe the synthetic TEST data. Columns in a real file that are not
+# listed here are kept unchanged (never dropped) and can still be filtered, compared and used
+# in a discovery goal.
 
 variables:
   experiment_id:
@@ -79,7 +84,6 @@ variables:
     units:
       mm: {scale: 0.1}
       m: {scale: 100.0}
-    safety_weight: 0.7
 
   burning_rate:
     role: outcome
@@ -89,7 +93,6 @@ variables:
     aliases: [burn_rate, spread_rate, flame_spread_rate, regression_rate]
     units:
       cm_per_s: {scale: 10.0}
-    safety_weight: 0.9
 
   burn_time:
     role: outcome
@@ -97,18 +100,15 @@ variables:
     unit: s
     description: Burn duration
     aliases: [burn_duration, burning_time]
-    safety_weight: 0.6
 
   extinction:
     role: outcome
     type: boolean
     description: Whether the flame extinguished
     aliases: [extinguished, flame_extinction, extinct]
-    safety_weight: 1.0
 
   ignition:
     role: outcome
     type: boolean
     description: Whether ignition occurred
     aliases: [ignited, ignition_success]
-    safety_weight: 1.0

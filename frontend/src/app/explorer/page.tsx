@@ -16,7 +16,25 @@ import type { ColumnStats, Filter, Row } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
 const PAGE = 50;
-type Draft = Record<string, { min?: string; max?: string; value?: string }>;
+type Draft = Record<
+  string,
+  { min?: string; max?: string; value?: string; values?: string[] }
+>;
+
+// Filters are generated from the dataset's own columns, so new variables in a real NASA file
+// get filters automatically. Conditions and outcomes stay separate.
+const FILTER_GROUPS = [
+  { key: "condition", title: "Conditions", note: "experiment set-up" },
+  { key: "outcome", title: "Outcomes", note: "measured results" },
+  { key: "other", title: "Other columns", note: "not in the standard schema" },
+] as const;
+
+const groupOf = (c: ColumnStats) =>
+  c.role === "condition"
+    ? "condition"
+    : c.role === "outcome"
+      ? "outcome"
+      : "other";
 
 function toFilters(draft: Draft, columns: ColumnStats[]): Filter[] {
   const out: Filter[] = [];
@@ -27,8 +45,14 @@ function toFilters(draft: Draft, columns: ColumnStats[]): Filter[] {
     if (d.max) out.push({ field: c.name, op: "lte", value: Number(d.max) });
     if (d.value) {
       const value = c.type === "boolean" ? d.value === "yes" : d.value;
-      out.push({ field: c.name, op: "eq", value });
+      out.push({
+        field: c.name,
+        op: c.type === "text" ? "contains" : "eq",
+        value,
+      });
     }
+    if (d.values?.length)
+      out.push({ field: c.name, op: "in", value: d.values });
   }
   return out;
 }
@@ -90,21 +114,19 @@ export default function ExplorerPage() {
   const refetching = !firstLoad && rowsFor !== queryKey;
 
   const filterable = useMemo(
-    () => columns.filter((c) => c.role === "condition" || c.role === "outcome"),
+    () => columns.filter((c) => c.count > 0),
     [columns],
   );
   const visible = useMemo(() => columns.map((c) => c.name), [columns]);
 
   if (!dataset) return <NoDataset />;
 
-  const set = (name: string, key: "min" | "max" | "value", v: string) =>
-    setDraft((d) => ({ ...d, [name]: { ...d[name], [key]: v } }));
-
   return (
     <>
       <PageHeader eyebrow="Explore" title="Experiment explorer">
-        Filter experiments by their conditions and outcomes. Tick experiments to
-        compare them.
+        Find and filter experiments by any variable in the dataset — filters are
+        generated from its columns. Exploring draws no conclusions; tick
+        experiments to compare them, and use Discover to look for associations.
       </PageHeader>
       {dataset.synthetic && <SyntheticBanner />}
 
@@ -139,44 +161,36 @@ export default function ExplorerPage() {
                 </div>
               ))}
             {!columnsLoading &&
-              filterable.map((c) => (
-                <fieldset key={c.name}>
-                  <legend className="mb-1 text-xs font-medium text-ink-2">
-                    {label(c.name)}{" "}
-                    {c.unit && <span className="text-muted">({c.unit})</span>}
-                  </legend>
-                  {c.type === "numeric" ? (
-                    <div className="flex gap-2">
-                      {(["min", "max"] as const).map((k) => (
-                        <input
-                          key={k}
-                          type="number"
-                          step="any"
-                          placeholder={`${k} ${fmt(c[k])}`}
-                          aria-label={`${c.name} ${k}`}
-                          value={draft[c.name]?.[k] ?? ""}
-                          onChange={(e) => set(c.name, k, e.target.value)}
-                          className="w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <select
-                      aria-label={c.name}
-                      value={draft[c.name]?.value ?? ""}
-                      onChange={(e) => set(c.name, "value", e.target.value)}
-                      className="w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
-                    >
-                      <option value="">any</option>
-                      {c.type === "boolean"
-                        ? ["yes", "no"].map((v) => <option key={v}>{v}</option>)
-                        : Object.keys(c.top_values ?? {}).map((v) => (
-                            <option key={v}>{v}</option>
-                          ))}
-                    </select>
-                  )}
-                </fieldset>
-              ))}
+              FILTER_GROUPS.map((g) => {
+                const cols = filterable.filter((c) => groupOf(c) === g.key);
+                if (!cols.length) return null;
+                return (
+                  <div
+                    key={g.key}
+                    className="space-y-3 border-t border-line pt-3 first:border-0 first:pt-0"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                      {g.title}{" "}
+                      <span className="font-normal normal-case tracking-normal">
+                        · {g.note}
+                      </span>
+                    </p>
+                    {cols.map((c) => (
+                      <FilterField
+                        key={c.name}
+                        c={c}
+                        d={draft[c.name] ?? {}}
+                        set={(patch) =>
+                          setDraft((d) => ({
+                            ...d,
+                            [c.name]: { ...d[c.name], ...patch },
+                          }))
+                        }
+                      />
+                    ))}
+                  </div>
+                );
+              })}
             <div className="flex gap-2 pt-1">
               <Button type="submit">Apply</Button>
               <Button
@@ -299,5 +313,105 @@ export default function ExplorerPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+function FilterField({
+  c,
+  d,
+  set,
+}: {
+  c: ColumnStats;
+  d: Draft[string];
+  set: (patch: Draft[string]) => void;
+}) {
+  const legend = (
+    <legend className="mb-1 text-xs font-medium text-ink-2">
+      {label(c.name)} {c.unit && <span className="text-muted">({c.unit})</span>}
+      {!c.known && <span className="ml-1 text-muted">· from file</span>}
+    </legend>
+  );
+  if (c.type === "numeric") {
+    return (
+      <fieldset>
+        {legend}
+        <div className="flex items-center gap-2">
+          {(["min", "max"] as const).map((k, i) => (
+            <span key={k} className="contents">
+              {i === 1 && <span className="text-xs text-muted">to</span>}
+              <input
+                type="number"
+                step="any"
+                placeholder={fmt(c[k])}
+                aria-label={`${c.name} ${k}`}
+                value={d[k] ?? ""}
+                onChange={(e) => set({ [k]: e.target.value })}
+                className="w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
+              />
+            </span>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+  if (c.type === "boolean") {
+    return (
+      <fieldset>
+        {legend}
+        <select
+          aria-label={c.name}
+          value={d.value ?? ""}
+          onChange={(e) => set({ value: e.target.value })}
+          className="w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
+        >
+          <option value="">any</option>
+          <option value="yes">yes</option>
+          <option value="no">no</option>
+        </select>
+      </fieldset>
+    );
+  }
+  const options = Object.keys(c.top_values ?? {});
+  if (c.type === "text" || options.length > 12) {
+    return (
+      <fieldset>
+        {legend}
+        <input
+          type="search"
+          placeholder="contains…"
+          aria-label={`${c.name} contains`}
+          value={d.value ?? ""}
+          onChange={(e) => set({ value: e.target.value })}
+          className="w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
+        />
+      </fieldset>
+    );
+  }
+  const chosen = new Set(d.values ?? []);
+  return (
+    <fieldset>
+      {legend}
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => (
+          <label
+            key={o}
+            className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-xs ${chosen.has(o) ? "border-accent bg-surface-2 text-ink" : "border-line text-ink-2"}`}
+          >
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={chosen.has(o)}
+              onChange={() => {
+                const next = new Set(chosen);
+                if (next.has(o)) next.delete(o);
+                else next.add(o);
+                set({ values: [...next] });
+              }}
+            />
+            {o}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }

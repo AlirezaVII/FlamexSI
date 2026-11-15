@@ -25,9 +25,12 @@ function useChartWidth() {
 function ticks(min: number, max: number, count = 5): number[] {
   if (min === max) return [min];
   const step = 10 ** Math.floor(Math.log10((max - min) / count));
-  const nice = [1, 2, 5, 10].map((m) => m * step).find((s) => (max - min) / s <= count) ?? step;
+  const nice =
+    [1, 2, 5, 10].map((m) => m * step).find((s) => (max - min) / s <= count) ??
+    step;
   const out = [];
-  for (let v = Math.ceil(min / nice) * nice; v <= max + 1e-9; v += nice) out.push(+v.toFixed(10));
+  for (let v = Math.ceil(min / nice) * nice; v <= max + 1e-9; v += nice)
+    out.push(+v.toFixed(10));
   return out;
 }
 
@@ -81,8 +84,19 @@ function Axes({
     <g fontSize={11} fill="var(--muted)">
       {yTicks.map((t) => (
         <g key={`y${t}`}>
-          <line x1={M.left} x2={W - M.right} y1={sy(t)} y2={sy(t)} stroke="var(--grid)" />
-          <text x={M.left - 8} y={sy(t)} textAnchor="end" dominantBaseline="middle">
+          <line
+            x1={M.left}
+            x2={W - M.right}
+            y1={sy(t)}
+            y2={sy(t)}
+            stroke="var(--grid)"
+          />
+          <text
+            x={M.left - 8}
+            y={sy(t)}
+            textAnchor="end"
+            dominantBaseline="middle"
+          >
             {yFormat(t)}
           </text>
         </g>
@@ -92,8 +106,19 @@ function Axes({
           {fmt(t)}
         </text>
       ))}
-      <line x1={M.left} x2={W - M.right} y1={H - M.bottom} y2={H - M.bottom} stroke="var(--line)" />
-      <text x={M.left + (W - M.left - M.right) / 2} y={H - 6} textAnchor="middle" fill="var(--ink-2)">
+      <line
+        x1={M.left}
+        x2={W - M.right}
+        y1={H - M.bottom}
+        y2={H - M.bottom}
+        stroke="var(--line)"
+      />
+      <text
+        x={M.left + (W - M.left - M.right) / 2}
+        y={H - 6}
+        textAnchor="middle"
+        fill="var(--ink-2)"
+      >
         {xLabel}
       </text>
       <text
@@ -125,13 +150,20 @@ export function ScatterChart({
   const points = useMemo(
     () =>
       rows
-        .map((r) => ({ id: String(r[idKey] ?? ""), x: toNum(r[x]), y: toNum(r[y]), raw: r[y] }))
-        .filter((p): p is { id: string; x: number; y: number; raw: Row[string] } =>
-          p.x !== null && p.y !== null,
+        .map((r) => ({
+          id: String(r[idKey] ?? ""),
+          x: toNum(r[x]),
+          y: toNum(r[y]),
+          raw: r[y],
+        }))
+        .filter(
+          (p): p is { id: string; x: number; y: number; raw: Row[string] } =>
+            p.x !== null && p.y !== null,
         ),
     [rows, x, y, idKey],
   );
-  if (points.length === 0) return <p className="text-sm text-muted">No data to plot.</p>;
+  if (points.length === 0)
+    return <p className="text-sm text-muted">No data to plot.</p>;
 
   const isBool = points.every((p) => typeof p.raw === "boolean");
   const xs = points.map((p) => p.x);
@@ -139,16 +171,28 @@ export function ScatterChart({
   const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
   const [y0, y1] = isBool ? [-0.25, 1.25] : [Math.min(...ys), Math.max(...ys)];
   const pad = (a: number, b: number) => (b - a || 1) * 0.05;
-  const sx = (v: number) => M.left + ((v - (x0 - pad(x0, x1))) / (x1 - x0 + 2 * pad(x0, x1))) * PW;
+  const sx = (v: number) =>
+    M.left + ((v - (x0 - pad(x0, x1))) / (x1 - x0 + 2 * pad(x0, x1))) * PW;
   const sy = (v: number) =>
     M.top + PH - ((v - (y0 - pad(y0, y1))) / (y1 - y0 + 2 * pad(y0, y1))) * PH;
   // deterministic vertical jitter so yes/no points don't sit on one line
-  const jitter = (i: number) => (isBool ? (((i * 7919) % 100) / 100 - 0.5) * 0.3 : 0);
+  const jitter = (i: number) =>
+    isBool ? (((i * 7919) % 100) / 100 - 0.5) * 0.3 : 0;
 
   return (
-    <figure ref={ref} className="relative w-full min-w-0" onMouseLeave={() => setTip(null)}>
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full" role="img"
-        aria-label={`Scatter plot of ${label(y)} against ${label(x)}, ${points.length} points`}>
+    <figure
+      ref={ref}
+      className="relative w-full min-w-0"
+      onMouseLeave={() => setTip(null)}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width={W}
+        height={H}
+        className="block h-auto max-w-full"
+        role="img"
+        aria-label={`Scatter plot of ${label(y)} against ${label(x)}, ${points.length} points`}
+      >
         <Axes
           W={W}
           xTicks={ticks(x0, x1)}
@@ -164,8 +208,15 @@ export function ScatterChart({
           const cy = sy(p.y + jitter(i));
           return (
             <g key={i}>
-              <circle cx={cx} cy={cy} r={4} fill="var(--series-1)" fillOpacity={0.7}
-                stroke="var(--surface)" strokeWidth={1} />
+              <circle
+                cx={cx}
+                cy={cy}
+                r={4}
+                fill="var(--series-1)"
+                fillOpacity={0.7}
+                stroke="var(--surface)"
+                strokeWidth={1}
+              />
               <circle
                 cx={cx}
                 cy={cy}
@@ -175,7 +226,11 @@ export function ScatterChart({
                   setTip({
                     x: cx,
                     y: cy,
-                    lines: [p.id, `${label(x)}: ${fmt(p.x)}`, `${label(y)}: ${fmt(p.raw)}`],
+                    lines: [
+                      p.id,
+                      `${label(x)}: ${fmt(p.x)}`,
+                      `${label(y)}: ${fmt(p.raw)}`,
+                    ],
                   })
                 }
               />
@@ -202,7 +257,8 @@ export function GroupBars({
   const [ref, W] = useChartWidth();
   const PW = W - M.left - M.right;
   const entries = Object.entries(values);
-  if (entries.length === 0) return <p className="text-sm text-muted">No data to plot.</p>;
+  if (entries.length === 0)
+    return <p className="text-sm text-muted">No data to plot.</p>;
   const max = Math.max(...entries.map(([, v]) => v), 0) || 1;
   const yTicks = ticks(0, max);
   const top = Math.max(max, yTicks[yTicks.length - 1]);
@@ -211,10 +267,28 @@ export function GroupBars({
   const bw = Math.min(56, band * 0.6);
 
   return (
-    <figure ref={ref} className="relative w-full min-w-0" onMouseLeave={() => setTip(null)}>
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full" role="img"
-        aria-label={`Bar chart of ${yLabel} by ${xLabel}`}>
-        <Axes W={W} xTicks={[]} yTicks={yTicks} sx={() => 0} sy={sy} xLabel={xLabel} yLabel={yLabel} />
+    <figure
+      ref={ref}
+      className="relative w-full min-w-0"
+      onMouseLeave={() => setTip(null)}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width={W}
+        height={H}
+        className="block h-auto max-w-full"
+        role="img"
+        aria-label={`Bar chart of ${yLabel} by ${xLabel}`}
+      >
+        <Axes
+          W={W}
+          xTicks={[]}
+          yTicks={yTicks}
+          sx={() => 0}
+          sy={sy}
+          xLabel={xLabel}
+          yLabel={yLabel}
+        />
         {entries.map(([k, v], i) => {
           const cx = M.left + band * i + band / 2;
           const y = sy(v);
@@ -223,15 +297,28 @@ export function GroupBars({
           return (
             <g
               key={k}
-              onMouseEnter={() => setTip({ x: cx, y, lines: [k, `${yLabel}: ${fmt(v)}`] })}
+              onMouseEnter={() =>
+                setTip({ x: cx, y, lines: [k, `${yLabel}: ${fmt(v)}`] })
+              }
             >
-              <rect x={M.left + band * i} y={M.top} width={band} height={PH} fill="transparent" />
+              <rect
+                x={M.left + band * i}
+                y={M.top}
+                width={band}
+                height={PH}
+                fill="transparent"
+              />
               <path
                 d={`M${cx - bw / 2},${H - M.bottom} V${y + r} q0,-${r} ${r},-${r} H${cx + bw / 2 - r} q${r},0 ${r},${r} V${H - M.bottom} Z`}
                 fill="var(--series-1)"
               />
-              <text x={cx} y={H - M.bottom + 18} textAnchor="middle" fontSize={11}
-                fill="var(--ink-2)">
+              <text
+                x={cx}
+                y={H - M.bottom + 18}
+                textAnchor="middle"
+                fontSize={11}
+                fill="var(--ink-2)"
+              >
                 {k}
               </text>
             </g>

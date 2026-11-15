@@ -2,122 +2,125 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FindingList } from "@/components/finding-list";
-import { ListSkeleton, LoadingLabel, TextSkeleton } from "@/components/loading";
-import {
-  Button,
-  Card,
-  ErrorNote,
-  NoDataset,
-  PageHeader,
-  SyntheticBanner,
-} from "@/components/ui";
-import { api } from "@/lib/api";
-import type { Finding } from "@/lib/types";
-import { useWorkspace } from "@/lib/workspace";
+import { ListSkeleton } from "@/components/loading";
+import { Card, ErrorNote, PageHeader, StatusBadge } from "@/components/ui";
+import { api, fmt, label } from "@/lib/api";
+import type { Insight } from "@/lib/types";
+
+const STEPS = [
+  "Data",
+  "Statistical analysis",
+  "Finding",
+  "Validation on unseen data",
+  "Evidence",
+  "Scientific review & interpretation",
+  "Insight",
+];
 
 export default function InsightsPage() {
-  const { dataset } = useWorkspace();
-  const [findings, setFindings] = useState<Finding[] | null>(null);
-  const [summary, setSummary] = useState<{
-    summary: string;
-    caveats: string[];
-    model: string;
-  } | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [insights, setInsights] = useState<Insight[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const datasetId = dataset?.dataset_id;
-
   useEffect(() => {
-    if (!datasetId) return;
     api
-      .findings({ dataset_id: datasetId, status: "validated" })
-      .then((list) => {
-        setFindings(list);
-        setSummary(null);
-      })
+      .insights()
+      .then(setInsights)
       .catch((e) => setError(e.message));
-  }, [datasetId]);
-
-  async function summarize() {
-    if (!datasetId) return;
-    setBusy(true);
-    try {
-      setSummary(await api.summary(datasetId));
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!dataset) return <NoDataset />;
+  }, []);
 
   return (
     <>
-      <PageHeader eyebrow="Insights" title="Validated findings, ranked">
-        Ranking combines effect strength, amount of supporting data, validation
-        result and how directly the outcome relates to fire safety (extinction
-        and ignition weigh most).
+      <PageHeader eyebrow="Insights" title="Reviewed insights">
+        An insight is not produced by the engine or the AI. It is a validated
+        finding from real (non-synthetic) data that a researcher has reviewed,
+        checked for other explanations and interpreted scientifically — and
+        judged meaningful for fire safety.
       </PageHeader>
-      {dataset.synthetic && <SyntheticBanner />}
+
+      <ol className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+        {STEPS.map((s, i) => (
+          <li key={s} className="flex items-center gap-2">
+            <span
+              className={
+                i >= 5
+                  ? "rounded-full bg-accent px-2 py-0.5 text-accent-ink"
+                  : "text-ink-2"
+              }
+            >
+              {s}
+            </span>
+            {i < STEPS.length - 1 && <span aria-hidden>→</span>}
+          </li>
+        ))}
+      </ol>
+
       {error && <ErrorNote message={error} />}
 
-      {findings && findings.length === 0 ? (
+      {insights === null ? (
+        <Card>
+          <ListSkeleton rows={2} />
+        </Card>
+      ) : insights.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-2">
-            No validated findings yet.{" "}
-            <Link href="/relationships" className="font-medium text-accent">
-              Run discovery
+            No insights yet. To create one, open a{" "}
+            <Link href="/findings" className="font-medium text-accent">
+              validated finding
             </Link>{" "}
-            first.
+            from real data, review its evidence and deep-analysis checks, and
+            use <em>Promote to insight</em> to record the scientific
+            interpretation and reviewer.
+          </p>
+          <p className="mt-2 text-xs text-muted">
+            Findings from synthetic test data can never become insights.
           </p>
         </Card>
       ) : (
         <div className="space-y-4">
-          <Card
-            title="AI summary"
-            action={
-              <Button onClick={summarize} disabled={busy || !findings?.length}>
-                {busy ? "Summarizing…" : summary ? "Regenerate" : "Summarize"}
-              </Button>
-            }
-          >
-            {busy ? (
-              <div className="space-y-3" aria-busy="true">
-                <TextSkeleton lines={4} />
-                <LoadingLabel>
-                  Gemini is reading the ranked findings…
-                </LoadingLabel>
+          {insights.map((ins) => (
+            <Card key={ins.insight_id} className="fade-in">
+              <p className="font-display text-xl font-medium text-ink">
+                {ins.statement}
+              </p>
+              <p className="mt-2 text-sm text-ink-2">
+                {ins.scientific_interpretation}
+              </p>
+              <div className="mt-3 rounded-lg border border-line bg-surface-2 p-3 text-sm">
+                <p className="text-xs font-medium uppercase tracking-wider text-accent">
+                  Fire safety relevance
+                </p>
+                <p className="mt-1 text-ink">{ins.fire_safety_relevance}</p>
               </div>
-            ) : summary ? (
-              <div className="space-y-2 text-sm">
-                <p className="text-ink">{summary.summary}</p>
-                <ul className="list-disc pl-5 text-xs text-ink-2">
-                  {summary.caveats.map((c) => (
-                    <li key={c}>{c}</li>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted">
+                <StatusBadge status={ins.finding_snapshot.status} />
+                <span>
+                  Based on:{" "}
+                  <Link
+                    href={`/findings/${ins.finding_id}`}
+                    className="text-accent"
+                  >
+                    {ins.finding_snapshot.headline}
+                  </Link>
+                </span>
+                <span>
+                  · {label(ins.finding_snapshot.effect_metric)}{" "}
+                  {fmt(ins.finding_snapshot.effect_size, 2)} ·{" "}
+                  {ins.finding_snapshot.evidence.n_experiments} experiments
+                </span>
+                <span>
+                  · reviewed by {ins.reviewer} on{" "}
+                  {new Date(ins.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              {ins.references.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 text-xs text-ink-2">
+                  {ins.references.map((r) => (
+                    <li key={r}>{r}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-muted">
-                  Generated by {summary.model} from the ranked list below.
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-ink-2">
-                A plain-language overview of the top findings, written only from
-                their statistics.
-              </p>
-            )}
-          </Card>
-          <Card title="Ranking">
-            {findings === null ? (
-              <ListSkeleton rows={4} />
-            ) : (
-              <FindingList findings={findings} />
-            )}
-          </Card>
+              )}
+            </Card>
+          ))}
         </div>
       )}
     </>

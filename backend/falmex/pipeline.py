@@ -24,7 +24,9 @@ class ColumnMapping:
     raw: str
     canonical: str
     known: bool
-    unit_from: str | None = None
+    unit_from: str | None = None  # unit found in the file, when it was converted
+    unit_to: str | None = None  # canonical unit
+    converted_values: int = 0
 
 
 @dataclass
@@ -34,7 +36,11 @@ class PipelineReport:
     empty_rows_dropped: int = 0
     duplicate_rows_dropped: int = 0
     columns: list[ColumnMapping] = field(default_factory=list)
+    # values that could not be read as the variable's type and were set to missing
     coercion_failures: dict[str, int] = field(default_factory=dict)
+    # possible outliers (far outside the interquartile range). Flagged only, never removed:
+    # whether they are measurement errors is a scientific decision.
+    outliers_flagged: dict[str, int] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -43,8 +49,18 @@ class PipelineReport:
             "rows_out": self.rows_out,
             "empty_rows_dropped": self.empty_rows_dropped,
             "duplicate_rows_dropped": self.duplicate_rows_dropped,
+            "rows_removed": {
+                "empty row (every value missing)": self.empty_rows_dropped,
+                "exact duplicate row": self.duplicate_rows_dropped,
+            },
             "columns": [c.__dict__ for c in self.columns],
+            "unit_conversions": [
+                {"column": c.canonical, "raw": c.raw, "from": c.unit_from, "to": c.unit_to,
+                 "values": c.converted_values}
+                for c in self.columns if c.unit_from
+            ],
             "coercion_failures": self.coercion_failures,
+            "outliers_flagged": self.outliers_flagged,
             "warnings": self.warnings,
         }
 
@@ -60,11 +76,15 @@ def _split_unit(raw: str, schema: Schema) -> tuple[str | None, str | None]:
         hint = m.group(1)
     canonical = schema.resolve(raw)
     if canonical is None:
+        # 'pressure_atm' -> pressure + atm, but only when the suffix really is a unit of that
+        # variable; otherwise 'sample_mass' would be misread as 'sample' (material) + 'mass'
         parts = normalize_name(raw).split("_")
         for i in range(len(parts) - 1, 0, -1):
-            canonical = schema.resolve("_".join(parts[:i]))
-            if canonical:
-                hint = hint or "_".join(parts[i:])
+            candidate = schema.resolve("_".join(parts[:i]))
+            suffix = "_".join(parts[i:])
+            var = schema.get(candidate) if candidate else None
+            if var and _match_unit(var.units, suffix):
+                canonical, hint = candidate, hint or suffix
                 break
     return canonical, hint
 
@@ -98,6 +118,24 @@ def _to_bool(series: pd.Series) -> tuple[pd.Series, int]:
     return out.astype("boolean"), bad
 
 
+def flag_outliers(frame: pd.DataFrame, k: float = 3.0) -> dict[str, int]:
+    """Count values beyond k interquartile ranges from the quartiles, per numeric column."""
+    flagged = {}
+    for col in frame.columns:
+        s = frame[col]
+        numeric = pd.api.types.is_numeric_dtype(s) and not pd.api.types.is_bool_dtype(s)
+        if col.startswith("_") or not numeric:
+            continue
+        q1, q3 = s.quantile(0.25), s.quantile(0.75)
+        iqr = q3 - q1
+        if not np.isfinite(iqr) or iqr == 0:
+            continue
+        n = int(((s < q1 - k * iqr) | (s > q3 + k * iqr)).sum())
+        if n:
+            flagged[col] = n
+    return flagged
+
+
 def standardize(
     frame: pd.DataFrame, schema: Schema, source_id: str
 ) -> tuple[pd.DataFrame, PipelineReport]:
@@ -124,12 +162,20 @@ def standardize(
             out[name] = df[raw]
             continue
         if canonical in out.columns:
-            report.warnings.append(f"Column '{raw}' duplicates '{canonical}'; kept the first.")
+            # never drop data: keep the second column under its own name
+            name = normalize_name(raw) or raw
+            if name in out.columns:
+                name = f"{name}_2"
+            report.warnings.append(
+                f"Column '{raw}' also matches '{canonical}'; kept separately as '{name}'."
+            )
+            report.columns.append(ColumnMapping(raw, name, known=False))
+            out[name] = df[raw]
             continue
 
         series = df[raw]
         unit = _match_unit(var.units, hint)
-        mapping = ColumnMapping(raw, canonical, known=True, unit_from=unit)
+        mapping = ColumnMapping(raw, canonical, known=True, unit_from=unit, unit_to=var.unit)
         hint_norm = normalize_name(hint) if hint else ""
         if hint_norm and unit is None and var.unit and hint_norm != normalize_name(var.unit):
             report.warnings.append(
@@ -143,6 +189,7 @@ def standardize(
             bad = int((numeric.isna() & series.notna()).sum())
             if unit:
                 numeric = numeric.map(var.units[unit].apply)
+                mapping.converted_values = int(numeric.notna().sum())
             series = numeric.astype("float64")
         elif var.type == VarType.BOOLEAN:
             series, bad = _to_bool(series)
@@ -163,4 +210,5 @@ def standardize(
         report.warnings.append(f"No '{id_col}' column found; generated IDs from row numbers.")
     out = out.reset_index(drop=True)
     report.rows_out = len(out)
+    report.outliers_flagged = flag_outliers(out)
     return out, report

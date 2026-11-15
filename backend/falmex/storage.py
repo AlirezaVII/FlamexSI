@@ -83,6 +83,9 @@ class Store:
             CREATE TABLE IF NOT EXISTS findings (
                 finding_id VARCHAR PRIMARY KEY, dataset_id VARCHAR,
                 created_at TIMESTAMPTZ, payload JSON);
+            CREATE TABLE IF NOT EXISTS insights (
+                insight_id VARCHAR PRIMARY KEY, finding_id VARCHAR, dataset_id VARCHAR,
+                created_at TIMESTAMPTZ, payload JSON);
             """
         )
 
@@ -141,6 +144,24 @@ class Store:
              json.dumps(rec.columns), json.dumps(rec.source_ids), json.dumps(rec.report)],
         )
         return rec
+
+    def replace_dataset(
+        self, dataset_id: str, frame: pd.DataFrame, *, source_ids: list[str], report: dict
+    ) -> DatasetRecord:
+        """Swap in a new version of a dataset's table (e.g. after adding another file).
+
+        Raw files are untouched; only the processed table and its metadata change.
+        """
+        tmp = self._parquet(dataset_id).with_suffix(".tmp")
+        frame.to_parquet(tmp, index=False)
+        tmp.replace(self._parquet(dataset_id))
+        self._exec(
+            "UPDATE datasets SET n_rows = ?, columns = ?, source_ids = ?, report = ? "
+            "WHERE dataset_id = ?",
+            [len(frame), json.dumps(list(frame.columns)), json.dumps(source_ids),
+             json.dumps(report), dataset_id],
+        )
+        return self.get_dataset(dataset_id)
 
     def _parquet(self, dataset_id: str) -> Path:
         return self.processed_dir / f"{dataset_id}.parquet"
@@ -225,4 +246,20 @@ class Store:
 
     def get_finding(self, finding_id: str) -> dict | None:
         rows = self._fetch("SELECT payload FROM findings WHERE finding_id = ?", [finding_id])
+        return json.loads(rows[0]["payload"]) if rows else None
+
+    # ---- insights (created by a person, never automatically) ----------------------------
+    def save_insight(self, insight: dict) -> None:
+        self._exec(
+            "INSERT INTO insights VALUES (?, ?, ?, ?, ?)",
+            [insight["insight_id"], insight["finding_id"], insight["dataset_id"],
+             insight["created_at"], json.dumps(insight, default=str)],
+        )
+
+    def list_insights(self) -> list[dict]:
+        rows = self._fetch("SELECT payload FROM insights ORDER BY created_at DESC")
+        return [json.loads(r["payload"]) for r in rows]
+
+    def get_insight(self, insight_id: str) -> dict | None:
+        rows = self._fetch("SELECT payload FROM insights WHERE insight_id = ?", [insight_id])
         return json.loads(rows[0]["payload"]) if rows else None

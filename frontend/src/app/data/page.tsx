@@ -10,7 +10,8 @@ import {
   SyntheticBanner,
 } from "@/components/ui";
 import { api, fmt } from "@/lib/api";
-import type { DatasetDetail, Meta } from "@/lib/types";
+import { DataQuality } from "@/components/data-quality";
+import type { DatasetDetail, Meta, Quality } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
 export default function DataPage() {
@@ -21,6 +22,9 @@ export default function DataPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [quality, setQuality] = useState<Quality | null>(null);
+  const [qualityFor, setQualityFor] = useState<string | null>(null);
+  const [append, setAppend] = useState(false);
 
   useEffect(() => {
     api
@@ -34,6 +38,13 @@ export default function DataPage() {
     api
       .dataset(dataset.dataset_id)
       .then(setDetail)
+      .catch((e) => setError(e.message));
+    api
+      .quality(dataset.dataset_id)
+      .then((q) => {
+        setQuality(q);
+        setQualityFor(dataset.dataset_id);
+      })
       .catch((e) => setError(e.message));
   }, [dataset]);
 
@@ -55,7 +66,11 @@ export default function DataPage() {
   const upload = () =>
     run(async () => {
       if (!file) return null;
-      const res = await api.upload(file);
+      const into =
+        append && dataset && !dataset.synthetic ? dataset.dataset_id : null;
+      const res = into
+        ? await api.addSource(into, file)
+        : await api.upload(file);
       if (!res.dataset) {
         setNotice(
           `Stored ${res.source.filename} as media. Media analysis is not enabled yet.`,
@@ -74,9 +89,10 @@ export default function DataPage() {
   return (
     <>
       <PageHeader eyebrow="Data" title="Load experiment data">
-        Files are stored unchanged, then cleaned and mapped onto the canonical
-        variables (units converted). Every row keeps a link to the file it came
-        from.
+        NASA file → stored unchanged → standardized (units, names, types) →
+        quality checks → standard variables plus every original column → ready
+        for analysis. Every row keeps a link to the file it came from, and every
+        change is listed with its reason.
       </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -98,6 +114,18 @@ export default function DataPage() {
               />
             )}
           </p>
+          {dataset && !dataset.synthetic && (
+            <label className="mt-3 flex items-center gap-2 text-sm text-ink-2">
+              <input
+                type="checkbox"
+                checked={append}
+                onChange={(e) => setAppend(e.target.checked)}
+                className="accent-[var(--accent)]"
+              />
+              Add to “{dataset.name}” (rows link to experiments by their
+              experiment ID)
+            </label>
+          )}
           <Button className="mt-4" onClick={upload} disabled={!file || busy}>
             {busy ? "Working…" : "Upload & standardize"}
           </Button>
@@ -105,9 +133,11 @@ export default function DataPage() {
 
         <Card title="Synthetic test data">
           <p className="text-sm text-ink-2">
-            Generates fake experiments with a few planted relationships, to
-            check that the engine finds real signal and rejects noise. Not for
-            scientific conclusions.
+            Synthetic test data — not NASA laboratory data. Contains planted
+            relationships plus pure noise and a spurious variable, to check that
+            the engine finds real signal and does not report what is not there.
+            Always kept separate from real data and never eligible to become an
+            insight.
           </p>
           <Button
             variant="ghost"
@@ -150,6 +180,13 @@ export default function DataPage() {
         detail.dataset.dataset_id === dataset.dataset_id && (
           <div className="fade-in mt-8 space-y-4">
             {dataset.synthetic && <SyntheticBanner />}
+            {quality && qualityFor === dataset.dataset_id ? (
+              <DataQuality q={quality} />
+            ) : (
+              <Card title="Data quality">
+                <TableSkeleton rows={4} cols={4} />
+              </Card>
+            )}
             <Card title={`Variables in “${dataset.name}”`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
