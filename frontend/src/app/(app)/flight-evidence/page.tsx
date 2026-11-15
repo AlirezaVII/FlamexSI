@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, PageHeader, Stat } from "@/components/ui";
 import burning from "@/lib/flight/burning.json";
 import frames from "@/lib/flight/frames.json";
+import audit from "@/lib/flight/holdout-audit.json";
 import models from "@/lib/flight/models.json";
 
 /*
@@ -95,6 +96,7 @@ const SECTIONS = [
   ["atmosphere", "Mission check"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
+  ["methods", "Methods & uncertainty"],
   ["sources", "NASA sources"],
   ["vision", "Image evidence"],
   ["burning", "Burning rates"],
@@ -127,6 +129,7 @@ export default function FlightEvidence() {
       <AtmosphereCheck />
       <Ranking />
       <ReportAndPlanner />
+      <EvidenceMethods />
       <Sources />
       <ImageEvidence />
       <FrameTester />
@@ -351,7 +354,9 @@ function ReportAndPlanner() {
   const [di, setDi] = useState(Math.floor(rows.length / 2));
   const [ai, setAi] = useState<{ state: "idle" | "busy" | "done" | "error"; text?: string; data?: Interpretation; cached?: boolean }>({ state: "idle" });
 
+  const requestVersion = useRef(0);
   const pickTask = (i: number) => {
+    requestVersion.current++;
     setTi(i);
     const f = Object.keys(TASKS[i].options)[0];
     setFuel(f);
@@ -373,9 +378,10 @@ function ReportAndPlanner() {
       ? { tone: "var(--critical)", text: "Prediction alert: the fuel-only baseline has lower error. Use measured observations to plan a follow-up." }
       : x === y
         ? { tone: "var(--warning)", text: "Comparison alert: both inputs select the same condition." }
-        : { tone: "var(--good)", text: `Validation: ${g.toFixed(1)}% lower error than the fuel median on the final time window. This is an observational contrast within FLEX.` };
+        : { tone: "var(--warning)", text: `Observed error was ${g.toFixed(1)}% lower than the fuel median. The date-resampled interval also includes zero gain. See Methods & uncertainty.` };
 
   async function interpret() {
+    const version = ++requestVersion.current;
     setAi({ state: "busy" });
     try {
       const r = await fetch(`/api/flight-evidence/${encodeURIComponent(t.id)}/interpret`, {
@@ -387,8 +393,10 @@ function ReportAndPlanner() {
       if (!r.ok) throw Error(`HTTP ${r.status}`);
       const { interpretation, cached } = (await r.json()) as { interpretation: Interpretation; cached?: boolean };
       if (!interpretation?.summary) throw Error("no Gemini output");
+      if (version !== requestVersion.current) return;
       setAi({ state: "done", data: interpretation, cached });
     } catch (e) {
+      if (version !== requestVersion.current) return;
       setAi({ state: "error", text: (e as Error).message });
     }
   }
@@ -464,7 +472,7 @@ function ReportAndPlanner() {
             <summary className="cursor-pointer text-xs font-medium text-ink">Three chronological evaluations</summary>
             <p className="mt-2 text-xs text-ink-2">
               Each model learned only from earlier experiment dates. Windows cover successive
-              fifths of the 80 dates. Entries: model / fuel-only median absolute error.
+              fifths of the 80 dates. Entries show mean absolute error for the model and the fuel-only baseline.
             </p>
             <table className="mt-2 w-full text-xs tabular-nums">
               <thead className="text-muted">
@@ -556,7 +564,7 @@ function ReportAndPlanner() {
           {ai.state === "done" && ai.data && (
             <div className="space-y-2 rounded-lg bg-surface-2 p-3" role="status">
               <p className="text-xs font-medium uppercase tracking-wider text-accent">
-                Gemini · explains the computed facts only{ai.data.model ? ` · ${ai.data.model}` : ""}
+                Gemini · explains the overall finding across experiments{ai.data.model ? ` · ${ai.data.model}` : ""}
                 {ai.cached ? " · saved answer" : ""}
               </p>
               <p className="text-ink">{ai.data.summary}</p>
@@ -582,6 +590,40 @@ function ReportAndPlanner() {
 }
 
 /* ---------------------------------------------------------------------------------- */
+
+function EvidenceMethods() {
+  const repo = "https://github.com/AlirezaVII/Falmex/blob/main/";
+  const source = repo + "backend/review_seed/PSI-69_Experimental%20table_FLEX.csv";
+  return (
+    <section id="methods" className="scroll-mt-24">
+      <Card title="How to read and reproduce a prediction">
+        <ol className="list-decimal space-y-2 pl-5 text-sm text-ink-2">
+          <li>Open Report &amp; planner. Choose one fuel and two measured conditions. Each estimate is the median outcome among the five closest training rows for that fuel, including ties. The extinction ratio divides visible extinction diameter by initial diameter.</li>
+          <li>Compare absolute errors on experiments dated {audit.cutoff} or later. The baseline predicts the median for that fuel in training. Positive gain means lower mean absolute error for the planner. Each row below uses its outcome’s units.</li>
+          <li>Read the interval before interpreting the ranking. We resampled whole test dates with replacement {audit.replicates.toLocaleString("en-US")} times and kept paired errors together. Each interval spans the 2.5th to 97.5th percentiles. It measures sensitivity to the sampled dates with training fixed.</li>
+        </ol>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-xs tabular-nums">
+            <caption className="pb-2 text-left text-sm font-medium">Held-out gain over the fuel median</caption>
+            <thead><tr>{["Target", "Rows / dates", "MAE gain", "95% interval"].map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
+            <tbody>{audit.results.map(r => <tr key={r.title} className="border-t border-line">
+              <td className="p-2">{r.title}</td><td className="p-2">{r.rows} / {r.days}</td>
+              <td className="p-2">{r.gain.toFixed(3)}</td><td className="p-2">[{r.low.toFixed(3)}, {r.high.toFixed(3)}]</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-sm text-ink-2">All three intervals include zero. These experiments leave the direction of the predictive advantage uncertain. Each interval is exploratory and applies to FLEX only. Gemini explains the selected statistical finding. Its text does not estimate a cabin hazard.</p>
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-accent underline">
+          <a href={source}>FLEX source table</a>
+          <a href={repo + "backend/scripts/build_flex_decision_review.py"}>Prediction formula and units</a>
+          <a href={repo + "backend/scripts/audit_flex_holdout.py"}>Resampling code</a>
+          <a href={repo + "frontend/src/lib/flight/holdout-audit.json"}>Exact test rows, seed and dataset checksum</a>
+          <a href={repo + "bass-cv/independent-review-results-v6/dual-reference-folds.json"}>Image scores by held-out video</a>
+        </div>
+      </Card>
+    </section>
+  );
+}
 
 function Sources() {
   const [i, setI] = useState(0);
