@@ -310,7 +310,11 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
         {(busy || comparing) && (
           <div className="mt-3">
             <LoadingLabel>
-              {comparing ? "Running every method on the same footage…" : "Measuring every frame…"}
+              {comparing
+                ? `Running every method on the same footage…${usable.some((d) => d.id === "v6") ? " Pouya's v6 takes about half a minute." : ""}`
+                : detector === "v6"
+                  ? "Sending 24 frames to Pouya's v6 model… about half a minute"
+                  : "Measuring every frame…"}
             </LoadingLabel>
           </div>
         )}
@@ -629,10 +633,18 @@ function CompareCard({ c, detectors }: { c: FootageComparison; detectors: Footag
             <text x={38} y={Y(y1 * k) + 3} fontSize={10} textAnchor="end" fill="var(--muted)">{fmt(y1 * k, 3)}</text>
           </g>
         ))}
-        {entries.map(([id, d]) => (
-          <polyline key={id} fill="none" stroke={COLORS[id] ?? "var(--accent)"} strokeWidth={2}
-            points={d.radius.filter((p) => p[1] != null).map((p) => `${X(p[0]).toFixed(1)},${Y(p[1] as number).toFixed(1)}`).join(" ")} />
-        ))}
+        {entries.map(([id, d]) => {
+          const pts = d.radius.filter((p) => p[1] != null) as [number, number][];
+          return (
+            <g key={id}>
+              <polyline fill="none" stroke={COLORS[id] ?? "var(--accent)"} strokeWidth={2}
+                points={pts.map((p) => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" ")} />
+              {d.radius.length <= 40 && pts.map((p, i) => ( // a sampled method: show its frames
+                <circle key={i} cx={X(p[0])} cy={Y(p[1])} r={2.5} fill={COLORS[id] ?? "var(--accent)"} />
+              ))}
+            </g>
+          );
+        })}
         <text x={309} y={192} fontSize={11} textAnchor="middle" fill="var(--ink-2)">
           {c.x === "time_s" ? "time (s)" : "frame"} · equivalent radius (px)
         </text>
@@ -641,6 +653,9 @@ function CompareCard({ c, detectors }: { c: FootageComparison; detectors: Footag
         Same footage, same measurements; only the way the flame is found differs. Where the
         curves disagree, open the overlay with each method to see why.
       </p>
+      {Object.entries(c.skipped ?? {}).map(([id, why]) => (
+        <p key={id} className="mt-1 text-xs text-ink-2">{name(id)} was not run: {why.replace(/\.$/, "")}.</p>
+      ))}
     </Card>
   );
 }

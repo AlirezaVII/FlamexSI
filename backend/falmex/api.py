@@ -136,7 +136,7 @@ class InnovationUpdate(BaseModel):
 class AnalyzeMediaRequest(BaseModel):
     fps: float | None = Field(None, gt=0, le=1_000_000)  # overrides the file's frame rate
     mm_per_px: float | None = Field(None, gt=0)  # calibration; lengths stay in px without it
-    detector: Literal["opencv", "classic"] = "opencv"  # how the flame is found in each frame
+    detector: Literal["opencv", "classic", "v6"] = "opencv"  # how the flame is found in each frame
 
 
 class AttachMediaRequest(BaseModel):
@@ -304,7 +304,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             "safety_areas": [a.value for a in SafetyArea],
             "innovation_kinds": [k.value for k in InnovationKind],
             "innovation_stages": [s.value for s in Stage],
-            "footage_detectors": [{"id": k, **v} for k, v in vision.DETECTOR_INFO.items()],
+            "footage_detectors": [{"id": k, **vision.DETECTOR_INFO[k]} for k in vision.detectors()],
         }
 
     # ---- datasets -----------------------------------------------------------
@@ -776,20 +776,27 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
 
         body = body or AnalyzeMediaRequest()
         source = media_or_404(request, source_id)
-        out = {}
-        for det in vision.DETECTORS:
+        out, skipped = {}, {}
+        path = store(request).raw_path(source)
+        for det in vision.detectors():
+            if det == "v6" and path.suffix.lower() not in vision.VIDEO_EXT:
+                skipped[det] = "needs a video"
+                continue
             with tempfile.TemporaryDirectory() as tmp:
                 try:
-                    r = vision.analyze(store(request).raw_path(source), Path(tmp),
+                    r = vision.analyze(path, Path(tmp),
                                        vision.Calibration(fps=body.fps, mm_per_px=body.mm_per_px),
                                        detector=det)
                 except ValueError as exc:
+                    if det == "v6":  # an optional remote method must not sink the comparison
+                        skipped[det] = str(exc)
+                        continue
                     raise HTTPException(422, str(exc)) from exc
             out[det] = {"summary": r["summary"],
                         "radius": [[f.get("time_s") if f.get("time_s") is not None else f["index"],
                                     f.get("radius_px") if f.get("present") else None]
                                    for f in r["frames"]]}
-        return {"source_id": source_id, "detectors": out,
+        return {"source_id": source_id, "detectors": out, "skipped": skipped,
                 "x": "time_s" if any(d["summary"].get("growth_rate_unit") for d in out.values())
                 else "frame"}
 

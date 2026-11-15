@@ -698,6 +698,7 @@ export interface FootageComparison {
   source_id: string;
   x: "time_s" | "frame";
   detectors: Record<string, { summary: FootageSummary; radius: [number, number | null][] }>;
+  skipped?: Record<string, string>; // methods that could not run on this footage, and why
 }
 
 export interface FootageAnalysis {

@@ -17,6 +17,12 @@ Lengths are in pixels unless a calibration (mm per pixel) is given. Time comes f
 video's frame rate unless overridden (high-speed footage is often stored at a playback rate).
 """
 
+import base64
+import json
+import os
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,7 +43,7 @@ SOOT_HUES = ((0, 35), (165, 180))  # red, orange, yellow
 VIDEO_EXT = {".mp4", ".avi", ".mov"}
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
-DETECTORS = ("opencv", "classic")
+DETECTORS = ("opencv", "classic")  # always available; "v6" joins when its service is set up
 DETECTOR_INFO = {
     "opencv": {"label": "OpenCV (recommended)",
                "note": "Background subtraction + hysteresis, no training. On the 24 reserved "
@@ -46,7 +52,16 @@ DETECTOR_INFO = {
     "classic": {"label": "Classic brightness threshold",
                 "note": "One Otsu threshold on brightness for the whole clip. Fast and simple; "
                         "bright scenes, LEDs and screens confuse it."},
+    "v6": {"label": "Learned v6 (Pouya's model)", "video_only": True,
+           "note": "Pouya Latifiyan's frozen LightGBM model: 74 features per pixel, each frame "
+                   "compared with the clip's first second. Video only; slower, so "
+                   "24 frames spread through the clip are measured. Trained on BASS-II, it "
+                   "scored IoU 0.03 against reviewer A on the 24 reserved frames."},
 }
+# Pouya's v6 needs ~1 GB per frame, more than the main server has, so it runs as its own
+# service (services/v6). Frames are downscaled to V6_MAX_WIDTH before sending.
+V6_FRAMES, V6_MAX_WIDTH, V6_WORKERS, V6_TIMEOUT = 24, 960, 8, 90
+V6_REFERENCE_FRAMES = 30  # as in the frozen pipeline: median of the clip's first 30 frames
 # OpenCV detector (bass-cv/scripts/opencv_flame_v3.py, colour-free variant for new footage):
 # a pixel seeds the flame when it is bright AND changed from the scene's background, any
 # colour (microgravity flames are often blue); saturated warm points also seed. Connected,
@@ -90,6 +105,74 @@ def _frames(path: Path):
     if not out:
         raise ValueError("The video has no readable frames")
     return out, fps, i
+
+
+def _v6_config() -> tuple[str, str]:
+    return os.environ.get("FALMEX_V6_URL", "").strip(), os.environ.get("FALMEX_V6_KEY", "").strip()
+
+
+def detectors() -> tuple[str, ...]:
+    """Detectors usable right now: v6 only when its service is configured."""
+    url, key = _v6_config()
+    return DETECTORS + (("v6",) if url and key else ())
+
+
+def _reference(path: Path) -> np.ndarray:
+    """The frozen v6 reference: per-pixel median of the clip's first 30 frames."""
+    cap = cv2.VideoCapture(str(path))
+    images = []
+    for _ in range(V6_REFERENCE_FRAMES):
+        ok, img = cap.read()
+        if not ok:
+            break
+        images.append(img)
+    cap.release()
+    if not images:
+        raise ValueError("The video has no readable frames")
+    return np.median(np.stack(images), axis=0).astype(np.uint8)
+
+
+def _v6_mask(url: str, key: str, frame: np.ndarray, reference_png: bytes) -> np.ndarray:
+    ok, png = cv2.imencode(".png", frame)
+    body = png.tobytes()
+    req = urllib.request.Request(url, data=body + reference_png, method="POST", headers={
+        "X-Flamex-Key": key, "X-Frame-Bytes": str(len(body)),
+        "Content-Type": "application/octet-stream"})
+    try:
+        with urllib.request.urlopen(req, timeout=V6_TIMEOUT) as r:  # noqa: S310 (configured URL)
+            out = json.loads(r.read())
+    except urllib.error.HTTPError as exc:
+        raise ValueError(f"The v6 service refused a frame (HTTP {exc.code})") from exc
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        raise ValueError("The v6 service did not answer; try again or pick another method") from exc
+    mask = cv2.imdecode(np.frombuffer(base64.b64decode(out["mask"]), np.uint8),
+                        cv2.IMREAD_GRAYSCALE)
+    if mask is None or mask.shape != frame.shape[:2]:
+        raise ValueError("The v6 service returned an unreadable mask")
+    return (mask > 0).astype(np.uint8)
+
+
+def v6_masks(path: Path, frames: list[np.ndarray]) -> list[np.ndarray]:
+    """Masks from Pouya's v6 service, one per frame, at each frame's own size. Frames wider
+    than V6_MAX_WIDTH are sent downscaled and the mask is scaled back (nearest neighbour)."""
+    url, key = _v6_config()
+    if not (url and key):
+        raise ValueError("The v6 method is not set up on this server")
+    ref = _reference(path)
+    h, w = ref.shape[:2]
+    size = None
+    if w > V6_MAX_WIDTH:
+        size = (V6_MAX_WIDTH, round(h * V6_MAX_WIDTH / w))
+        ref = cv2.resize(ref, size, interpolation=cv2.INTER_AREA)
+    ref_png = cv2.imencode(".png", ref)[1].tobytes()
+
+    def one(frame: np.ndarray) -> np.ndarray:
+        small = cv2.resize(frame, size, interpolation=cv2.INTER_AREA) if size else frame
+        m = _v6_mask(url, key, small, ref_png)
+        return cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST) if size else m
+
+    with ThreadPoolExecutor(V6_WORKERS) as pool:
+        return list(pool.map(one, frames))
 
 
 def _threshold(frames: list[np.ndarray]) -> float:
@@ -231,11 +314,20 @@ def _measure(frame: np.ndarray, thresh: float, mask: np.ndarray | None = None) -
 def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
             detector: str = "opencv") -> dict:
     """Measure every analyzed frame, save overlay frames as JPEG, return the analysis."""
-    if detector not in DETECTORS:
-        raise ValueError(f"Unknown detector '{detector}'")
+    if detector not in detectors():
+        raise ValueError(f"Unknown detector '{detector}'" if detector != "v6"
+                         else "The v6 method is not set up on this server")
     cal = calibration or Calibration()
     sampled, file_fps, n_total = _frames(path)
     bg = background([f for _, f in sampled]) if detector == "opencv" else None
+    masks = None
+    if detector == "v6":
+        if path.suffix.lower() not in VIDEO_EXT:
+            raise ValueError("v6 needs a video: it compares each frame with the clip's first "
+                             "second. Use OpenCV for a single image.")
+        pick = np.linspace(0, len(sampled) - 1, min(V6_FRAMES, len(sampled))).astype(int)
+        sampled = [sampled[i] for i in sorted(set(pick))]
+        masks = v6_masks(path, [f for _, f in sampled])
     fps = cal.fps or file_fps
     thresh = _threshold([f for _, f in sampled])
     h, w = sampled[0][1].shape[:2]
@@ -248,7 +340,8 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
 
     frames, saved = [], 0
     for k, (idx, img) in enumerate(sampled):
-        m = _measure(img, thresh, opencv_mask(img, bg) if bg is not None else None)
+        mask = masks[k] if masks is not None else opencv_mask(img, bg) if bg is not None else None
+        m = _measure(img, thresh, mask)
         m.update(index=idx, time_s=round(idx / fps, 6) if fps else None)
         if k in keep:
             name = f"frame_{saved:04d}.jpg"
