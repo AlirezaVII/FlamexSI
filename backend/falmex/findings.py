@@ -130,7 +130,7 @@ class Novelty(StrEnum):
 
 class Reference(BaseModel):
     title: str = Field(min_length=3)
-    url: str = ""
+    url: str = Field("", pattern=r"^(https?://\S+)?$")  # only web links; never javascript:
     # NASA's own sources and the challenge material come first; papers only when needed
     kind: Literal["nasa_primary", "challenge", "paper", "other"] = "nasa_primary"
     note: str = ""  # what this source says about the finding

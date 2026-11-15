@@ -56,11 +56,20 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     throw new ApiError(
       0,
-      `Cannot reach the Falmex API at ${API_URL}. Is the backend running?`,
+      "Cannot reach the Falmex server. Check your connection and try again.",
     );
   }
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail =
+      res.status === 413
+        ? "The file is too large for the server."
+        : res.status === 429
+          ? "Too many requests. Please wait a minute and try again."
+          : res.status === 504 || res.status === 502 || res.status === 503
+            ? "The server did not respond in time. Please try again in a moment."
+            : res.status >= 500
+              ? "The server hit an unexpected error. Please try again; if it repeats, tell the team."
+              : res.statusText || `Request failed (${res.status}).`;
     try {
       const body = await res.json();
       detail =
@@ -68,7 +77,7 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
           ? body.detail
           : Array.isArray(body.detail)
             ? body.detail.map(readableIssue).join(" ")
-            : JSON.stringify(body.detail);
+            : detail;
     } catch {}
     throw new ApiError(res.status, detail);
   }
@@ -100,12 +109,37 @@ function checkUploadSize(file: File) {
 
 /** A FastAPI/pydantic validation issue as a sentence a person can act on. */
 function readableIssue(issue: {
+  type?: string;
   loc?: (string | number)[];
   msg?: string;
-  ctx?: { min_length?: number; max_length?: number };
+  ctx?: {
+    min_length?: number;
+    max_length?: number;
+    gt?: number;
+    ge?: number;
+    lt?: number;
+    le?: number;
+  };
 }): string {
-  const field = String(issue.loc?.[issue.loc.length - 1] ?? "a field").replace(/_/g, " ");
+  const field = String(
+    [...(issue.loc ?? [])].reverse().find((p) => typeof p === "string" && p !== "body") ??
+      "a field",
+  ).replace(/_/g, " ");
   const name = field.charAt(0).toUpperCase() + field.slice(1);
+  const c = issue.ctx ?? {};
+  if (issue.type === "string_pattern_mismatch")
+    return field === "url"
+      ? "Links must start with http:// or https://."
+      : `${name} has an invalid format.`;
+  if (c.gt !== undefined) return `${name} must be greater than ${c.gt}.`;
+  if (c.ge !== undefined) return `${name} must be at least ${c.ge}.`;
+  if (c.lt !== undefined) return `${name} must be less than ${c.lt}.`;
+  if (c.le !== undefined) return `${name} must be at most ${c.le}.`;
+  if (issue.type === "json_invalid") return "The request was not valid JSON.";
+  if (issue.type?.endsWith("_parsing") || issue.type?.endsWith("_type"))
+    return `${name} has the wrong kind of value (for example text where a number is expected).`;
+  if (issue.type === "enum" || issue.type === "literal_error")
+    return `${name} is not one of the allowed options.`;
   if (issue.ctx?.min_length !== undefined)
     return `${name} needs at least ${issue.ctx.min_length} characters.`;
   if (issue.ctx?.max_length !== undefined)

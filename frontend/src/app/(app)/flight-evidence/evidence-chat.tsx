@@ -31,13 +31,19 @@ export function EvidenceChat({ frame, counts }: { frame?: string; counts?: Count
           history: turns.slice(-4).map(({ question, answer }) => ({ question, answer })) }),
         signal: AbortSignal.timeout(60000),
       });
-      if (!response.ok) throw Error(response.status === 429
-        ? "The assistant is busy. Try again in a minute." : "The assistant is unavailable. Please retry.");
+      if (!response.ok) throw Error(
+        response.status === 429 ? "The assistant is busy. Try again in a minute."
+        : response.status === 422 ? "Please shorten the question (up to 1,200 characters)."
+        : response.status === 503 ? "The assistant is not configured on this server."
+        : "The assistant could not answer this time. Please retry.");
       const { answer, sources } = await response.json();
       setTurns(old => [...old, { question: text, answer, sources }]);
       setQuestion("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Request failed. Please retry.");
+      setError(e instanceof Error && e.name === "TimeoutError"
+        ? "No answer after 60 seconds. Please retry."
+        : e instanceof TypeError ? "No connection to the server. Check your network and retry."
+        : e instanceof Error ? e.message : "Request failed. Please retry.");
     } finally {
       setBusy(false);
     }

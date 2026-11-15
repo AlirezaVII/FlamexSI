@@ -7,6 +7,7 @@
 
 import hashlib
 import json
+import math
 import threading
 import uuid
 from datetime import UTC, datetime
@@ -15,7 +16,7 @@ from typing import Any, Literal
 
 import duckdb
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 FilterOp = Literal["eq", "ne", "gt", "gte", "lt", "lte", "in", "contains"]
 _SQL_OPS = {"eq": "=", "ne": "!=", "gt": ">", "gte": ">=", "lt": "<", "lte": "<="}
@@ -25,6 +26,14 @@ class Filter(BaseModel):
     field: str
     op: FilterOp = "eq"
     value: Any
+
+    @field_validator("value")
+    @classmethod
+    def finite(cls, v):
+        vals = v if isinstance(v, list) else [v]
+        if any(isinstance(x, float) and not math.isfinite(x) for x in vals):
+            raise ValueError("filter values must be finite numbers")
+        return v
 
 
 class SourceRecord(BaseModel):
@@ -265,10 +274,15 @@ class Store:
                 raise ValueError(f"Unknown column '{sort}'")
             order = f'ORDER BY "{sort}" {"DESC" if descending else "ASC"} NULLS LAST'
         with self._lock:
-            total = self._con.execute(f"SELECT count(*) FROM {src} {clause}", params).fetchone()[0]
-            frame = self._con.execute(
-                f"SELECT * FROM {src} {clause} {order} LIMIT ? OFFSET ?", [*params, limit, offset]
-            ).df()
+            try:
+                total = self._con.execute(f"SELECT count(*) FROM {src} {clause}",
+                                          params).fetchone()[0]
+                frame = self._con.execute(
+                    f"SELECT * FROM {src} {clause} {order} LIMIT ? OFFSET ?",
+                    [*params, limit, offset]).df()
+            except (duckdb.ConversionException, duckdb.BinderException) as exc:
+                raise ValueError("a filter value does not match the column's type "
+                                 "(for example text compared with a number)") from exc
         return records(frame), int(total)
 
     # ---- findings ----------------------------------------------------------

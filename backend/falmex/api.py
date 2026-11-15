@@ -1,6 +1,7 @@
 """HTTP API. Run: uvicorn falmex.api:app --reload"""
 
 import io
+import math
 import re
 import uuid
 from contextlib import asynccontextmanager
@@ -8,9 +9,10 @@ from datetime import UTC, datetime
 from functools import lru_cache
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
 
 from falmex import (
     __version__,
@@ -92,6 +94,8 @@ class ProbeRequest(BaseModel):
 
 
 class InsightRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)  # '   ' is empty
+
     statement: str = Field(min_length=10)
     scientific_interpretation: str = Field(min_length=10)
     fire_safety_relevance: str = Field(min_length=5)
@@ -103,6 +107,8 @@ class InsightRequest(BaseModel):
 
 
 class PriorKnowledgeRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)  # '   ' is empty
+
     novelty: Novelty
     summary: str = Field(min_length=5)
     references: list[Reference] = []
@@ -110,6 +116,8 @@ class PriorKnowledgeRequest(BaseModel):
 
 
 class InnovationRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)  # '   ' is empty
+
     title: str = Field(min_length=3)
     kind: InnovationKind
     enables: str = Field(min_length=5)
@@ -142,6 +150,8 @@ class FlammabilityRequest(BaseModel):
 
 
 class ReferenceLimitRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)  # '   ' is empty
+
     material: str = Field(min_length=1)
     kind: str = Field("MOC", min_length=2)
     oxygen_percent: float = Field(gt=0, le=100)
@@ -149,7 +159,7 @@ class ReferenceLimitRequest(BaseModel):
     gravity_g: float | None = Field(None, ge=0)
     flow_cm_s: float | None = Field(None, ge=0)
     source: str = Field(min_length=5)
-    url: str = ""
+    url: str = Field("", pattern=r"^(https?://\S+)?$")  # a javascript: link would run on click
     note: str = ""
     entered_by: str = Field(min_length=2)
 
@@ -167,7 +177,7 @@ FRAME_NAME = re.compile(r"^frame_\d{4}\.jpg$")
 
 class SyntheticRequest(BaseModel):
     n_experiments: int = Field(200, ge=10, le=100_000)
-    seed: int = 0
+    seed: int = Field(0, ge=0, le=2**32 - 1)
 
 
 @lru_cache(maxsize=1)
@@ -229,6 +239,19 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         app.state.store.close()
 
     app = FastAPI(title="Falmex API", version=__version__, lifespan=lifespan)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(_request: Request, exc: RequestValidationError):
+        # FastAPI echoes the rejected input back; an infinite number or a huge string there
+        # would break the JSON response itself. Keep where/what/limits, never the input.
+        detail = [{k: v for k, v in e.items() if k in ("type", "loc", "msg", "ctx")}
+                  for e in exc.errors()]
+        for e in detail:
+            if "ctx" in e:
+                e["ctx"] = {k: v if isinstance(v, (int, str)) or (
+                    isinstance(v, float) and math.isfinite(v)) else str(v)
+                            for k, v in e["ctx"].items()}
+        return JSONResponse(status_code=422, content={"detail": detail})
     app.include_router(chat_router())
     app.add_middleware(
         CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"],

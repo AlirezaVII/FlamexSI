@@ -788,14 +788,17 @@ function ReportAndPlanner() {
       });
       if (r.status === 429) throw Error("too many requests, try again in a few minutes");
       if (r.status === 503) throw Error("Gemini is not configured on this server");
-      if (!r.ok) throw Error(`HTTP ${r.status}`);
+      if (!r.ok) throw Error("Gemini could not write the report this time; please retry");
       const { interpretation, cached } = (await r.json()) as { interpretation: Interpretation; cached?: boolean };
       if (!interpretation?.summary) throw Error("no Gemini output");
       if (version !== requestVersion.current) return;
       setAi({ state: "done", data: interpretation, cached });
     } catch (e) {
       if (version !== requestVersion.current) return;
-      setAi({ state: "error", text: (e as Error).message });
+      const err = e as Error;
+      setAi({ state: "error", text: err.name === "TimeoutError"
+        ? "no report after 45 seconds; please retry"
+        : err instanceof TypeError ? "no connection to the server" : err.message });
     }
   }
 

@@ -66,7 +66,13 @@ def read_file(filename: str, content: bytes) -> IngestResult:
         raise UnsupportedFileError(
             f"Unsupported file type '.{ext}'. Supported: {', '.join(supported_extensions())}"
         )
-    return adapter(filename, content)
+    try:
+        return adapter(filename, content)
+    except (UnsupportedFileError, ValueError, UnicodeDecodeError):
+        raise
+    except Exception as exc:  # a corrupt file must not crash the server (zip, xlsx, parquet...)
+        raise ValueError(f"the file looks damaged or is not a valid .{ext} file "
+                         f"({type(exc).__name__})") from exc
 
 
 def _decode(content: bytes) -> tuple[str, str]:
