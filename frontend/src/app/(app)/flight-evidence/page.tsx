@@ -8,6 +8,7 @@ import frames from "@/lib/flight/frames.json";
 import benchmark from "@/lib/flight/benchmark.json";
 import audit from "@/lib/flight/holdout-audit.json";
 import models from "@/lib/flight/models.json";
+import transitions from "@/lib/flight/transitions.json";
 
 /*
  * Flight evidence: NASA FLEX (PSI-69) droplet measurements and BASS-II frames.
@@ -95,6 +96,7 @@ const STUDIES: [string, string, string, string][] = [
 ];
 
 const SECTIONS = [
+  ["transition", "Transition finder"],
   ["atmosphere", "Mission check"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
@@ -129,6 +131,7 @@ export default function FlightEvidence() {
       </nav>
       <NasaLessons />
       <ExtinctionCurve />
+      <TransitionFinder />
       <AtmosphereCheck />
       <Ranking />
       <ReportAndPlanner />
@@ -265,6 +268,110 @@ function ExtinctionCurve() {
 }
 
 /* ---------------------------------------------------------------------------------- */
+
+interface Transition {
+  n: number;
+  tested_oxygen: [number, number];
+  transition_oxygen: number | null;
+  interval: [number, number] | null;
+  shuffle_p: number;
+  later_dates: { test_experiments: number; cutoff: string; balanced_accuracy: number; baseline: number } | null;
+  status: "supported" | "candidate" | "none";
+  levels: { oxygen: number; extinction: number; disruption: number; completion: number }[];
+  by_diluent: Record<string, { n: number; transition_oxygen: number | null }>;
+}
+const TRANSITIONS = transitions as unknown as { method: string; fuels: Record<string, Transition> };
+const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+/** Fire Behavior Transition Finder: where does the end of a burn change with oxygen? */
+function TransitionFinder() {
+  return (
+    <Card title="Fire behavior transition finder" className="scroll-mt-24 print:hidden">
+      <span id="transition" className="sr-only" />
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        FLEX records how each burn ended: the visible flame went out (extinction), the
+        droplet broke apart (disruption), or the fuel burned away (completion). Below
+        which oxygen level do flames go out? Falmex looks for that boundary, then tries to
+        break it with shuffles and with test dates it did not use. It reports a boundary
+        only if it survives.
+      </p>
+      <div className="grid gap-5 md:grid-cols-2">
+        {Object.entries(TRANSITIONS.fuels).map(([fuel, t]) => {
+          const max = Math.max(...t.levels.map((l) => l.extinction + l.disruption + l.completion));
+          const badge =
+            t.status === "supported"
+              ? ["Supported boundary", "var(--good)"]
+              : t.status === "candidate"
+                ? ["Candidate: not confirmed on later dates", "var(--warning)"]
+                : ["No boundary supported", "var(--muted)"];
+          return (
+            <div key={fuel} className="rounded-xl border border-line p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-lg text-ink">{fuel}</h3>
+                <span className="rounded-full px-2 py-0.5 text-xs" style={{ color: badge[1], border: `1px solid ${badge[1]}` }}>
+                  {badge[0]}
+                </span>
+              </div>
+              {t.transition_oxygen !== null && t.interval && (
+                <p className="mt-1 text-sm text-ink-2">
+                  Flames mostly went out below about{" "}
+                  <b className="text-ink">{pct(t.transition_oxygen)}</b> oxygen (95% interval{" "}
+                  {pct(t.interval[0])}–{pct(t.interval[1])}), {t.n} tests, shuffle p{" "}
+                  {t.shuffle_p < 0.001 ? "< 0.001" : `= ${t.shuffle_p}`}.
+                </p>
+              )}
+              <div className="mt-3 space-y-1" aria-label={`${fuel}: how burns ended at each oxygen level`}>
+                {t.levels.map((l) => {
+                  const total = l.extinction + l.disruption + l.completion;
+                  return (
+                    <div key={l.oxygen} className="grid grid-cols-[3rem_minmax(0,1fr)_2rem] items-center gap-2 text-xs">
+                      <span className="tabular-nums text-muted">{pct(l.oxygen)}</span>
+                      <div className="flex h-3 overflow-hidden rounded-full bg-surface-2" style={{ width: `${(100 * total) / max}%` }}>
+                        <i style={{ width: `${(100 * l.extinction) / total}%`, background: "var(--series-1)" }} title={`${l.extinction} extinction`} />
+                        <i style={{ width: `${(100 * l.disruption) / total}%`, background: "var(--series-2)" }} title={`${l.disruption} disruption`} />
+                        <i style={{ width: `${(100 * l.completion) / total}%`, background: "var(--good)" }} title={`${l.completion} completion`} />
+                      </div>
+                      <span className="tabular-nums text-muted">{total}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-2 flex flex-wrap gap-3 text-[11px] text-muted">
+                <span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: "var(--series-1)" }} />extinction</span>
+                <span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: "var(--series-2)" }} />disruption</span>
+                <span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: "var(--good)" }} />completion</span>
+              </p>
+              {t.later_dates && (
+                <p className="mt-2 text-xs text-ink-2">
+                  Later-date check: fitted before {t.later_dates.cutoff}, scored on{" "}
+                  {t.later_dates.test_experiments} later tests: balanced accuracy{" "}
+                  {t.later_dates.balanced_accuracy} vs {t.later_dates.baseline} for always
+                  predicting extinction.
+                  {t.later_dates.balanced_accuracy <= t.later_dates.baseline &&
+                    " The boundary did not predict later tests, so it is not reported as general."}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-muted">
+                By suppressant:{" "}
+                {Object.entries(t.by_diluent)
+                  .map(([k, v]) => `${k} ${v.transition_oxygen !== null ? pct(v.transition_oxygen) : "no boundary"} (${v.n})`)
+                  .join(" · ")}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-4 text-xs text-muted">
+        A boundary in how FLEX burns ended, not the limiting oxygen index itself: pressure,
+        diluent and droplet size vary between tests. Fire-safety reading: in these droplet
+        tests the visible flame mostly went out below about 21% (heptane) and 24%
+        (methanol) oxygen, and above that burns mostly ended in disruption or completion.
+        The 30% expected in a Moon base lies above both; whether the boundary holds at
+        Moon-base pressure is an experiment worth running.
+      </p>
+    </Card>
+  );
+}
 
 /** Innovation: read the flight measurements at the oxygen level of real cabin atmospheres. */
 function AtmosphereCheck() {

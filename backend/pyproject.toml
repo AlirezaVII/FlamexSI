@@ -43,6 +43,7 @@ include = ["falmex*"]
 [tool.setuptools.package-data]
 falmex = [
     "config/*.yaml",
+    "datasets/*.csv",
     "review_artifacts/*.json",
     "review_artifacts/compositional/*",
     "review_artifacts/replication/*",

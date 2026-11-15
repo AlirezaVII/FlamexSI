@@ -1,0 +1,253 @@
+{
+ "method": "1. Logistic fit of P(test ends in extinction) on oxygen mole fraction.\n2. Transition oxygen = where that probability is 50%; 95% interval from 2000 bootstrap\n   resamples of the experiments.\n3. Shuffle test: the oxygen-outcome link is re-fitted on 2000 random relabelings.\n4. Later-date check: the transition is fitted on the earliest 80% of test dates and its\n   predictions scored on the latest 20% (balanced accuracy vs always predicting extinction).\nA transition is reported only when the interval lies inside the tested oxygen range, the\nshuffle p-value is below 0.01 and the later-date check beats the baseline. Otherwise the\nresult says no transition is supported.",
+ "fuels": {
+  "Heptane": {
+   "n": 117,
+   "tested_oxygen": [
+    0.13,
+    0.34
+   ],
+   "transition_oxygen": 0.2067,
+   "interval": [
+    0.191,
+    0.2217
+   ],
+   "shuffle_p": 0.0005,
+   "later_dates": {
+    "test_experiments": 25,
+    "cutoff": "2011-09-13",
+    "balanced_accuracy": 0.392,
+    "baseline": 0.5
+   },
+   "supported": false,
+   "status": "candidate",
+   "levels": [
+    {
+     "oxygen": 0.13,
+     "extinction": 3,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.14,
+     "extinction": 2,
+     "disruption": 0,
+     "completion": 1
+    },
+    {
+     "oxygen": 0.15,
+     "extinction": 3,
+     "disruption": 0,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.16,
+     "extinction": 4,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.17,
+     "extinction": 7,
+     "disruption": 1,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.18,
+     "extinction": 12,
+     "disruption": 1,
+     "completion": 4
+    },
+    {
+     "oxygen": 0.19,
+     "extinction": 2,
+     "disruption": 2,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.2,
+     "extinction": 8,
+     "disruption": 3,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.21,
+     "extinction": 12,
+     "disruption": 9,
+     "completion": 4
+    },
+    {
+     "oxygen": 0.23,
+     "extinction": 3,
+     "disruption": 1,
+     "completion": 1
+    },
+    {
+     "oxygen": 0.24,
+     "extinction": 4,
+     "disruption": 9,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.25,
+     "extinction": 0,
+     "disruption": 2,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.3,
+     "extinction": 0,
+     "disruption": 6,
+     "completion": 1
+    },
+    {
+     "oxygen": 0.34,
+     "extinction": 0,
+     "disruption": 4,
+     "completion": 0
+    }
+   ],
+   "by_diluent": {
+    "with CO2": {
+     "n": 48,
+     "transition_oxygen": 0.2179
+    },
+    "with helium": {
+     "n": 22,
+     "transition_oxygen": null
+    },
+    "nitrogen only": {
+     "n": 47,
+     "transition_oxygen": 0.1866
+    }
+   }
+  },
+  "Methanol": {
+   "n": 157,
+   "tested_oxygen": [
+    0.12,
+    0.34
+   ],
+   "transition_oxygen": 0.2432,
+   "interval": [
+    0.2272,
+    0.2631
+   ],
+   "shuffle_p": 0.0005,
+   "later_dates": {
+    "test_experiments": 35,
+    "cutoff": "2011-09-08",
+    "balanced_accuracy": 0.5,
+    "baseline": 0.5
+   },
+   "supported": false,
+   "status": "candidate",
+   "levels": [
+    {
+     "oxygen": 0.12,
+     "extinction": 8,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.13,
+     "extinction": 6,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.14,
+     "extinction": 8,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.15,
+     "extinction": 15,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.16,
+     "extinction": 6,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.17,
+     "extinction": 11,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.18,
+     "extinction": 18,
+     "disruption": 0,
+     "completion": 1
+    },
+    {
+     "oxygen": 0.19,
+     "extinction": 3,
+     "disruption": 0,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.2,
+     "extinction": 16,
+     "disruption": 1,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.21,
+     "extinction": 22,
+     "disruption": 5,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.23,
+     "extinction": 8,
+     "disruption": 4,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.24,
+     "extinction": 3,
+     "disruption": 1,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.25,
+     "extinction": 0,
+     "disruption": 4,
+     "completion": 0
+    },
+    {
+     "oxygen": 0.3,
+     "extinction": 2,
+     "disruption": 4,
+     "completion": 2
+    },
+    {
+     "oxygen": 0.34,
+     "extinction": 0,
+     "disruption": 4,
+     "completion": 1
+    }
+   ],
+   "by_diluent": {
+    "with CO2": {
+     "n": 75,
+     "transition_oxygen": 0.2336
+    },
+    "with helium": {
+     "n": 28,
+     "transition_oxygen": 0.2391
+    },
+    "nitrogen only": {
+     "n": 54,
+     "transition_oxygen": 0.2517
+    }
+   }
+  }
+ }
+}

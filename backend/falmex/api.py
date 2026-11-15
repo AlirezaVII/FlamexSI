@@ -304,8 +304,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         """Load NASA's PSI-69 FLEX experimental table shipped with Falmex (274 tests)."""
         from pathlib import Path
 
-        table = (Path(__file__).resolve().parents[1] / "review_seed"
-                 / "PSI-69_Experimental table_FLEX.csv")
+        # shipped inside the package so it also exists in a non-editable install
+        table = Path(__file__).resolve().parent / "datasets" / "PSI-69_Experimental table_FLEX.csv"
         existing = next((d for d in store(request).list_datasets()
                          if d.name.startswith("NASA PSI-69 FLEX")), None)
         if existing:
