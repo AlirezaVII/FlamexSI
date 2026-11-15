@@ -608,3 +608,20 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+
+/* printing the flight-evidence report: only the report card */
+@media print {
+  body:has(.flight-report) * {
+    visibility: hidden;
+  }
+  body:has(.flight-report) .flight-report,
+  body:has(.flight-report) .flight-report * {
+    visibility: visible;
+  }
+  body:has(.flight-report) .flight-report {
+    position: absolute;
+    inset: 0 0 auto 0;
+    border: 0;
+    box-shadow: none;
+  }
+}

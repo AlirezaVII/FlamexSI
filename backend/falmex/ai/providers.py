@@ -23,33 +23,57 @@ class LLMProvider(ABC):
 
 
 class GeminiProvider(LLMProvider):
+    """Gemini with key rotation: when a key runs out of quota (HTTP 429 /
+    RESOURCE_EXHAUSTED) the next configured key is tried, and becomes the active one."""
+
     name = "gemini"
 
-    def __init__(self, api_key: str, model: str):
+    def __init__(self, api_key: str | list[str], model: str):
         from google import genai
 
-        self._client = genai.Client(api_key=api_key)
+        keys = [api_key] if isinstance(api_key, str) else list(api_key)
+        keys = [k for i, k in enumerate(keys) if k and k not in keys[:i]]
+        if not keys:
+            raise ValueError("at least one Gemini API key is required")
+        self._clients = [genai.Client(api_key=k) for k in keys]
+        self._active = 0
         self.model = model
+
+    @property
+    def key_count(self) -> int:
+        return len(self._clients)
+
+    @staticmethod
+    def _is_quota(exc: Exception) -> bool:
+        text = str(exc).lower()
+        code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+        return code == 429 or "resource_exhausted" in text or "quota" in text or "429" in text
 
     def generate_json(self, system: str, prompt: str) -> dict:
         from google.genai import types
 
-        try:
-            response = self._client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                    response_mime_type="application/json",
-                    temperature=0.2,
-                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                        disable=True
-                    ),
-                ),
-            )
-            return json.loads(response.text)
-        except Exception as exc:  # network, quota, bad JSON ...
-            raise LLMError(f"Gemini request failed: {exc}") from exc
+        config = types.GenerateContentConfig(
+            system_instruction=system,
+            response_mime_type="application/json",
+            temperature=0.2,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        )
+        last: Exception | None = None
+        for step in range(len(self._clients)):
+            index = (self._active + step) % len(self._clients)
+            try:
+                response = self._clients[index].models.generate_content(
+                    model=self.model, contents=prompt, config=config
+                )
+                self._active = index
+                return json.loads(response.text)
+            except Exception as exc:  # network, quota, bad JSON ...
+                last = exc
+                if not self._is_quota(exc):
+                    break
+                log.warning("Gemini key %d of %d hit its quota; trying the next key.",
+                            index + 1, len(self._clients))
+        raise LLMError(f"Gemini request failed: {last}") from last
 
 
 class MockProvider(LLMProvider):
@@ -92,8 +116,12 @@ class MockProvider(LLMProvider):
 
 def get_provider(settings: Settings) -> LLMProvider:
     if settings.llm_provider in {"auto", "gemini"}:
-        if settings.gemini_api_key:
-            return GeminiProvider(settings.gemini_api_key, settings.gemini_model)
+        keys = [settings.gemini_api_key or ""] + [
+            k.strip() for k in (settings.gemini_fallback_keys or "").split(",")
+        ]
+        keys = [k for k in keys if k]
+        if keys:
+            return GeminiProvider(keys, settings.gemini_model)
         if settings.llm_provider == "gemini":
             log.warning("FALMEX_LLM_PROVIDER=gemini but GEMINI_API_KEY is missing; using mock.")
     return MockProvider()

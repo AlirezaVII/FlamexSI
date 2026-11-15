@@ -188,9 +188,9 @@ export default function Landing() {
                 that records where each measurement stops supporting a conclusion.
               </p>
               <div className="cta">
-                <a className="btn primary" href="/flex-comparison.html">
+                <Link className="btn primary" href="/flight-evidence">
                   Explore the flight evidence →
-                </a>
+                </Link>
                 <a className="btn ghost" href="#how">
                   How it works
                 </a>
@@ -458,9 +458,9 @@ export default function Landing() {
               Let it tell you what to look for.
             </h2>
             <div className="cta" style={{ justifyContent: "center" }}>
-              <a className="btn primary" href="/flex-comparison.html">
+              <Link className="btn primary" href="/flight-evidence">
                 Explore the flight evidence →
-              </a>
+              </Link>
               <Link className="btn ghost" href="/data">
                 Load NASA data
               </Link>

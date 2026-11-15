@@ -468,10 +468,17 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         findings.sort(key=lambda f: f.score, reverse=True)
         return findings[:limit]
 
+    # Flight-evidence reports: the facts are fixed, so one Gemini answer per finding is
+    # cached for the life of the process, and fresh requests are rate-limited per client.
+    flight_reports: dict[str, object] = {}
+    flight_calls: dict[str, list[float]] = {}
+    FLIGHT_LIMIT, FLIGHT_WINDOW = 5, 600.0  # at most 5 new Gemini calls per client / 10 min
+
     @app.post("/api/flight-evidence/{finding_id}/interpret")
     def interpret_flight_evidence(request: Request, finding_id: str):
         # The packaged flight results remain available in synthetic-only workspaces.
         import json
+        import time
         from pathlib import Path
 
         folder = Path(__file__).resolve().parent / "review_artifacts" / "review"
@@ -479,14 +486,25 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         facts = json.loads(source.read_text(encoding="utf-8"))
         if finding_id not in facts:
             raise HTTPException(404, "Unknown flight finding")
+        if finding_id in flight_reports:
+            return {"interpretation": flight_reports[finding_id], "cached": True}
         provider = request.app.state.provider
         if provider.name != "gemini":
             raise HTTPException(503, "Gemini is not configured on this server")
+        client = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip() or (
+            request.client.host if request.client else "unknown"
+        )
+        now = time.monotonic()
+        recent = [t for t in flight_calls.get(client, []) if now - t < FLIGHT_WINDOW]
+        if len(recent) >= FLIGHT_LIMIT:
+            raise HTTPException(429, "Too many report requests; try again in a few minutes")
+        flight_calls[client] = [*recent, now]
         try:
             report = interpret_finding(Finding(**facts[finding_id]), provider)
         except LLMError as exc:
             raise HTTPException(502, "Gemini could not produce a report") from exc
-        return {"interpretation": report}
+        flight_reports[finding_id] = report
+        return {"interpretation": report, "cached": False}
 
     @app.get("/api/findings/{finding_id}")
     def get_finding(request: Request, finding_id: str):

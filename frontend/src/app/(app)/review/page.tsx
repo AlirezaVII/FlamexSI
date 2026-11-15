@@ -128,7 +128,7 @@ function ScientificReviewForDataset({ dataset }: { dataset: Dataset }) {
         and where the evidence stops. Numerical results are read from the locked
         analysis artifacts, not retyped for this page.
       </PageHeader>
-      {!dataset.synthetic && <a className="text-accent underline" href="/flex-comparison.html">Compare findings, interpret the evidence and explore FLEX predictions</a>}
+      {!dataset.synthetic && <Link className="text-accent underline" href="/flight-evidence">Compare findings, interpret the evidence and explore FLEX predictions</Link>}
       {dataset.synthetic && <SyntheticBanner />}
       {loading && (
         <div className="space-y-5" aria-busy="true">

@@ -18,3 +18,48 @@ def test_packaged_report_without_workspace_data(settings):
 
 def test_packaged_report_discloses_offline_provider(client):
     assert client.post("/api/flight-evidence/9b3b08af88bf/interpret").status_code == 503
+
+
+def test_flight_report_is_cached_and_rate_limited(settings):
+    calls = []
+
+    class CountingGemini(MockProvider):
+        name = "gemini"
+
+        def generate_json(self, system, prompt):
+            calls.append(1)
+            return super().generate_json(system, prompt)
+
+    with TestClient(create_app(settings, provider=CountingGemini())) as client:
+        first = client.post("/api/flight-evidence/9b3b08af88bf/interpret").json()
+        again = client.post("/api/flight-evidence/9b3b08af88bf/interpret").json()
+        assert first["cached"] is False and again["cached"] is True
+        assert len(calls) == 1  # the second click costs no quota
+
+
+def test_gemini_rotates_to_the_next_key_on_quota(monkeypatch):
+    from falmex.ai import providers
+
+    class Quota(Exception):
+        code = 429
+
+    class FakeModels:
+        def __init__(self, key):
+            self.key = key
+
+        def generate_content(self, **_):
+            if self.key == "spent":
+                raise Quota("RESOURCE_EXHAUSTED")
+            return type("R", (), {"text": '{"ok": "' + self.key + '"}'})()
+
+    class FakeClient:
+        def __init__(self, api_key):
+            self.models = FakeModels(api_key)
+
+    import google.genai as genai
+
+    monkeypatch.setattr(genai, "Client", FakeClient)
+    gem = providers.GeminiProvider(["spent", "spare", "spent"], "m")
+    assert gem.key_count == 2  # duplicates dropped
+    assert gem.generate_json("s", "p") == {"ok": "spare"}
+    assert gem.generate_json("s", "p") == {"ok": "spare"}  # the spare stays active

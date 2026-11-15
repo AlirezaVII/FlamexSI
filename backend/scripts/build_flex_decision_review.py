@@ -10,7 +10,8 @@ from statistics import mean, median
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "backend/review_seed/PSI-69_Experimental table_FLEX.csv"
 REVIEW = ROOT / "backend/falmex/review_artifacts/review/eight_findings_review.csv"
-PAGE = ROOT / "frontend/public/flex-comparison.html"
+# read by the app's /flight-evidence page
+MODELS = ROOT / "frontend/src/lib/flight/models.json"
 TASKS = [
     ("Oxygen → burning rate", "Initial oxygen mole fraction",
      "Burning rate (source scale)", 6, 12, False,
@@ -25,7 +26,6 @@ TASKS = [
      "Compare normalized extinction diameters within one fuel. The ratio shares a measurement "
      "with extinction diameter, so the two results provide overlapping evidence."),
 ]
-MODELS_TAG = '<script type="application/json" id="models">'
 
 
 def date(value):
@@ -84,10 +84,7 @@ def build():
                           cutoff=cutoff.date().isoformat(),
                           rho=float(review["date_holdout_effect"]), finding=review["review_id"]))
     tasks.sort(key=lambda t: 1 - t["mae"] / t["baseline"], reverse=True)
-    page = PAGE.read_text()
-    start = page.index(MODELS_TAG) + len(MODELS_TAG)
-    end = page.index("</script>", start)
-    PAGE.write_text(page[:start] + json.dumps(tasks, ensure_ascii=False) + page[end:])
+    MODELS.write_text(json.dumps(tasks, ensure_ascii=False))
     for t in tasks:
         print(t["title"], t["train"], t["test"], t["mae"], t["baseline"], t["cutoff"])
 

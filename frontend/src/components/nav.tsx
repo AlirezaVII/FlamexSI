@@ -154,6 +154,12 @@ const STAGES: Stage[] = [
         badge: "insights",
       },
       {
+        href: "/flight-evidence",
+        label: "Flight evidence",
+        hint: "NASA FLEX and BASS-II: findings, report, mission check",
+        icon: icon("M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"),
+      },
+      {
         href: "/simulator",
         label: "Simulate",
         hint: "Flammability by oxygen and gravity",

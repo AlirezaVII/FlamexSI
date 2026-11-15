@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = Field(
         default=None, validation_alias=AliasChoices("GEMINI_API_KEY", "FALMEX_GEMINI_API_KEY")
     )
+    # extra keys (comma-separated), tried in order when a key hits its quota
+    gemini_fallback_keys: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("GEMINI_FALLBACK_API_KEYS", "FALMEX_GEMINI_FALLBACK_KEYS"),
+    )
     gemini_model: str = Field(
         default="gemini-flash-latest",
         validation_alias=AliasChoices("GEMINI_MODEL", "FALMEX_GEMINI_MODEL"),

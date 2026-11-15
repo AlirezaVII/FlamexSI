@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // the flight evidence page used to be a standalone HTML file
+  async redirects() {
+    return [
+      { source: "/flex-comparison.html", destination: "/flight-evidence", permanent: true },
+    ];
+  },
   async rewrites() {
     if (!backend) return [];
     return [
