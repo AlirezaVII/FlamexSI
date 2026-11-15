@@ -8,6 +8,7 @@ import frames from "@/lib/flight/frames.json";
 import benchmark from "@/lib/flight/benchmark.json";
 import audit from "@/lib/flight/holdout-audit.json";
 import models from "@/lib/flight/models.json";
+import nextExperiments from "@/lib/flight/next_experiments.json";
 import transitions from "@/lib/flight/transitions.json";
 
 /*
@@ -97,6 +98,7 @@ const STUDIES: [string, string, string, string][] = [
 
 const SECTIONS = [
   ["transition", "Transition finder"],
+  ["next", "Next experiment"],
   ["atmosphere", "Mission check"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
@@ -132,6 +134,7 @@ export default function FlightEvidence() {
       <NasaLessons />
       <ExtinctionCurve />
       <TransitionFinder />
+      <NextExperiment />
       <AtmosphereCheck />
       <Ranking />
       <ReportAndPlanner />
@@ -369,6 +372,104 @@ function TransitionFinder() {
         The 30% expected in a Moon base lies above both; whether the boundary holds at
         Moon-base pressure is an experiment worth running.
       </p>
+    </Card>
+  );
+}
+
+interface Cell {
+  fuel: string;
+  oxygen: string;
+  pressure: string;
+  tests: number;
+  habitat: number;
+  boundary: number;
+  value: number;
+  why: string[];
+}
+const NEXT = nextExperiments as unknown as {
+  method: string;
+  moon_base_tests: number;
+  suggestions: Cell[];
+  grid: Cell[];
+};
+
+/** Which experiment adds the most information next? Coverage gaps of the FLEX table. */
+function NextExperiment() {
+  const fuels = [...new Set(NEXT.grid.map((c) => c.fuel))];
+  const byNumber = (a: string, b: string) => parseFloat(a) - parseFloat(b);
+  const oxy = [...new Set(NEXT.grid.map((c) => c.oxygen))].sort(byNumber);
+  const press = [...new Set(NEXT.grid.map((c) => c.pressure))].sort(byNumber);
+  return (
+    <Card title="Which experiment should come next?" className="scroll-mt-24 print:hidden">
+      <span id="next" className="sr-only" />
+      <p className="mb-2 max-w-3xl text-sm text-ink-2">
+        Where are the FLEX measurements thin, and where would one more test matter most
+        for crews? Each cell counts the tests already flown at that oxygen and pressure.
+      </p>
+      <p className="mb-4 rounded-lg border-l-4 p-3 text-sm text-ink-2" style={{ borderColor: "var(--warning)", background: "var(--surface-2)" }}>
+        <b className="text-ink">{NEXT.moon_base_tests} FLEX tests</b> were run at the
+        planned Moon-base / rover atmosphere (30% oxygen or more at 8.2–10.2 psi). The
+        conditions crews will live in have not been tested with burning droplets.
+      </p>
+      <ol className="mb-5 grid gap-2 md:grid-cols-2">
+        {NEXT.suggestions.map((c, i) => (
+          <li key={i} className="rounded-lg border border-line p-3 text-sm">
+            <p className="font-medium text-ink">
+              {i + 1}. {c.fuel} · {c.oxygen} oxygen · {c.pressure}
+            </p>
+            <p className="text-xs text-ink-2">{c.why.join(" · ")}</p>
+            <p className="mt-1 text-xs tabular-nums text-muted">value {(c.value * 100).toFixed(0)} / 100</p>
+          </li>
+        ))}
+      </ol>
+      <div className="grid gap-5 md:grid-cols-2">
+        {fuels.map((fuel) => (
+          <div key={fuel} className="overflow-x-auto" data-lenis-prevent>
+            <p className="mb-1 text-sm font-medium text-ink">{fuel}: tests flown</p>
+            <table className="w-full min-w-[22rem] text-xs tabular-nums">
+              <thead>
+                <tr>
+                  <th className="py-1 text-left font-normal text-muted">O₂ \ pressure</th>
+                  {press.map((p) => (
+                    <th key={p} className="px-1 py-1 text-center font-normal text-muted">{p.replace(" mmHg", "")}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {oxy.map((o) => (
+                  <tr key={o}>
+                    <td className="py-0.5 pr-2 text-muted">{o}</td>
+                    {press.map((p) => {
+                      const c = NEXT.grid.find((x) => x.fuel === fuel && x.oxygen === o && x.pressure === p)!;
+                      const ring = c.habitat === 1 ? "2px solid var(--accent)" : undefined;
+                      return (
+                        <td key={p} className="px-0.5 py-0.5">
+                          <div
+                            className="grid h-7 place-items-center rounded"
+                            style={{
+                              background: c.tests ? `color-mix(in srgb, var(--series-1) ${Math.min(90, 15 + c.tests * 6)}%, transparent)` : "var(--surface-2)",
+                              outline: ring,
+                              color: c.tests > 8 ? "white" : "var(--ink-2)",
+                            }}
+                            title={c.why.join(" · ")}
+                          >
+                            {c.tests || "·"}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-1 text-[11px] text-muted">Pressure in mmHg; outlined cells: Moon-base / rover atmosphere.</p>
+          </div>
+        ))}
+      </div>
+      <details className="mt-4 rounded-lg border border-line p-3 text-xs text-ink-2">
+        <summary className="cursor-pointer font-medium text-ink">How the value is scored</summary>
+        <p className="mt-2 whitespace-pre-line">{NEXT.method}</p>
+      </details>
     </Card>
   );
 }

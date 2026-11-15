@@ -1,0 +1,898 @@
+{
+ "method": "Each cell is fuel x oxygen band x pressure band. The value of a new test in a cell is scored\nfrom three stated parts:\n  habitat   1 if the cell holds the Moon-base / rover atmosphere named in the challenge\n            (30% oxygen or more at 10.2 psi = 527 mmHg or less), 0.5 for ISS air (21%, 760 mmHg)\n  boundary  1 if the cell lies inside the 95% interval of the extinction-transition oxygen\n            found by build_transitions.py (where the boundary is least certain)\n  scarcity  1 / (1 + tests already in the cell)\nvalue = 0.45 habitat + 0.30 boundary + 0.25 scarcity.",
+ "moon_base_tests": 0,
+ "suggestions": [
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  }
+ ],
+ "grid": [
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 1.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.7,
+   "why": [
+    "Moon-base / rover atmosphere (30%+ O2 at 10.2 psi or less)",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "20\u201324%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "20\u201324%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "24\u201328%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "24\u201328%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "24\u201328%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "24\u201328%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 1.0,
+   "value": 0.55,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "20\u201324%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 23,
+   "habitat": 0.5,
+   "boundary": 1.0,
+   "scarcity": 0.042,
+   "value": 0.535,
+   "why": [
+    "ISS cabin air",
+    "inside the uncertain extinction-transition band",
+    "23 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 26,
+   "habitat": 0.5,
+   "boundary": 1.0,
+   "scarcity": 0.037,
+   "value": 0.534,
+   "why": [
+    "ISS cabin air",
+    "inside the uncertain extinction-transition band",
+    "26 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 2,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.333,
+   "value": 0.383,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "only 2 tests"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "20\u201324%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 7,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.125,
+   "value": 0.331,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "7 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 8,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.111,
+   "value": 0.328,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "8 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "24\u201328%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 8,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.111,
+   "value": 0.328,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "8 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "20\u201324%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 15,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.062,
+   "value": 0.316,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "15 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "16\u201320%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 27,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.036,
+   "value": 0.309,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "27 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "20\u201324%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 29,
+   "habitat": 0.0,
+   "boundary": 1.0,
+   "scarcity": 0.033,
+   "value": 0.308,
+   "why": [
+    "inside the uncertain extinction-transition band",
+    "29 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "12\u201316%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "12\u201316%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "12\u201316%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "12\u201316%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "24\u201328%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "24\u201328%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "24\u201328%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "12\u201316%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "12\u201316%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "12\u201316%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "16\u201320%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "16\u201320%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "1\u2013424 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "800\u20132400 mmHg",
+   "tests": 0,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 1.0,
+   "value": 0.25,
+   "why": [
+    "no tests yet"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "16\u201320%",
+   "pressure": "424\u2013527 mmHg",
+   "tests": 1,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.5,
+   "value": 0.125,
+   "why": [
+    "only 1 test"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 3,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.25,
+   "value": 0.062,
+   "why": [
+    "only 3 tests"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "28\u201332%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 4,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.2,
+   "value": 0.05,
+   "why": [
+    "4 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "32\u201340%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 4,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.2,
+   "value": 0.05,
+   "why": [
+    "4 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "12\u201316%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 4,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.2,
+   "value": 0.05,
+   "why": [
+    "4 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 4,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.2,
+   "value": 0.05,
+   "why": [
+    "4 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "28\u201332%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 4,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.2,
+   "value": 0.05,
+   "why": [
+    "4 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "32\u201340%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 5,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.167,
+   "value": 0.042,
+   "why": [
+    "5 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "24\u201328%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 8,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.111,
+   "value": 0.028,
+   "why": [
+    "8 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "24\u201328%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 9,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.1,
+   "value": 0.025,
+   "why": [
+    "9 tests already"
+   ]
+  },
+  {
+   "fuel": "Heptane",
+   "oxygen": "12\u201316%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 11,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.083,
+   "value": 0.021,
+   "why": [
+    "11 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "16\u201320%",
+   "pressure": "527\u2013700 mmHg",
+   "tests": 13,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.071,
+   "value": 0.018,
+   "why": [
+    "13 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "16\u201320%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 25,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.038,
+   "value": 0.01,
+   "why": [
+    "25 tests already"
+   ]
+  },
+  {
+   "fuel": "Methanol",
+   "oxygen": "12\u201316%",
+   "pressure": "700\u2013800 mmHg",
+   "tests": 33,
+   "habitat": 0.0,
+   "boundary": 0.0,
+   "scarcity": 0.029,
+   "value": 0.007,
+   "why": [
+    "33 tests already"
+   ]
+  }
+ ]
+}

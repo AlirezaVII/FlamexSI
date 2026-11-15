@@ -11,7 +11,9 @@ const nextConfig: NextConfig = {
   images: { qualities: [75, 90] },
   // uploads go through the /api proxy; the default 10 MB buffer cut NASA files short.
   // 100 MB stays safe on the 1 GB droplet (the body is buffered in memory)
-  experimental: { proxyClientMaxBodySize: "100mb" },
+  // discovery on the full FLEX table takes about a minute on the 1-CPU droplet; the default
+  // 30 s proxy timeout cut it off
+  experimental: { proxyClientMaxBodySize: "100mb", proxyTimeout: 300_000 },
   devIndicators: false,
   // planet maps rarely change: let browsers keep them for a week (revalidate in background)
   async headers() {
