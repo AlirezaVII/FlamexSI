@@ -3,7 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { ProgressBar } from "@/components/progress-bar";
 import { Splash } from "@/components/splash";
-import { splashInitScript, themeInitScript } from "@/lib/boot-scripts";
+import {
+  sidebarInitScript,
+  splashInitScript,
+  themeInitScript,
+} from "@/lib/boot-scripts";
 import { WorkspaceProvider } from "@/lib/workspace";
 import "./globals.css";
 
@@ -43,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: themeInitScript + splashInitScript,
+            __html: themeInitScript + splashInitScript + sidebarInitScript,
           }}
         />
       </head>

@@ -28,7 +28,8 @@
   --card-shadow-hover:
     0 2px 4px rgb(24 22 18 / 0.05), 0 8px 18px -4px rgb(24 22 18 / 0.09),
     0 24px 48px -16px rgb(217 83 30 / 0.18);
-  --bar-shadow: 0 1px 0 rgb(24 22 18 / 0.03), 0 6px 16px -10px rgb(24 22 18 / 0.18);
+  --bar-shadow:
+    0 1px 0 rgb(24 22 18 / 0.03), 0 6px 16px -10px rgb(24 22 18 / 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -54,8 +55,10 @@
       0 6px 14px -4px rgb(0 0 0 / 0.45), 0 18px 40px -14px rgb(0 0 0 / 0.7);
     --card-shadow-hover:
       inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.45),
-      0 10px 24px -6px rgb(0 0 0 / 0.55), 0 24px 50px -16px rgb(232 112 62 / 0.25);
-    --bar-shadow: 0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
+      0 10px 24px -6px rgb(0 0 0 / 0.55),
+      0 24px 50px -16px rgb(232 112 62 / 0.25);
+    --bar-shadow:
+      0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
   }
 }
 
@@ -82,7 +85,8 @@
   --card-shadow-hover:
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.45),
     0 10px 24px -6px rgb(0 0 0 / 0.55), 0 24px 50px -16px rgb(232 112 62 / 0.25);
-  --bar-shadow: 0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
+  --bar-shadow:
+    0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
 }
 
 @theme inline {
@@ -132,8 +136,12 @@ body {
 }
 
 @keyframes shimmer {
-  from { background-position: 100% 0; }
-  to { background-position: -150% 0; }
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
 }
 
 /* chart loader: marks rise and settle in a travelling wave */
@@ -154,30 +162,68 @@ body {
 }
 
 @keyframes chart-rise {
-  0%, 100% { transform: scaleY(0.25); opacity: 0.35; }
-  45% { transform: scaleY(1); opacity: 0.9; }
+  0%,
+  100% {
+    transform: scaleY(0.25);
+    opacity: 0.35;
+  }
+  45% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
 }
 @keyframes chart-pop {
-  0%, 100% { transform: scale(0.4); opacity: 0.2; }
-  45% { transform: scale(1); opacity: 0.85; }
+  0%,
+  100% {
+    transform: scale(0.4);
+    opacity: 0.2;
+  }
+  45% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
 }
 @keyframes chart-draw {
-  0% { stroke-dashoffset: 1; opacity: 0.2; }
-  55% { stroke-dashoffset: 0; opacity: 0.8; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0.2;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
 }
 
-.fade-in { animation: fade-in 0.35s ease-out both; }
+.fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton, .chart-loader-mark, .chart-loader-dot, .chart-loader-line, .fade-in {
+  .skeleton,
+  .chart-loader-mark,
+  .chart-loader-dot,
+  .chart-loader-line,
+  .fade-in {
     animation: none;
   }
-  .chart-loader-line { stroke-dashoffset: 0; opacity: 0.5; }
+  .chart-loader-line {
+    stroke-dashoffset: 0;
+    opacity: 0.5;
+  }
 }
 
 /* ---- Splash: "flame in freefall" ------------------------------------- */
@@ -193,32 +239,58 @@ body {
   color: #e8eeff;
   background:
     radial-gradient(ellipse 60% 45% at 50% 42%, #0d1a3a 0%, transparent 70%),
-    radial-gradient(ellipse at 50% 120%, #1a1030 0%, transparent 60%),
-    #04060d;
+    radial-gradient(ellipse at 50% 120%, #1a1030 0%, transparent 60%), #04060d;
   /* fallback: disappears even if the app script never runs */
   animation: splash-auto-hide 0.01s linear 15s forwards;
 }
-:root[data-splash="active"] .splash { animation: none; }
-:root[data-splash="gone"] .splash { display: none; }
+:root[data-splash="active"] .splash {
+  animation: none;
+}
+:root[data-splash="gone"] .splash {
+  display: none;
+}
 :root[data-splash="leaving"] .splash {
   animation: splash-out 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
   pointer-events: none;
 }
 @keyframes splash-out {
-  to { opacity: 0; transform: scale(1.05); filter: blur(6px); }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(6px);
+  }
 }
 @keyframes splash-auto-hide {
-  to { opacity: 0; visibility: hidden; pointer-events: none; }
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
-.splash-stars { position: absolute; inset: 0; width: 100%; height: 100%; }
+.splash-stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 .splash-stars circle {
   fill: #cfdcff;
   opacity: 0;
-  animation: star-in 0.8s ease-out forwards, twinkle 2.6s ease-in-out 0.8s infinite;
+  animation:
+    star-in 0.8s ease-out forwards,
+    twinkle 2.6s ease-in-out 0.8s infinite;
 }
-@keyframes star-in { to { opacity: 0.55; } }
-@keyframes twinkle { 50% { opacity: 0.15; } }
+@keyframes star-in {
+  to {
+    opacity: 0.55;
+  }
+}
+@keyframes twinkle {
+  50% {
+    opacity: 0.15;
+  }
+}
 
 .splash-stage {
   position: relative;
@@ -228,8 +300,14 @@ body {
   padding: 0 16px;
   text-align: center;
 }
-.splash-flame { width: min(58vw, 260px); height: auto; overflow: visible; }
-.splash-flame * { transform-box: view-box; }
+.splash-flame {
+  width: min(58vw, 260px);
+  height: auto;
+  overflow: visible;
+}
+.splash-flame * {
+  transform-box: view-box;
+}
 
 /* Earth flame: appears, flickers, then buoyancy fades out and it collapses */
 .splash-earth {
@@ -237,12 +315,28 @@ body {
   animation: earth-flame 1.9s cubic-bezier(0.5, 0, 0.3, 1) 0.1s both;
 }
 @keyframes earth-flame {
-  0% { opacity: 0; transform: scale(0.6, 0.3); }
-  15% { opacity: 1; transform: scale(1, 1); }
-  28% { transform: scale(0.97, 1.04); }
-  40% { transform: scale(1.02, 0.98); }
-  52% { opacity: 1; transform: scale(1, 1); }
-  100% { opacity: 0; transform: scale(1.35, 0.35); }
+  0% {
+    opacity: 0;
+    transform: scale(0.6, 0.3);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.97, 1.04);
+  }
+  40% {
+    transform: scale(1.02, 0.98);
+  }
+  52% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35, 0.35);
+  }
 }
 .splash-rise {
   fill: #6b5a4a;
@@ -250,9 +344,17 @@ body {
   animation: soot-rise 0.9s ease-out 2;
 }
 @keyframes soot-rise {
-  0% { opacity: 0; transform: translateY(8px); }
-  30% { opacity: 0.8; }
-  100% { opacity: 0; transform: translateY(-62px); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  30% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-62px);
+  }
 }
 
 /* microgravity flame: a sphere blooms around the droplet, then breathes */
@@ -264,12 +366,23 @@ body {
     sphere-breathe 2.4s ease-in-out 1.9s infinite;
 }
 @keyframes sphere-in {
-  0% { opacity: 0; transform: scale(0.25); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes sphere-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.045); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
 }
 .splash-drift {
   fill: #9fc4ff;
@@ -277,18 +390,37 @@ body {
   animation: soot-drift 1.5s ease-out forwards;
 }
 @keyframes soot-drift {
-  0% { opacity: 0; transform: translate(0, 0); }
-  25% { opacity: 0.9; }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy));
+  }
 }
 
-.splash-orbit { opacity: 0; animation: fade-to 0.8s ease-out 1.3s forwards; }
+.splash-orbit {
+  opacity: 0;
+  animation: fade-to 0.8s ease-out 1.3s forwards;
+}
 .splash-sat {
   offset-path: path("M186,100 A86,30 0 1,1 14,100 A86,30 0 1,1 186,100");
   animation: orbit 4s linear infinite;
 }
-@keyframes orbit { to { offset-distance: 100%; } }
-@keyframes fade-to { to { opacity: 1; } }
+@keyframes orbit {
+  to {
+    offset-distance: 100%;
+  }
+}
+@keyframes fade-to {
+  to {
+    opacity: 1;
+  }
+}
 
 .splash-readout {
   margin-top: 4px;
@@ -311,9 +443,19 @@ body {
   color: #ffd35a;
   animation: readout-cool 1.2s ease-in-out 0.5s forwards;
 }
-@keyframes readout-cool { to { color: #8fc0ff; text-shadow: 0 0 14px #3f8dff; } }
+@keyframes readout-cool {
+  to {
+    color: #8fc0ff;
+    text-shadow: 0 0 14px #3f8dff;
+  }
+}
 
-.splash-captions { position: relative; height: 22px; width: min(92vw, 460px); margin-top: 10px; }
+.splash-captions {
+  position: relative;
+  height: 22px;
+  width: min(92vw, 460px);
+  margin-top: 10px;
+}
 .splash-cap {
   position: absolute;
   inset: 0;
@@ -321,9 +463,21 @@ body {
   color: #a9b6d8;
   opacity: 0;
 }
-.splash-cap-1 { animation: cap 1.25s ease-in-out 0.25s both; }
-.splash-cap-2 { animation: fade-to 0.5s ease-out 1.55s forwards; }
-@keyframes cap { 15%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.splash-cap-1 {
+  animation: cap 1.25s ease-in-out 0.25s both;
+}
+.splash-cap-2 {
+  animation: fade-to 0.5s ease-out 1.55s forwards;
+}
+@keyframes cap {
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 
 .splash-title {
   margin-top: 22px;
@@ -344,8 +498,16 @@ body {
   animation: letter-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 @keyframes letter-in {
-  from { opacity: 0; transform: translateY(14px); filter: blur(8px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
 }
 .splash-tagline {
   margin-top: 14px;
@@ -375,11 +537,22 @@ body {
   box-shadow: 0 0 0 0 #ffb34788;
   animation: status-pulse 1.2s ease-out infinite;
 }
-.splash-status.is-ready { color: #bfe0ff; }
-.splash-status.is-ready .splash-status-dot { background: #5fd38a; animation: none; box-shadow: 0 0 10px #5fd38a; }
-.splash-status.is-offline .splash-status-dot { background: #ff6b6b; animation: none; }
+.splash-status.is-ready {
+  color: #bfe0ff;
+}
+.splash-status.is-ready .splash-status-dot {
+  background: #5fd38a;
+  animation: none;
+  box-shadow: 0 0 10px #5fd38a;
+}
+.splash-status.is-offline .splash-status-dot {
+  background: #ff6b6b;
+  animation: none;
+}
 @keyframes status-pulse {
-  to { box-shadow: 0 0 0 8px #ffb34700; }
+  to {
+    box-shadow: 0 0 0 8px #ffb34700;
+  }
 }
 
 .splash-skip {
@@ -393,11 +566,24 @@ body {
   border-radius: 999px;
   background: #0b1224aa;
 }
-.splash-skip:hover { color: #fff; border-color: #4a5a85; }
+.splash-skip:hover {
+  color: #fff;
+  border-color: #4a5a85;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .splash *, .splash { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
-  .splash-earth, .splash-cap-1, .splash-rise, .splash-drift { display: none; }
+  .splash *,
+  .splash {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+  .splash-earth,
+  .splash-cap-1,
+  .splash-rise,
+  .splash-drift {
+    display: none;
+  }
 }
 
 /* ---- logo: badge on light surfaces, glow on dark ones (same rules as the colour theme) */
@@ -417,4 +603,347 @@ body {
 }
 :root[data-theme="dark"] .logo-on-dark {
   display: inline-block;
+}
+
+/* ---- app shell: desktop sidebar ------------------------------------------------- */
+:root {
+  --sidebar-w: 15.5rem;
+}
+:root[data-sidebar="collapsed"] {
+  --sidebar-w: 4.25rem;
+}
+@media (min-width: 1024px) {
+  .app-shell {
+    padding-left: var(--sidebar-w);
+    transition: padding-left 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+.sidebar {
+  width: var(--sidebar-w);
+  transition: width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-sidebar="collapsed"] .sidebar-label {
+  display: none;
+}
+:root[data-sidebar="collapsed"] .sidebar-footer {
+  flex-direction: column;
+}
+:root[data-sidebar="collapsed"] .sidebar-row {
+  justify-content: center;
+  padding: 0;
+}
+:root[data-sidebar="collapsed"] .sidebar-step {
+  justify-content: center;
+}
+.sidebar-label {
+  transition: opacity 0.18s ease;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+.pop-in {
+  animation: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell,
+  .sidebar,
+  .sidebar-label {
+    transition: none;
+  }
+  .pop-in {
+    animation: none;
+  }
+}
+
+/* ---- page transitions (View Transitions, see app/(app)/template.tsx) ----------------
+   Direction comes from the pipeline: forward = a later step, back = an earlier one,
+   lateral = the other page of the same stage. Phones push like a stack of screens;
+   wide screens move in depth, like flying further into the pipeline. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+/* the chrome stays put while the content moves */
+::view-transition-group(sidebar),
+::view-transition-group(m-header),
+::view-transition-group(m-tabbar),
+::view-transition-group(m-segment) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(sidebar),
+::view-transition-old(m-header),
+::view-transition-old(m-tabbar),
+::view-transition-old(m-segment) {
+  display: none;
+}
+::view-transition-new(sidebar),
+::view-transition-new(m-header),
+::view-transition-new(m-tabbar),
+::view-transition-new(m-segment) {
+  animation: none;
+}
+
+/* phones: a push. The new screen slides over, the old one recedes and dims. */
+@keyframes push-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes push-out-left {
+  to {
+    transform: translateX(-28%);
+    filter: brightness(0.82);
+  }
+}
+@keyframes push-in-left {
+  from {
+    transform: translateX(-28%);
+    filter: brightness(0.82);
+  }
+}
+@keyframes push-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes lateral-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--lateral, 14px));
+  }
+}
+@keyframes lateral-out {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--lateral, 14px) * -1));
+  }
+}
+::view-transition-new(.nav-forward) {
+  animation: 460ms cubic-bezier(0.32, 0.72, 0, 1) both push-in-right;
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.18);
+}
+::view-transition-old(.nav-forward) {
+  animation: 460ms cubic-bezier(0.32, 0.72, 0, 1) both push-out-left;
+}
+::view-transition-new(.nav-back) {
+  animation: 420ms cubic-bezier(0.32, 0.72, 0, 1) both push-in-left;
+}
+::view-transition-old(.nav-back) {
+  animation: 420ms cubic-bezier(0.32, 0.72, 0, 1) both push-out-right;
+  z-index: 1;
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.18);
+}
+::view-transition-new(.nav-lateral) {
+  animation: 260ms ease-out 60ms both lateral-in;
+}
+::view-transition-old(.nav-lateral) {
+  animation: 160ms ease-in both lateral-out;
+}
+
+/* wide screens: depth. Forward, the old page flies past the viewer and the new one
+   comes out of the distance; back, the reverse. */
+@media (min-width: 1024px) {
+  @keyframes depth-in-far {
+    from {
+      opacity: 0;
+      transform: scale(0.94) translateY(18px);
+      filter: blur(10px);
+    }
+  }
+  @keyframes depth-out-near {
+    to {
+      opacity: 0;
+      transform: scale(1.05);
+      filter: blur(8px);
+    }
+  }
+  @keyframes depth-in-near {
+    from {
+      opacity: 0;
+      transform: scale(1.05);
+      filter: blur(8px);
+    }
+  }
+  @keyframes depth-out-far {
+    to {
+      opacity: 0;
+      transform: scale(0.94) translateY(18px);
+      filter: blur(10px);
+    }
+  }
+  ::view-transition-new(.nav-forward) {
+    animation: 520ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both depth-in-far;
+    box-shadow: none;
+  }
+  ::view-transition-old(.nav-forward) {
+    animation: 260ms cubic-bezier(0.4, 0, 1, 1) both depth-out-near;
+  }
+  ::view-transition-new(.nav-back) {
+    animation: 520ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both depth-in-near;
+  }
+  ::view-transition-old(.nav-back) {
+    animation: 260ms cubic-bezier(0.4, 0, 1, 1) both depth-out-far;
+    box-shadow: none;
+  }
+  ::view-transition-new(.nav-lateral),
+  ::view-transition-old(.nav-lateral) {
+    --lateral: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* ---- overview: a view from orbit ------------------------------------------------------
+   Photos: Unsplash License (see public/backgrounds/CREDITS.md). Dark: Earth's limb under
+   empty space, so text sits on the dark sky. Light: NASA's view from the ISS over bright
+   clouds, behind frosted cards. Each image has a scrim tuned to keep text readable. */
+.space-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--bg);
+  background-image: var(--space-scrim), var(--space-img);
+  background-size: cover, cover;
+  background-position: center, var(--space-pos);
+  background-repeat: no-repeat;
+}
+:root {
+  --space-img: url("/backgrounds/orbit-light-2400.webp");
+  --space-pos: 70% 20%;
+  --space-scrim: linear-gradient(
+    105deg,
+    rgb(246 246 244 / 0.55) 0%,
+    rgb(246 246 244 / 0.3) 45%,
+    rgb(246 246 244 / 0) 80%
+  );
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --space-img: url("/backgrounds/orbit-dark-2400.webp");
+    --space-pos: center 78%;
+    --space-scrim: linear-gradient(
+      180deg,
+      rgb(5 6 12 / 0.25) 0%,
+      rgb(5 6 12 / 0.1) 40%,
+      rgb(5 6 12 / 0.55) 100%
+    );
+  }
+}
+:root[data-theme="dark"] {
+  --space-img: url("/backgrounds/orbit-dark-2400.webp");
+  --space-pos: center 78%;
+  --space-scrim: linear-gradient(
+    180deg,
+    rgb(5 6 12 / 0.25) 0%,
+    rgb(5 6 12 / 0.1) 40%,
+    rgb(5 6 12 / 0.55) 100%
+  );
+}
+@media (max-width: 767px) {
+  :root {
+    --space-img: url("/backgrounds/orbit-light-1200.webp");
+    --space-pos: 78% top;
+    --space-scrim: linear-gradient(
+      180deg,
+      rgb(246 246 244 / 0.55) 0%,
+      rgb(246 246 244 / 0.8) 55%,
+      rgb(246 246 244 / 0.92) 100%
+    );
+  }
+  :root[data-theme="dark"] {
+    --space-img: url("/backgrounds/orbit-dark-1200.webp");
+    --space-pos: 30% 70%;
+  }
+}
+@media (max-width: 767px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --space-img: url("/backgrounds/orbit-dark-1200.webp");
+    --space-pos: 30% 70%;
+  }
+}
+.glass {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* the overview headline: a frosted panel on the bright light-mode photo, straight on the
+   night sky in dark mode */
+.hero-panel {
+  background: color-mix(in srgb, var(--surface) 48%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  box-shadow: var(--card-shadow);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero-panel {
+    background: transparent;
+    backdrop-filter: none;
+    border-color: transparent;
+    box-shadow: none;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 0.6);
+  }
+}
+:root[data-theme="dark"] .hero-panel {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: transparent;
+  box-shadow: none;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.6);
+}
+
+/* ---- theme switch: a scale reveal from the toggle button (components/theme-toggle.tsx) */
+html[data-theme-switch] * {
+  view-transition-name: none !important; /* one picture of the whole page, chrome included */
+}
+html[data-theme-switch]::view-transition-old(root) {
+  animation: theme-recede 620ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  transform-origin: var(--theme-x) var(--theme-y);
+}
+html[data-theme-switch]::view-transition-new(root) {
+  animation: theme-reveal 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: var(--theme-x) var(--theme-y);
+}
+@keyframes theme-recede {
+  to {
+    transform: scale(0.92);
+    opacity: 0.35;
+    filter: blur(3px);
+  }
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x) var(--theme-y));
+    transform: scale(1.06);
+  }
+  to {
+    clip-path: circle(var(--theme-r) at var(--theme-x) var(--theme-y));
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-switch]::view-transition-old(root),
+  html[data-theme-switch]::view-transition-new(root) {
+    animation: none;
+  }
 }

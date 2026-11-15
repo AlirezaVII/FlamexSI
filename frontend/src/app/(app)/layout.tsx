@@ -1,11 +1,11 @@
 import { Nav } from "@/components/nav";
 
-/** The app: explore, compare, discover, findings, insights, data. */
+/** The app shell: pipeline sidebar (desktop) or pipeline tab bar (mobile), then the page. */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col pb-16 lg:pb-0">
+    <div className="app-shell flex min-h-screen flex-col pb-28 lg:pb-0">
       <Nav />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <main className="flex w-full flex-1 flex-col">
         {children}
       </main>
       <footer className="border-t border-line px-4 py-4 text-center text-xs text-muted">

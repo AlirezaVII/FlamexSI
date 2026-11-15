@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PipelineLink as Link } from "./pipeline-link";
 import { fmt, label } from "@/lib/api";
 import type { Finding } from "@/lib/types";
 import { StatusBadge } from "./ui";

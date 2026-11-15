@@ -3,51 +3,67 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { StatSkeleton } from "@/components/loading";
+import { PipelineLink } from "@/components/pipeline-link";
 import { Card, ErrorNote, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { DiscoveryGoal } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
+// in pipeline order; `stage` is the step number shown in the navigation
 const SECTIONS = [
   {
+    href: "/data",
+    stage: 1,
+    title: "Data",
+    text: "NASA files stored unchanged, standardized, and checked for quality, with every change explained.",
+  },
+  {
+    href: "/footage",
+    stage: 1,
+    title: "Footage",
+    text: "Flame video to numbers: circularity, growth rate, extinction radius, blue vs soot-like colour.",
+  },
+  {
     href: "/explorer",
+    stage: 2,
     title: "Explore",
     text: "Find and filter experiments by any variable in the data. No conclusions here, just the data.",
   },
   {
     href: "/compare",
+    stage: 2,
     title: "Compare",
     text: "See which variables differ between experiments, with repeated measurements and their spread.",
   },
   {
     href: "/relationships",
+    stage: 3,
     title: "Discover",
-    text: "Pick a goal or explore openly. Associations are found on part of the data and validated on the rest.",
+    text: "Associations are found on 70% of the experiments and validated on the 30% the engine never saw.",
   },
   {
     href: "/findings",
+    stage: 3,
     title: "Findings",
     text: "Validated findings, ranked, each with its evidence, uncertainty, limitations and checks.",
   },
   {
     href: "/insights",
+    stage: 4,
     title: "Insights",
     text: "Findings a researcher reviewed and interpreted. Created by people, never automatically.",
   },
   {
     href: "/simulator",
+    stage: 4,
     title: "Simulate",
-    text: "Flammability map by oxygen and gravity or flow, for ISS, lunar and Mars scenarios. Estimated only from loaded experiments.",
-  },
-  {
-    href: "/footage",
-    title: "Footage",
-    text: "Flame video to numbers: circularity, growth rate, extinction radius, blue vs soot-like colour, with an overlay player.",
+    text: "Flammability by oxygen and gravity or flow, for ISS, lunar and Mars scenarios, from loaded data only.",
   },
   {
     href: "/innovation",
+    stage: 5,
     title: "Innovate",
-    text: "Beyond the challenge: what new capability an insight makes possible. AI suggests, the team decides.",
+    text: "Beyond the challenge: what an insight makes possible. AI suggests, the team decides.",
   },
 ];
 
@@ -75,8 +91,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl border border-line bg-surface px-6 py-10 shadow-card sm:px-10">
+    <div className="relative space-y-8">
+      <div className="space-bg" aria-hidden />
+      <section className="hero-panel relative rounded-2xl px-6 py-10 sm:px-10">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
           NASA Microgravity Combustion
         </p>
@@ -100,13 +117,13 @@ export default function Home() {
             </p>
             <div className="flex flex-wrap gap-2">
               {goals.map((g) => (
-                <Link
+                <PipelineLink
                   key={g.id}
                   href={`/relationships?goal=${encodeURIComponent(g.id)}`}
-                  className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-2 hover:border-accent hover:text-ink"
+                  className="glass rounded-full border border-line px-3 py-1.5 text-sm text-ink-2 hover:border-accent hover:text-ink"
                 >
                   {g.question}
-                </Link>
+                </PipelineLink>
               ))}
             </div>
           </div>
@@ -115,13 +132,16 @@ export default function Home() {
 
       {error && <ErrorNote message={error} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((s) => (
-          <Link
+          <PipelineLink
             key={s.href}
             href={s.href}
-            className="group rounded-xl border border-line bg-surface p-5 shadow-card transition duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-card-hover motion-reduce:hover:translate-y-0"
+            className="glass group rounded-xl border border-line p-5 shadow-card transition duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-card-hover motion-reduce:hover:translate-y-0"
           >
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Stage {s.stage}
+            </p>
             <h2 className="font-display text-xl font-medium text-ink">
               {s.title}{" "}
               <span className="text-accent transition group-hover:translate-x-0.5">
@@ -129,11 +149,11 @@ export default function Home() {
               </span>
             </h2>
             <p className="mt-1.5 text-sm text-ink-2">{s.text}</p>
-          </Link>
+          </PipelineLink>
         ))}
       </div>
 
-      <Card title="Workspace">
+      <Card title="Workspace" className="glass relative">
         <div className="grid gap-4 sm:grid-cols-4">
           {loading ? (
             <>

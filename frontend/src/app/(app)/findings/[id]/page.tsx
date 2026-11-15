@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { GroupBars, ScatterChart } from "@/components/charts";
+import { PipelineLink } from "@/components/pipeline-link";
 import { PriorKnowledgeCard } from "@/components/prior-knowledge";
 import {
   ChartSkeleton,
@@ -129,12 +129,12 @@ export default function FindingPage() {
 
   return (
     <>
-      <Link
+      <PipelineLink
         href="/relationships"
         className="mb-4 inline-block text-sm text-ink-2 hover:text-ink"
       >
         ← Discovery
-      </Link>
+      </PipelineLink>
       <PageHeader
         eyebrow={`${label(f.condition)} ↔ ${label(f.outcome)}`}
         title={f.headline}
