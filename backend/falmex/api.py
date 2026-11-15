@@ -139,6 +139,12 @@ class AnalyzeMediaRequest(BaseModel):
     detector: Literal["opencv", "classic", "v6"] = "opencv"  # how the flame is found in each frame
 
 
+class CompareMediaRequest(AnalyzeMediaRequest):
+    # which methods to run; empty = all available. The page asks for one per request, so each
+    # stays under the 120 s a proxy (Vercel) allows.
+    detectors: list[Literal["opencv", "classic", "v6"]] = Field(default_factory=list, max_length=3)
+
+
 class AttachMediaRequest(BaseModel):
     dataset_id: str
     experiment_id: str
@@ -768,17 +774,19 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         return result
 
     @app.post("/api/media/{source_id}/compare")
-    def compare_media(request: Request, source_id: str, body: AnalyzeMediaRequest | None = None):
+    def compare_media(request: Request, source_id: str, body: CompareMediaRequest | None = None):
         """Run every detector on the same footage: summaries and radius curves side by side.
         Nothing is saved; the stored analysis keeps the detector chosen on the page."""
         import tempfile
         from pathlib import Path
 
-        body = body or AnalyzeMediaRequest()
+        body = body or CompareMediaRequest()
         source = media_or_404(request, source_id)
         out, skipped = {}, {}
         path = store(request).raw_path(source)
         for det in vision.detectors():
+            if body.detectors and det not in body.detectors:
+                continue
             if det == "v6" and path.suffix.lower() not in vision.VIDEO_EXT:
                 skipped[det] = "needs a video"
                 continue

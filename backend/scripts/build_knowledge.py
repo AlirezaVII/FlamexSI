@@ -75,6 +75,18 @@ def build() -> list[dict]:
                      "radiometer", "pressure", "temperature", "real fire"],
         "facts": {k: sf[k] for k in ("source", "method", "samples", "ignited_in_file")},
     })
+    s12 = load("flight/saffire12.json")
+    cards.append({
+        "id": "saffire12", "title": "Saffire-I and II: which samples burned (11 samples)",
+        "page": "/flight-evidence#saffire12",
+        "keywords": ["saffire-i", "saffire-ii", "saffire i", "saffire ii", "sample", "ignite",
+                     "ignition", "burned", "flammab", "thermocouple", "oxygen", "co2",
+                     "igniter", "cygnus"],
+        "facts": {"source": s12["source"], "method": s12["method"], "note": s12["note"],
+                  "flights": [{**{k: f[k] for k in ("name", "psi", "date_utc", "burned")},
+                               "samples": [_s12(x) for x in f["samples"]]}
+                              for f in s12["flights"]]},
+    })
     f2 = load("flight/flex2.json")
     cards.append({
         "id": "flex2", "title": "FLEX-2: every raw test log summarised",
@@ -116,11 +128,24 @@ def build() -> list[dict]:
             "by a combustion expert (evidence readiness level 7 is never automatic).",
             "Droplet results (FLEX) are not cabin fires; the radiometers in Saffire sit next "
             "to the sample, unlike cabin sensors.",
-            "FLEX-2 atmospheres (oxygen, diluent per test) are in larger chamber logs not "
-            "read yet.",
+            "FLEX-2 oxygen and diluent per test are not in the public files: the per-test "
+            "chamber logs (checked, 686 of 690 downloadable) hold only pressure and "
+            "temperature.",
         ],
     })
     return cards
+
+
+def _s12(x: dict) -> dict:
+    """One Saffire-I/II sample, trimmed for the assistant's prompt."""
+    keep = {k: x.get(k) for k in ("sample", "igniter_on_for_s", "burned",
+                                  "hot_after_igniter_off_s", "front_lag_s")}
+    keep["air_speed_cm_s"] = x["before"]["air_speed_cm_s"]
+    keep["oxygen_before_pct"] = x["before"]["oxygen_pct"]
+    keep["box"] = x["box"]
+    keep["hottest_thermocouples"] = [[t["thermocouple"], t["peak_c"], t["peak_at_s"]]
+                                     for t in x["sample_thermocouples"]]
+    return keep
 
 
 def saffire_series() -> dict:

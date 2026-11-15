@@ -225,10 +225,27 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
     setComparing(true);
     setError(null);
     try {
-      setComparison(await api.compareMedia(id, {
-        fps: fps ? Number(fps) : null,
-        mm_per_px: mmPerPx ? Number(mmPerPx) : null,
-      }));
+      // one request per method, so none runs past a proxy's time limit; v6 waits on its own
+      // service, so it runs alongside the local methods, which run one after the other
+      const body = { fps: fps ? Number(fps) : null, mm_per_px: mmPerPx ? Number(mmPerPx) : null };
+      const one = (d: string) => api.compareMedia(id, { ...body, detectors: [d] });
+      const ids = usable.length ? usable.map((d) => d.id) : ["opencv", "classic"];
+      const local = (async () => {
+        const out: FootageComparison[] = [];
+        for (const d of ids.filter((d) => d !== "v6")) out.push(await one(d));
+        return out;
+      })();
+      const remote = ids.includes("v6")
+        ? one("v6").catch((e: Error): FootageComparison => ({
+            source_id: id, x: "frame", detectors: {}, skipped: { v6: e.message } }))
+        : null;
+      const parts = [...(await local), ...(remote ? [await remote] : [])];
+      setComparison({
+        source_id: id,
+        x: parts.some((p) => p.x === "time_s") ? "time_s" : "frame",
+        detectors: Object.assign({}, ...parts.map((p) => p.detectors)),
+        skipped: Object.assign({}, ...parts.map((p) => p.skipped ?? {})),
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -311,9 +328,9 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
           <div className="mt-3">
             <LoadingLabel>
               {comparing
-                ? `Running every method on the same footage…${usable.some((d) => d.id === "v6") ? " Pouya's v6 takes about half a minute." : ""}`
+                ? `Running every method on the same footage…${usable.some((d) => d.id === "v6") ? " Pouya's v6 takes about a minute." : ""}`
                 : detector === "v6"
-                  ? "Sending 24 frames to Pouya's v6 model… about half a minute"
+                  ? "Sending 24 frames to Pouya's v6 model… about a minute"
                   : "Measuring every frame…"}
             </LoadingLabel>
           </div>

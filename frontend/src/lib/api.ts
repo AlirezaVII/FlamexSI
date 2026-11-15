@@ -337,7 +337,7 @@ export const api = {
     id: string,
     body: { fps?: number | null; mm_per_px?: number | null; detector?: string },
   ) => request<FootageAnalysis>(`/api/media/${id}/analyze`, json(body)),
-  compareMedia: (id: string, body: { fps?: number | null; mm_per_px?: number | null }) =>
+  compareMedia: (id: string, body: { fps?: number | null; mm_per_px?: number | null; detectors?: string[] }) =>
     request<FootageComparison>(`/api/media/${id}/compare`, json(body)),
   mediaAnalysis: (id: string) =>
     request<FootageAnalysis>(`/api/media/${id}/analysis`),

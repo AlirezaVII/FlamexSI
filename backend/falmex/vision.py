@@ -90,7 +90,7 @@ class _Footage:
             self.image = cv2.imread(str(path), cv2.IMREAD_COLOR)
             if self.image is None:
                 raise ValueError("Could not read the image")
-            self.fps, self.stride = None, 1
+            self.fps, self.stride, self.total_hint = None, 1, 1
             return
         if ext not in VIDEO_EXT:
             raise ValueError(f"Not an image or video file: {path.name}")
@@ -100,7 +100,14 @@ class _Footage:
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
         self.fps = cap.get(cv2.CAP_PROP_FPS) or None
         cap.release()
+        self.total_hint = total
         self.stride = max(1, int(np.ceil(total / MAX_ANALYZED))) if total else 1
+
+    def estimate(self) -> int | None:
+        """Sampled frames expected from the container's frame count (no decoding)."""
+        if self.image is not None:
+            return 1
+        return int(np.ceil(self.total_hint / self.stride)) if self.total_hint else None
 
     def walk(self):
         """Yield (k, index, frame) for every sampled frame; sets n (sampled) and total."""
@@ -356,17 +363,23 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
     cal = calibration or Calibration()
     src = _Footage(path)
     file_fps = src.fps
-    brightest = src.scan()
-    n = src.n
-    h, w = brightest.shape[:2]
     bg, masks, subset = None, None, None
-    if detector == "opencv":
-        bg = background([f for _, f in src.pick(np.linspace(0, n - 1, min(BG_FRAMES, n)))])
     if detector == "v6":
+        # one pass: the 24 frames are chosen from the file's frame count (no full scan); if
+        # the count is wrong, the frames still come from the whole clip, only less evenly
+        n = src.estimate() or sum(1 for _ in src.walk())
         subset = src.pick(np.linspace(0, n - 1, min(V6_FRAMES, n)))
+        if not subset:
+            raise ValueError("The video has no readable frames")
         masks = v6_masks(path, [f for _, f in subset])
         brightest = max((f for _, f in subset),
                         key=lambda f: float(np.percentile(f.max(axis=2), 99.5)))
+    else:
+        brightest = src.scan()
+        n = src.n
+        if detector == "opencv":
+            bg = background([f for _, f in src.pick(np.linspace(0, n - 1, min(BG_FRAMES, n)))])
+    h, w = brightest.shape[:2]
     fps = cal.fps or file_fps
     thresh = _threshold([brightest])
     del brightest

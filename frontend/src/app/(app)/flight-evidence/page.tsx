@@ -13,6 +13,7 @@ import nextExperiments from "@/lib/flight/next_experiments.json";
 import transitions from "@/lib/flight/transitions.json";
 import smoke from "@/lib/flight/smoke.json";
 import saffire from "@/lib/flight/saffire.json";
+import saffire12 from "@/lib/flight/saffire12.json";
 import flex2 from "@/lib/flight/flex2.json";
 
 /*
@@ -106,6 +107,7 @@ const SECTIONS = [
   ["atmosphere", "Mission check"],
   ["smoke", "Smoke detection"],
   ["saffire", "Saffire cabin fire"],
+  ["saffire12", "Saffire I & II samples"],
   ["flex2", "FLEX-2 raw logs"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
@@ -145,6 +147,7 @@ export default function FlightEvidence() {
       <AtmosphereCheck />
       <SmokeDetection />
       <SaffireCabin />
+      <SaffireSamples />
       <Flex2Logs />
       <Ranking />
       <ReportAndPlanner />
@@ -780,6 +783,118 @@ function SaffireCabin() {
         gave only a brief, weak signal. The file gives no distance between the radiometers, so
         no spread speed is computed; radiometer values are in the file&apos;s units. The second
         detector&apos;s channels are empty in this file. Source: {saffire.source}.
+      </p>
+    </Card>
+  );
+}
+
+/** Saffire-I and II: which samples burned, by the same rule (build_saffire12_summary.py). */
+function SaffireSamples() {
+  type Sample = (typeof saffire12.flights)[number]["samples"][number] & {
+    hot_after_igniter_off_s?: number; front_lag_s?: number; series?: number[][] };
+  const rows = saffire12.flights.flatMap((f) =>
+    f.samples.map((x) => ({ flight: f.name, ...(x as Sample) })));
+  const burned = rows.filter((x) => x.burned);
+  const colors = ["#ff8a3d", "#4f7cff", "#22a06b", "#c64bd6"];
+  const tMax = Math.max(...burned.flatMap((x) => (x.series ?? []).map((p) => p[0])));
+  const yMax = Math.max(...burned.flatMap((x) => (x.series ?? []).map((p) => p[1])));
+  const X = (t: number) => 44 + ((t + 10) / (tMax + 10)) * 536;
+  const Y = (v: number) => 170 - (Math.max(0, v) / yMax) * 150;
+  const sign = (v: number) => (v > 0 ? `+${v}` : `${v}`);
+  const readable = (v: number, noise: number) => Math.abs(v) > 2 * noise;
+  return (
+    <Card title="Saffire-I and II · which samples burned" className="scroll-mt-24 print:hidden">
+      <span id="saffire12" className="sr-only" />
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        Before Saffire-III, two Cygnus flights burned samples inside the same kind of box:
+        Saffire-I ({saffire12.flights[0].date_utc} UTC, {saffire12.flights[0].samples.length}{" "}
+        samples) and Saffire-II ({saffire12.flights[1].date_utc} UTC,{" "}
+        {saffire12.flights[1].samples.length} samples). Every sample got the same igniter; one rule decides whether it really burned:
+        a thermocouple on the sample stays over {saffire12.rule.hot_rise_c} °C above its starting
+        value for {saffire12.rule.hold_s} s or more, counted only after the igniter is off (the
+        igniter wire heats the thermocouples by itself). {burned.length} of {rows.length}{" "}
+        samples burned.
+      </p>
+      <div className="overflow-x-auto" data-lenis-prevent>
+        <table className="w-full min-w-[46rem] text-left text-sm tabular-nums">
+          <thead>
+            <tr className="border-b border-line text-xs text-muted">
+              {["Sample", "Igniter on", "Burned", "Hot after igniter off", "Front passing",
+                "Hottest on sample", "O₂ change (points)", "CO₂ change (points)", "Air speed"].map((h) => (
+                <th key={h} className="py-1.5 pr-3 font-medium">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((x) => {
+              const peak = Math.max(...x.sample_thermocouples.map((t) => t.peak_c ?? 0), 0);
+              return (
+                <tr key={`${x.flight}-${x.sample}`} className="border-b border-line/60">
+                  <td className="py-1.5 pr-3 text-ink">{x.flight} · {x.sample}</td>
+                  <td className="py-1.5 pr-3 text-ink-2">{x.igniter_on_for_s} s</td>
+                  <td className={`py-1.5 pr-3 ${x.burned ? "text-serious" : "text-muted"}`}>
+                    {x.burned ? "yes" : "no"}
+                  </td>
+                  <td className="py-1.5 pr-3 text-ink-2">{x.hot_after_igniter_off_s != null ? `${x.hot_after_igniter_off_s} s` : "—"}</td>
+                  <td className="py-1.5 pr-3 text-ink-2">{x.front_lag_s != null ? `${x.front_lag_s} s` : "—"}</td>
+                  <td className="py-1.5 pr-3 text-ink-2">{peak ? `${peak} °C` : "under +100 °C"}</td>
+                  <td className="py-1.5 pr-3 text-ink-2">
+                    {readable(x.box.oxygen_change_pct, x.box.oxygen_noise_pct)
+                      ? sign(x.box.oxygen_change_pct) : "within noise"}
+                  </td>
+                  <td className="py-1.5 pr-3 text-ink-2">
+                    {readable(x.box.co2_change_pct, x.box.co2_noise_pct)
+                      ? sign(x.box.co2_change_pct) : "within noise"}
+                  </td>
+                  <td className="py-1.5 pr-3 text-ink-2">{x.before.air_speed_cm_s} cm/s</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <svg viewBox="0 0 600 196" className="mt-5 w-full" role="img"
+        aria-label="Hottest sample thermocouple over time for each sample that burned">
+        {[0, 0.5, 1].map((k) => (
+          <g key={k}>
+            <line x1={44} x2={580} y1={Y(yMax * k)} y2={Y(yMax * k)} stroke="var(--line)" />
+            <text x={38} y={Y(yMax * k) + 3} fontSize={10} textAnchor="end" fill="var(--muted)">
+              +{Math.round(yMax * k)}
+            </text>
+          </g>
+        ))}
+        {[0, 100, 200, 300, 400, 500, 600].filter((t) => t <= tMax).map((t) => (
+          <text key={t} x={X(t)} y={186} fontSize={10} textAnchor="middle" fill="var(--muted)">{t} s</text>
+        ))}
+        {burned.map((x, i) => (
+          <polyline key={`${x.flight}-${x.sample}`} fill="none" stroke={colors[i % 4]} strokeWidth={1.8}
+            points={(x.series ?? []).map((p) => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" ")} />
+        ))}
+      </svg>
+      <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted">
+        {burned.map((x, i) => (
+          <span key={`${x.flight}-${x.sample}`}>
+            <span style={{ color: colors[i % 4] }}>━</span> {x.flight} · {x.sample}
+          </span>
+        ))}
+        <span>hottest sample thermocouple, °C above its start, time from ignition</span>
+      </p>
+      <div className="mt-4 rounded-lg border-l-4 border-accent bg-surface-2 p-3 text-sm text-ink-2">
+        <b className="text-ink">What it shows:</b> the same igniter lit only some samples. The
+        large Saffire-I sample burned for minutes, its thermocouples peaking one after another
+        as the flame front moved along it, and it raised the box&apos;s CO₂ by{" "}
+        {rows[0].box.co2_change_pct} percentage points. In Saffire-II, the samples that burned
+        did so for one to two and a half minutes. Two Saffire-II samples had the igniter on for
+        30 s instead of 9 s: neither passed the burn rule, yet CO₂ in the box rose slowly over the
+        following minutes (about +0.07 percentage points), unlike the other unburned samples.
+      </div>
+      <p className="mt-3 text-xs text-muted">
+        The workbooks name samples by number only, so no materials are claimed. Front passing =
+        time between the first and last thermocouple peak; no positions are given, so no speed.
+        Oxygen and CO₂ changes compare the last 30 s with the 30 s before ignition and are shown
+        only when larger than twice the sensor&apos;s noise (the oxygen sensor steps by about
+        0.2 % with no flame). Radiometers are not used to decide: the igniter alone raises some
+        of them. Source: {saffire12.source}.
       </p>
     </Card>
   );

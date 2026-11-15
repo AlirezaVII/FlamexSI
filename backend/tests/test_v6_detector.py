@@ -136,3 +136,31 @@ def test_v6_failures_are_reported_and_do_not_sink_a_comparison(client, v6):
     v6.server_close()
     res = client.post(f"/api/media/{sid}/analyze", json={"detector": "v6"})
     assert res.status_code == 422 and "did not answer" in res.json()["detail"]
+
+
+def test_compare_can_run_one_method_per_request(client, v6):
+    """The page asks for each method separately so no request outlives a proxy's limit."""
+    sid = client.post("/api/media/synthetic").json()["source"]["source_id"]
+    for det in ("opencv", "classic", "v6"):
+        res = client.post(f"/api/media/{sid}/compare", json={"detectors": [det]})
+        assert res.status_code == 200, res.text
+        assert list(res.json()["detectors"]) == [det]
+    bad = client.post(f"/api/media/{sid}/compare", json={"detectors": ["magic"]})
+    assert bad.status_code == 422
+    both = client.post(f"/api/media/{sid}/compare", json={"detectors": ["opencv", "v6"]}).json()
+    assert set(both["detectors"]) == {"opencv", "v6"}
+
+
+def test_v6_reads_the_video_once_when_the_frame_count_is_known(tmp_path, v6, monkeypatch):
+    path = tmp_path / "clip.avi"
+    vision.synthetic_clip(path, frames=48)
+    walks = []
+    real = vision._Footage.walk
+
+    def counting(self):
+        walks.append(1)
+        yield from real(self)
+
+    monkeypatch.setattr(vision._Footage, "walk", counting)
+    r = vision.analyze(path, tmp_path / "o", detector="v6")
+    assert len(walks) == 1 and r["frames_total"] == 48 and r["frames_analyzed"] == 24

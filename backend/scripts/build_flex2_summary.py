@@ -12,8 +12,9 @@ of the narrow- and wide-view radiometers with chamber pressure and temperature) 
               at least 2 s starting 1 s after the igniter switched off; flame seconds =
               lit readings; first flame = first lit reading
   chamber     median pressure (psia) and temperature (°C); their rise during the test
-The atmosphere (oxygen, diluent) is logged in the larger per-test chamber files, not read
-here, so it is not in this table.
+The atmosphere (oxygen, diluent) is not in this table, and not in NASA's public files: the
+per-test "<TEST>_Chamber_Readings.txt" logs were checked (686 of 690 download; 4 return "File
+not found") and hold only four pressure transducers (psia) and four temperatures (°C).
 Output: backend/falmex/datasets/PSI-68_FLEX2_test_summary.csv and
 frontend/src/lib/flight/flex2.json
 Usage: python backend/scripts/build_flex2_summary.py <folder with the downloaded txt files>
