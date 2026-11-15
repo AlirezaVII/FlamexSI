@@ -166,6 +166,14 @@ const STAGES: Stage[] = [
         icon: icon("M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"),
       },
       {
+        href: "/flame-lab",
+        label: "Flame lab 3D",
+        hint: "Replay a real FLEX droplet burn in 3D",
+        icon: icon(
+          "M12 3c1.5 3 4.5 4.5 4.5 8.5a4.5 4.5 0 0 1-9 0C7.5 8.5 9.5 7 12 3zM12 14a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z",
+        ),
+      },
+      {
         href: "/simulator",
         label: "Simulate",
         hint: "Flammability by oxygen and gravity",
