@@ -1,0 +1,67 @@
+{
+ "dataset": "NASA PSI-69 FLEX experimental table (274 tests)",
+ "source": "NASA PSI-69, FLEX experimental table",
+ "finding_id": "184edfdf348d",
+ "headline": "Higher oxygen is associated with higher droplet burning rate constant",
+ "method": "spearman_rho",
+ "n_experiments": 258,
+ "split": {
+  "discovery_rows": 192,
+  "discovery_experiments": 192,
+  "holdout_rows": 82,
+  "holdout_experiments": 82,
+  "by": "experiment_id",
+  "groups_discovery": 192,
+  "groups_holdout": 82,
+  "shared_across_split": {
+   "experiment_id": 0
+  },
+  "test_fraction": 0.3,
+  "seed": 42
+ },
+ "discovery_effect": 0.5772,
+ "unseen_effect": 0.5714,
+ "shuffles_as_strong": 0,
+ "permutations": 200,
+ "effect_all_rows": 0.5861,
+ "controls": [
+  {
+   "control": "pressure",
+   "verdict": "supports",
+   "effect": 0.5725,
+   "retained_share": 0.977
+  },
+  {
+   "control": "nitrogen_fraction",
+   "verdict": "supports",
+   "effect": 0.5803,
+   "retained_share": 0.99
+  },
+  {
+   "control": "carbon_dioxide_fraction",
+   "verdict": "supports",
+   "effect": 0.6623,
+   "retained_share": 1.13
+  },
+  {
+   "control": "helium_fraction",
+   "verdict": "supports",
+   "effect": 0.7122,
+   "retained_share": 1.215
+  },
+  {
+   "control": "initial_droplet_diameter",
+   "verdict": "supports",
+   "effect": 0.6874,
+   "retained_share": 1.173
+  }
+ ],
+ "rank": 1,
+ "of": 18,
+ "tested": 119,
+ "rejected": {
+  "finding_id": "8d6abcbc2d2d",
+  "headline": "The helium fraction\u2013burn time association changes direction at higher carbon dioxide fraction (interaction)",
+  "why": "An initial signal was observed, but it did not survive validation on unseen data or against random shuffles. Likely a chance pattern."
+ }
+}

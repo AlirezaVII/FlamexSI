@@ -356,20 +356,18 @@ export default function Landing() {
                 Falmex tries to prove itself wrong.
               </h2>
               <p className="sub">
-                A pattern that looks real is not enough. In this example a
-                variable is strongly associated with burn time and the
-                association even holds up on unseen experiments — but when
-                Falmex holds oxygen fixed, it almost disappears. It is flagged
-                and ranked down, not reported as a discovery. The numbers on the
-                card are computed live by the engine.
+                A pattern that looks real is not enough. Every association Falmex
+                finds in the FLEX flight data is re-tested on tests it never saw,
+                against random shuffles, and with each other condition held fixed.
+                Patterns that fail are thrown out, not reported.
               </p>
               <p
                 className="sub"
                 style={{ marginTop: 14, fontSize: 14, color: "var(--l-muted)" }}
               >
-                A teaching example: synthetic data with a planted confounder, so the
-                right answer is known in advance. The same checks run on every finding
-                from the real FLEX flight data.
+                Real NASA data: the top finding from the PSI-69 FLEX table and one
+                the same run rejected. Every number comes from the engine&apos;s stored
+                results.
               </p>
             </div>
             <TrustCard />

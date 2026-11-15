@@ -419,9 +419,9 @@ html:has(.landing) {
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #ffcf8a;
-  background: #2a1c0a;
-  border: 1px solid #4a3312;
+  color: #a9c4ff;
+  background: #0e1a33;
+  border: 1px solid #22396a;
   padding: 4px 9px;
   border-radius: 6px;
 }
@@ -479,9 +479,9 @@ html:has(.landing) {
   margin-top: 22px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: #2a0f14;
-  border: 1px solid #5a1d26;
-  color: #ffd0d0;
+  background: #0d2a1b;
+  border: 1px solid #1d5a3a;
+  color: #c8f5dc;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -674,14 +674,14 @@ html:has(.landing) {
     filter: invert(1);
   }
   :root:not([data-theme="dark"]) .landing .verdict {
-    background: #fdecee;
-    border-color: #f3c2c8;
-    color: #7a1622;
+    background: #e8f7ef;
+    border-color: #b9e3cb;
+    color: #0f5132;
   }
   :root:not([data-theme="dark"]) .landing .synth {
-    background: #fff4e0;
-    border-color: #f1d3a0;
-    color: #8a5300;
+    background: #e8f0ff;
+    border-color: #bcd0f5;
+    color: #1f4fa8;
   }
 }
 :root[data-theme="light"] .landing .sky {
@@ -689,14 +689,14 @@ html:has(.landing) {
   filter: invert(1);
 }
 :root[data-theme="light"] .landing .verdict {
-  background: #fdecee;
-  border-color: #f3c2c8;
-  color: #7a1622;
+  background: #e8f7ef;
+  border-color: #b9e3cb;
+  color: #0f5132;
 }
 :root[data-theme="light"] .landing .synth {
-  background: #fff4e0;
-  border-color: #f1d3a0;
-  color: #8a5300;
+  background: #e8f0ff;
+  border-color: #bcd0f5;
+  color: #1f4fa8;
 }
 .landing .hl {
   color: var(--l-hl);

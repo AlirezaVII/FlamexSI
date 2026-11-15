@@ -648,6 +648,7 @@ export interface FootageFrame {
   index: number;
   time_s: number | null;
   present: boolean;
+  rejected?: string;
   image?: string;
   radius_px?: number;
   circularity?: number | null;

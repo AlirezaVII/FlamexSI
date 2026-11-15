@@ -730,7 +730,25 @@ function PromoteCard({ finding }: { finding: Finding }) {
   const [areas, setAreas] = useState<SafetyArea[]>([]);
   const [others, setOthers] = useState<Finding[]>([]);
   const [related, setRelated] = useState<string[]>([]);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  const [tried, setTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  // the same minimums the server enforces, checked here so the reviewer sees them as they type
+  const RULES: Record<string, number> = {
+    statement: 10,
+    scientific_interpretation: 10,
+    fire_safety_relevance: 5,
+    reviewer: 2,
+  };
+  const problem = (k: keyof typeof form) => {
+    const min = RULES[k];
+    if (!min) return null;
+    const n = form[k].trim().length;
+    if (n === 0) return "Required.";
+    if (n < min) return `Please write at least ${min} characters (${n} so far).`;
+    return null;
+  };
+  const invalid = (Object.keys(RULES) as (keyof typeof form)[]).filter((k) => problem(k));
   const blocked = finding.synthetic
     ? "Findings from synthetic test data can never become insights."
     : finding.status !== "validated"
@@ -751,6 +769,13 @@ function PromoteCard({ finding }: { finding: Finding }) {
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
   async function submit() {
+    setTried(true);
+    setMsg(null);
+    if (invalid.length) {
+      setMsg({ tone: "error", text: "Some fields need more detail; see the notes under them." });
+      return;
+    }
+    setBusy(true);
     try {
       await api.promote(finding.finding_id, {
         ...form,
@@ -761,10 +786,12 @@ function PromoteCard({ finding }: { finding: Finding }) {
         safety_areas: areas,
         related_finding_ids: related,
       });
-      setMsg("Saved as an insight.");
+      setMsg({ tone: "ok", text: "Saved as an insight. It is now listed on the Insights page." });
       setOpen(false);
     } catch (e) {
-      setMsg((e as Error).message);
+      setMsg({ tone: "error", text: `Could not save the insight: ${(e as Error).message}` });
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -807,17 +834,38 @@ function PromoteCard({ finding }: { finding: Finding }) {
               ["reviewer", "Reviewer"],
               ["references", "References (one per line)"],
             ] as const
-          ).map(([k, l]) => (
-            <label key={k} className="text-sm">
-              <span className="mb-1 block text-xs text-muted">{l}</span>
-              <textarea
-                rows={k === "reviewer" ? 1 : 2}
-                value={form[k]}
-                onChange={(e) => setForm({ ...form, [k]: e.target.value })}
-                className="w-full rounded-md border border-line bg-surface px-2 py-1.5"
-              />
-            </label>
-          ))}
+          ).map(([k, l]) => {
+            const err = tried ? problem(k) : null;
+            const min = RULES[k];
+            return (
+              <label key={k} className="text-sm">
+                <span className="mb-1 flex justify-between gap-2 text-xs text-muted">
+                  <span>
+                    {l}
+                    {min ? <span className="text-accent"> *</span> : <span> (optional)</span>}
+                  </span>
+                  {min ? (
+                    <span className="tabular-nums">
+                      {form[k].trim().length}/{min}+
+                    </span>
+                  ) : null}
+                </span>
+                <textarea
+                  rows={k === "reviewer" ? 1 : 2}
+                  value={form[k]}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  aria-invalid={!!err}
+                  className="w-full rounded-md border bg-surface px-2 py-1.5"
+                  style={{ borderColor: err ? "var(--critical)" : "var(--line)" }}
+                />
+                {err && (
+                  <span className="mt-1 block text-xs" style={{ color: "var(--critical)" }}>
+                    {err}
+                  </span>
+                )}
+              </label>
+            );
+          })}
           <fieldset>
             <legend className="mb-1 text-xs text-muted">
               Where it could help
@@ -860,14 +908,24 @@ function PromoteCard({ finding }: { finding: Finding }) {
             </fieldset>
           )}
           <div className="flex gap-2">
-            <Button onClick={submit}>Save insight</Button>
+            <Button onClick={submit} disabled={busy}>
+              {busy ? "Saving…" : "Save insight"}
+            </Button>
             <Button variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>
         </div>
       )}
-      {msg && <p className="mt-2 text-sm text-ink-2">{msg}</p>}
+      {msg && (
+        <p
+          role={msg.tone === "error" ? "alert" : "status"}
+          className="mt-2 text-sm"
+          style={{ color: msg.tone === "error" ? "var(--critical)" : "var(--good)" }}
+        >
+          {msg.text}
+        </p>
+      )}
     </Card>
   );
 }

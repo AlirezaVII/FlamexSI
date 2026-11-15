@@ -200,3 +200,17 @@ def test_media_api_analyze_and_attach(client):
     real = client.post("/api/datasets", files={"file": ("r.csv", csv, "text/csv")}).json()
     assert client.post(f"/api/media/{sid}/attach", json={
         "dataset_id": real["dataset"]["dataset_id"], "experiment_id": "E1"}).status_code == 409
+
+
+def test_bright_page_is_not_reported_as_a_flame():
+    import cv2
+    import numpy as np
+
+    from falmex import vision
+
+    page = np.full((400, 600, 3), 245, np.uint8)  # a screenshot / slide
+    cv2.circle(page, (150, 150), 50, (120, 150, 220), -1)
+    m = vision._measure(page, vision._threshold([page]))
+    assert m["present"] is False and "frame" in m["rejected"]
+    s = vision.summarize([{**m, "index": 0, "time_s": None}], None, None)
+    assert s["note"].startswith("This does not look like flame footage")

@@ -66,7 +66,9 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
       detail =
         typeof body.detail === "string"
           ? body.detail
-          : JSON.stringify(body.detail);
+          : Array.isArray(body.detail)
+            ? body.detail.map(readableIssue).join(" ")
+            : JSON.stringify(body.detail);
     } catch {}
     throw new ApiError(res.status, detail);
   }
@@ -94,6 +96,22 @@ function checkUploadSize(file: File) {
       413,
       `${file.name} is ${mb.toFixed(0)} MB; the limit is 100 MB. Split the file or export only the needed columns.`,
     );
+}
+
+/** A FastAPI/pydantic validation issue as a sentence a person can act on. */
+function readableIssue(issue: {
+  loc?: (string | number)[];
+  msg?: string;
+  ctx?: { min_length?: number; max_length?: number };
+}): string {
+  const field = String(issue.loc?.[issue.loc.length - 1] ?? "a field").replace(/_/g, " ");
+  const name = field.charAt(0).toUpperCase() + field.slice(1);
+  if (issue.ctx?.min_length !== undefined)
+    return `${name} needs at least ${issue.ctx.min_length} characters.`;
+  if (issue.ctx?.max_length !== undefined)
+    return `${name} can be at most ${issue.ctx.max_length} characters.`;
+  if (issue.msg === "Field required") return `${name} is required.`;
+  return `${name}: ${issue.msg ?? "invalid value"}.`;
 }
 
 const json = (body: unknown): RequestInit => ({

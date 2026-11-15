@@ -203,28 +203,17 @@ export function LandingFX() {
         el.style.transform = `translate3d(0,${(1 - t) * 46}px,0) scale(${0.97 + 0.03 * t})`;
       });
 
-      // trust card: the bars fill as it enters; the "oxygen held fixed" bar then shrinks from
-      // the uncontrolled effect to its controlled value. The numbers next to the bars are
-      // always the final, computed values — only the bar widths animate.
+      // trust card: the bars fill as it enters. The numbers next to the bars are always the
+      // final, computed values — only the bar widths animate (each bar carries data-w, in %).
       const card = root!.querySelector<HTMLElement>("[data-trust-card]");
-      if (card?.dataset.found) {
-        const F = parseFloat(card.dataset.found) * 100;
-        const O = parseFloat(card.dataset.oxygen ?? "0") * 100;
-        const Pr = parseFloat(card.dataset.pressure ?? "0") * 100;
+      if (card) {
         const cr = card.getBoundingClientRect();
         const fill = reduce
           ? 1
           : easeOut(clamp((H - cr.top - 120) / (H * 0.3)));
-        const drop = reduce
-          ? 1
-          : easeOut(clamp((H * 0.62 - cr.top) / (H * 0.28)));
-        const set = (k: string, w: number) => {
-          const el = card.querySelector<HTMLElement>(`[data-bar='${k}']`);
-          if (el) el.style.width = `${w}%`;
-        };
-        set("found", F * fill);
-        set("pressure", Pr * fill);
-        set("oxygen", (F * (1 - drop) + O * drop) * fill);
+        card.querySelectorAll<HTMLElement>("[data-w]").forEach((el) => {
+          el.style.width = `${parseFloat(el.dataset.w ?? "0") * fill}%`;
+        });
       }
 
       // planets (real 3D spheres in WebGL)

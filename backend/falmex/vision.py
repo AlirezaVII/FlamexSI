@@ -28,6 +28,8 @@ MAX_OVERLAY = 90  # frames saved as JPEG for the overlay player
 OVERLAY_WIDTH = 720
 HEAT_COLS = 24
 MIN_AREA_SHARE = 0.0002  # contours smaller than this share of the frame are noise
+MAX_AREA_SHARE = 0.5  # a "flame" filling half the frame is a bright background, not a flame
+BACKGROUND_SHARE = 0.75  # background median must stay below this share of the threshold
 SAT_MIN = 60  # below this saturation a pixel has no reliable hue
 BLUE_HUE = (90, 135)  # OpenCV hue scale 0-180
 SOOT_HUES = ((0, 35), (165, 180))  # red, orange, yellow
@@ -80,6 +82,22 @@ def _threshold(frames: list[np.ndarray]) -> float:
     return max(float(t), 40.0)
 
 
+def _not_a_flame(v: np.ndarray, mask: np.ndarray, c, area: float, thresh: float) -> str | None:
+    """Flames are imaged as a luminous region on a darker scene. Screenshots, slides and
+    daylight photos are bright almost everywhere, and thresholding them outlines the page."""
+    h, w = v.shape
+    if area > MAX_AREA_SHARE * h * w:
+        return "the bright region fills most of the frame (a page or lit scene, not a flame)"
+    x, y, bw, bh = cv2.boundingRect(c)
+    edges = (x <= 1) + (y <= 1) + (x + bw >= w - 1) + (y + bh >= h - 1)
+    if edges >= 3:
+        return "the bright region touches the frame edges on three or more sides"
+    outside = v[mask == 0]
+    if outside.size and float(np.median(outside)) > BACKGROUND_SHARE * thresh:
+        return "the background is nearly as bright as the brightest region"
+    return None
+
+
 def _measure(frame: np.ndarray, thresh: float) -> dict:
     h, w = frame.shape[:2]
     v = frame.max(axis=2)
@@ -93,6 +111,9 @@ def _measure(frame: np.ndarray, thresh: float) -> dict:
         return {"present": False}
     c = max(contours, key=cv2.contourArea)
     area = float(cv2.contourArea(c))
+    reason = _not_a_flame(v, mask, c, area, thresh)
+    if reason:
+        return {"present": False, "rejected": reason}
     # a slightly simplified outline: the raw pixel staircase overstates the perimeter
     smooth = cv2.approxPolyDP(c, 1.0, True)
     perimeter = float(cv2.arcLength(smooth, True))
@@ -198,7 +219,9 @@ def summarize(frames: list[dict], fps: float | None, mm_per_px: float | None) ->
     k = mm_per_px or 1.0
     out: dict = {"length_unit": unit, "flame_frames": len(lit), "frames": len(frames)}
     if not lit:
-        out["note"] = "No flame was found in any analyzed frame."
+        reasons = sorted({f["rejected"] for f in frames if f.get("rejected")})
+        out["note"] = ("This does not look like flame footage: " + "; ".join(reasons) + "."
+                       if reasons else "No flame was found in any analyzed frame.")
         return out
 
     def med(key):

@@ -1,52 +1,31 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import type { Showcase } from "@/lib/types";
+import Link from "next/link";
+import showcase from "@/lib/flight/showcase.json";
 
 const f2 = (v: number) => (v < 0 ? `−${Math.abs(v).toFixed(2)}` : v.toFixed(2));
+const LABEL: Record<string, string> = {
+  pressure: "Pressure",
+  nitrogen_fraction: "Nitrogen fraction",
+  carbon_dioxide_fraction: "CO₂ fraction",
+  helium_fraction: "Helium fraction",
+  initial_droplet_diameter: "Initial droplet diameter",
+  oxygen: "Oxygen",
+};
 
 /**
- * The "why trust it" example. Every number is computed live by the engine
- * (GET /api/showcase, synthetic test data) — nothing here is typed in by hand. The values are
- * always shown in their final state; only the bar widths animate on scroll (landing-fx).
+ * The "why trust it" example, on the real NASA PSI-69 FLEX table: the top validated
+ * finding with every check it went through, and a finding the same run threw out.
+ * Built by backend/scripts/build_showcase.py from the findings the engine stored; nothing
+ * is typed in by hand. Only the bar widths animate on scroll (landing-fx).
  */
 export function TrustCard() {
-  const [s, setS] = useState<Showcase | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    api
-      .showcase()
-      .then(setS)
-      .catch(() => setError(true));
-  }, []);
-
-  if (error) {
-    return (
-      <div className="card" style={{ padding: 30 }}>
-        <p style={{ color: "var(--l-ink2)" }}>
-          The live example could not be computed right now (the analysis engine
-          is unreachable).
-        </p>
-      </div>
-    );
-  }
-
-  const oxygen = s?.controls.oxygen;
-  const pressure = s?.controls.pressure;
-
+  const s = showcase;
+  const scale = Math.max(
+    Math.abs(s.effect_all_rows ?? 0),
+    ...s.controls.map((c) => Math.abs(c.effect)),
+  );
+  const w = (v: number) => ((Math.abs(v) / scale) * 92).toFixed(1);
   return (
-    <div
-      className="card"
-      data-reveal
-      data-trust-card
-      data-found={s ? Math.abs(s.effect_all_rows) : undefined}
-      data-oxygen={oxygen ? Math.abs(oxygen.effect) : undefined}
-      data-pressure={pressure ? Math.abs(pressure.effect) : undefined}
-      aria-busy={!s}
-      style={{ padding: 30 }}
-    >
+    <div className="card" data-reveal data-trust-card style={{ padding: 30 }}>
       <div
         style={{
           display: "flex",
@@ -60,83 +39,84 @@ export function TrustCard() {
           <span className="dot" style={{ background: "var(--l-good)" }} />
           Replicated on unseen data
         </span>
-        <span className="synth">Synthetic test data · not NASA</span>
+        <span className="synth">
+          Real NASA data · {s.source}
+        </span>
       </div>
       <p
         className="serif"
         style={{ fontSize: 28, margin: "18px 0 6px", lineHeight: 1.2 }}
       >
-        {s?.headline ?? "Computing the example…"}
+        {s.headline}
       </p>
       <p style={{ fontSize: 13, color: "var(--l-muted)" }}>
-        {s
-          ? `Rank correlation · ${s.n_experiments} experiments · split by experiment: ${s.split.discovery_experiments} discovery / ${s.split.holdout_experiments} unseen, ${s.split.shared_across_split.experiment_id ?? 0} shared`
-          : "Running the engine on synthetic test data…"}
+        Rank correlation · {s.n_experiments} FLEX tests · split by test:{" "}
+        {s.split.discovery_experiments} discovery / {s.split.holdout_experiments}{" "}
+        unseen, {s.split.shared_across_split.experiment_id ?? 0} shared
       </p>
 
       <div className="checks">
         <div className="check">
-          1 · Discovery data<b>{s ? `ρ = ${f2(s.discovery_effect)}` : "…"}</b>
+          1 · Discovery tests<b>ρ = {f2(s.discovery_effect)}</b>
         </div>
         <div className="check">
-          2 · Unseen data<b>{s ? `ρ = ${f2(s.unseen_effect)}` : "…"}</b>
+          2 · Unseen tests<b>ρ = {f2(s.unseen_effect)}</b>
         </div>
         <div className="check">
           3 · Random shuffles as strong
-          <b>{s ? `${s.shuffles_as_strong} / ${s.permutations}` : "…"}</b>
+          <b>
+            {s.shuffles_as_strong} / {s.permutations}
+          </b>
         </div>
       </div>
 
       <p style={{ fontSize: 12, color: "var(--l-muted)", margin: "20px 0 0" }}>
-        4 · Third-variable check — the same {s?.n_experiments ?? "…"}{" "}
-        experiments, re-measured while holding one other condition fixed:
+        4 · Third-variable check: the same tests, re-measured while holding one
+        other condition fixed:
       </p>
       <div className="bars" style={{ marginTop: 12 }}>
-        <div className="bar">
-          <span>No variable held fixed</span>
-          <div className="track">
-            <div
-              className="fill"
-              data-bar="found"
-              style={{ background: "var(--l-blue)" }}
-            />
+        {s.effect_all_rows != null && (
+          <div className="bar">
+            <span>Nothing held fixed</span>
+            <div className="track">
+              <div
+                className="fill"
+                data-w={w(s.effect_all_rows)}
+                style={{ background: "var(--l-blue)" }}
+              />
+            </div>
+            <span>{f2(s.effect_all_rows)}</span>
           </div>
-          <span>{s ? f2(s.effect_all_rows) : "…"}</span>
-        </div>
-        <div className="bar">
-          <span>Oxygen held fixed</span>
-          <div className="track">
-            <div
-              className="fill"
-              data-bar="oxygen"
-              style={{ background: "var(--l-bad)" }}
-            />
+        )}
+        {s.controls.map((c) => (
+          <div className="bar" key={c.control}>
+            <span>{LABEL[c.control] ?? c.control} fixed</span>
+            <div className="track">
+              <div
+                className="fill"
+                data-w={w(c.effect)}
+                style={{
+                  background:
+                    c.verdict === "weakens" ? "var(--l-bad)" : "var(--l-good)",
+                }}
+              />
+            </div>
+            <span>{f2(c.effect)}</span>
           </div>
-          <span>{oxygen ? f2(oxygen.effect) : "…"}</span>
-        </div>
-        <div className="bar">
-          <span>Pressure held fixed</span>
-          <div className="track">
-            <div
-              className="fill"
-              data-bar="pressure"
-              style={{ background: "#2d4f8f" }}
-            />
-          </div>
-          <span>{pressure ? f2(pressure.effect) : "…"}</span>
-        </div>
+        ))}
       </div>
-      {s && oxygen && pressure && (
-        <div className="verdict" data-verdict>
-          <b>Result:</b> with oxygen held fixed only{" "}
-          {Math.round(oxygen.retained_share * 100)}% of the association remains
-          ({f2(s.effect_all_rows)} → {f2(oxygen.effect)}), so it is largely
-          explained by oxygen. Holding pressure fixed changes nothing (
-          {f2(pressure.effect)}), so pressure does not explain it. The finding
-          stays visible with this warning and ranks {s.rank} of {s.of} validated
-          findings for this outcome.
-        </div>
-      )}
+      <div className="verdict">
+        <b>Result:</b> the association holds with every one of the{" "}
+        {s.controls.length} other conditions held fixed (it keeps at least{" "}
+        {Math.round(Math.min(...s.controls.map((c) => c.retained_share)) * 100)}%
+        of its strength), so none of them explains it. It ranks first of {s.of}{" "}
+        validated findings out of {s.tested} tested.{" "}
+        <Link href={`/findings/${s.finding_id}`}>Open the finding →</Link>
+      </div>
+      <p style={{ fontSize: 13, color: "var(--l-muted)", margin: "16px 0 0" }}>
+        <b style={{ color: "var(--l-ink2)" }}>Thrown out in the same run:</b>{" "}
+        {s.rejected.headline}. {s.rejected.why}
+      </p>
     </div>
   );
 }

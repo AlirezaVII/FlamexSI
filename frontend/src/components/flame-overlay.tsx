@@ -81,29 +81,44 @@ export function FlameOverlay({
         : heat === "blue"
           ? frame.heat_blue
           : null;
+    const outline = new Path2D();
+    frame.contour?.forEach(([x, y], j) =>
+      j ? outline.lineTo(x * k, y * k) : outline.moveTo(x * k, y * k),
+    );
+    outline.closePath();
     if (grid?.length) {
+      // the grid is coarse (24 columns): draw it as a smooth field, clipped to the outline,
+      // instead of square tiles that spill over the flame edge
       const [r, g, b] = heat === "soot" ? OVERLAY.soot : OVERLAY.blue;
-      const ch = h / grid.length;
-      const cw = w / grid[0].length;
-      grid.forEach((row, y) =>
-        row.forEach((v, x) => {
-          if (v <= 0) return;
-          ctx.fillStyle = `rgba(${r},${g},${b},${(0.15 + 0.55 * v).toFixed(3)})`;
-          ctx.fillRect(x * cw, y * ch, cw + 0.5, ch + 0.5);
-        }),
-      );
+      const gw = grid[0].length;
+      const gh = grid.length;
+      const off = document.createElement("canvas");
+      off.width = gw;
+      off.height = gh;
+      const octx = off.getContext("2d");
+      if (octx) {
+        const data = octx.createImageData(gw, gh);
+        grid.forEach((row, y) =>
+          row.forEach((v, x) => {
+            const o = (y * gw + x) * 4;
+            data.data.set([r, g, b, Math.round(255 * (v > 0 ? 0.1 + 0.5 * v : 0))], o);
+          }),
+        );
+        octx.putImageData(data, 0, 0);
+        ctx.save();
+        if (frame.contour?.length) ctx.clip(outline);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(off, 0, 0, w, h);
+        ctx.restore();
+      }
     }
     if (layers.contour && frame.contour?.length) {
-      ctx.beginPath();
-      frame.contour.forEach(([x, y], j) =>
-        j ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k),
-      );
-      ctx.closePath();
       ctx.lineWidth = 2;
       ctx.strokeStyle = OVERLAY.contour;
       ctx.shadowColor = "rgba(0,0,0,0.6)";
       ctx.shadowBlur = 3;
-      ctx.stroke();
+      ctx.stroke(outline);
       ctx.shadowBlur = 0;
     }
     if (layers.bbox && frame.bbox) {
@@ -164,6 +179,11 @@ export function FlameOverlay({
               ? ` · R ${fmt((frame.radius_px ?? 0) * k, 3)} ${unit} · Ψ ${fmt(frame.circularity, 3)}`
               : " · no flame"}
           </div>
+          {!frame.present && frame.rejected && (
+            <div className="absolute inset-x-2 bottom-2 rounded-md bg-black/70 px-3 py-2 text-xs text-white">
+              Not measured: {frame.rejected}.
+            </div>
+          )}
         </div>
       </div>
 
