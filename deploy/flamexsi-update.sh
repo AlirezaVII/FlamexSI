@@ -27,6 +27,12 @@ running=$(docker inspect -f '{{index .Config.Labels "flamexsi.commit"}}' flamexs
 
 log "deploying ${new:0:7} (running: ${running:0:7})"
 git_ reset -q --hard "origin/$BRANCH"
+before=$(docker images -f dangling=true -q --no-trunc | sort)
+clean_ours() {  # untagged images this build left behind (its intermediate stages) only
+  comm -13 <(echo "$before") <(docker images -f dangling=true -q --no-trunc | sort) \
+    | xargs -r docker rmi >/dev/null 2>&1
+}
+trap clean_ours EXIT
 if ! nice -n 15 env DOCKER_BUILDKIT=0 docker build -q --cpu-quota 70000 --memory 2g \
      --memory-swap 4g --label flamexsi.commit="$new" -t flamexsi:candidate "$SRC" >>"$LOG" 2>&1; then
   log "build failed; the running site is unchanged"; exit 1
@@ -53,7 +59,7 @@ start flamexsi:candidate
 if healthy; then
   docker tag flamexsi:candidate flamexsi:latest
   log "OK ${new:0:7} is live"
-  docker image prune -f --filter "label=flamexsi.commit" >/dev/null 2>&1
+  docker rmi flamexsi:candidate >/dev/null 2>&1  # the tag only; :latest keeps the image
 else
   log "FAILED: ${new:0:7} did not become healthy; rolling back"
   docker logs --tail 40 flamexsi >>"$LOG" 2>&1
