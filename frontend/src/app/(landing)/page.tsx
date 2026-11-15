@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FlameLab } from "@/components/landing/flame-lab";
@@ -12,6 +14,13 @@ export const metadata: Metadata = {
   description:
     "Falmex is built to find associations in NASA microgravity combustion data, re-test each one on experiments it never saw, and show the evidence behind it. Explore measured FLEX results and BASS-II image evidence.",
 };
+
+// A pre-rendered Earth, inlined into the HTML: the globe is on screen the moment the page
+// arrives, before any JavaScript or texture has downloaded. The live 3D globe crossfades in
+// over it when ready.
+const EARTH_STILL = `data:image/webp;base64,${readFileSync(
+  join(process.cwd(), "public/textures/earth-disc.webp"),
+).toString("base64")}`;
 
 // Deterministic star layers (rendered on the server; moved by parallax on the client).
 function stars(
@@ -192,6 +201,8 @@ export default function Landing() {
               </p>
             </div>
             <div className="grab" data-grab aria-label="Earth — drag to rotate">
+              {/* eslint-disable-next-line @next/next/no-img-element -- inline data URI */}
+              <img className="earth-still" src={EARTH_STILL} alt="" aria-hidden />
               <span className="grab-hint" data-grab-hint>
                 ⟲ Drag to rotate Earth
               </span>

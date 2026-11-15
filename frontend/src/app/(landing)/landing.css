@@ -310,6 +310,31 @@ html:has(.landing) {
   cursor: grab;
   touch-action: pan-y;
 }
+.landing .grab {
+  container-type: size;
+}
+.landing .earth-still {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* the image's sphere fills 84% of it; match the live globe (96% of the box) */
+  width: calc(min(100cqw, 100cqh) * 1.143);
+  height: auto;
+  translate: -50% -50%;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.9s ease;
+  animation: l-still-in 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes l-still-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+.landing.planets-live .earth-still {
+  opacity: 0;
+}
 .landing .grab:active {
   cursor: grabbing;
 }

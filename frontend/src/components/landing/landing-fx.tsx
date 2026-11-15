@@ -45,6 +45,7 @@ export function LandingFX() {
       const splash = document.documentElement.dataset.splash;
       if (splash && splash !== "gone" && splash !== "leaving") return;
       introStart = performance.now();
+      root!.classList.add("planets-live"); // crossfade: still image out, live globe in
       wake();
     }
     const splashWatch = new MutationObserver(maybeIntro);
@@ -245,16 +246,14 @@ export function LandingFX() {
           ];
         }
         const [, xv, yv, rv, spin] = along(path, p);
-        let r = rv * scale;
-        let x = xv * W;
-        let yy = yv * H;
+        const r = rv * scale;
+        const x = xv * W;
+        const yy = yv * H;
         let extra = 0;
         if (k === "earth") {
           earthR = r;
-          r *= 0.18 + 0.82 * intro;
-          x += (1 - intro) * W * 0.12;
-          yy -= (1 - intro) * H * 0.18;
-          extra = yaw + hover - (1 - intro) * 1.4 + spinBoost;
+          // the still image is already in place, so the live globe simply takes over
+          extra = yaw + hover + spinBoost;
         } else {
           // Moon and Mars keep turning slowly on their own
           extra = now / 240000 + spinBoost * 0.6;
