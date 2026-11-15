@@ -6,6 +6,7 @@ import { FlameLab } from "@/components/landing/flame-lab";
 import { LandingFX } from "@/components/landing/landing-fx";
 import { Team } from "@/components/landing/team";
 import { AskShowcase } from "@/components/landing/ask-showcase";
+import { MobileMenu } from "@/components/landing/mobile-menu";
 import { TrustCard } from "@/components/landing/trust-card";
 import { BrandLogo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -169,6 +170,7 @@ export default function Landing() {
           <span className="theme">
             <ThemeToggle />
           </span>
+          <MobileMenu />
           <Link
             className="btn ghost open-app"
             href="/overview"
