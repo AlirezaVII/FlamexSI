@@ -1,0 +1,114 @@
+# Canonical variable schema.
+#
+# This is the ONLY place that knows what the columns of an incoming file mean.
+# When the real NASA data arrives, extend/adjust this file (aliases, units,
+# roles) instead of changing pipeline code.
+#
+# role:  id | condition (experiment input) | outcome (flame behavior) | meta
+# type:  numeric | categorical | boolean | text
+# unit:  canonical unit; values in other units are converted via `units`
+# safety_weight: how directly the variable relates to fire safety (ranking input)
+
+variables:
+  experiment_id:
+    role: id
+    type: text
+    aliases: [experiment, exp_id, test_id, run_id, experiment_number]
+
+  oxygen:
+    role: condition
+    type: numeric
+    unit: percent_o2
+    description: Ambient oxygen concentration (mole/volume fraction, %)
+    aliases: [o2, oxygen_concentration, oxygen_percent, o2_percent, xo2]
+    units:
+      fraction: {scale: 100.0}
+
+  pressure:
+    role: condition
+    type: numeric
+    unit: kPa
+    description: Ambient pressure
+    aliases: [ambient_pressure, p, pressure_kpa]
+    units:
+      atm: {scale: 101.325}
+      psi: {scale: 6.894757}
+      bar: {scale: 100.0}
+      Pa: {scale: 0.001}
+
+  flow_rate:
+    role: condition
+    type: numeric
+    unit: cm_per_s
+    description: Imposed flow / ventilation velocity
+    aliases: [flow, flow_velocity, air_flow, velocity]
+    units:
+      m_per_s: {scale: 100.0}
+      mm_per_s: {scale: 0.1}
+
+  temperature:
+    role: condition
+    type: numeric
+    unit: K
+    description: Initial / ambient temperature
+    aliases: [temp, ambient_temperature, initial_temperature]
+    units:
+      C: {scale: 1.0, offset: 273.15}
+
+  material:
+    role: condition
+    type: categorical
+    description: Fuel / sample material
+    aliases: [fuel, sample, sample_material, fuel_type]
+
+  gravity:
+    role: condition
+    type: numeric
+    unit: g0
+    description: Gravity level relative to Earth (1.0 = 1 g)
+    aliases: [g_level, gravity_level, g]
+    units:
+      m_per_s2: {scale: 0.1019716}
+
+  flame_length:
+    role: outcome
+    type: numeric
+    unit: cm
+    description: Flame length / size
+    aliases: [flame_size, flame_height]
+    units:
+      mm: {scale: 0.1}
+      m: {scale: 100.0}
+    safety_weight: 0.7
+
+  burning_rate:
+    role: outcome
+    type: numeric
+    unit: mm_per_s
+    description: Burning / flame spread rate
+    aliases: [burn_rate, spread_rate, flame_spread_rate, regression_rate]
+    units:
+      cm_per_s: {scale: 10.0}
+    safety_weight: 0.9
+
+  burn_time:
+    role: outcome
+    type: numeric
+    unit: s
+    description: Burn duration
+    aliases: [burn_duration, burning_time]
+    safety_weight: 0.6
+
+  extinction:
+    role: outcome
+    type: boolean
+    description: Whether the flame extinguished
+    aliases: [extinguished, flame_extinction, extinct]
+    safety_weight: 1.0
+
+  ignition:
+    role: outcome
+    type: boolean
+    description: Whether ignition occurred
+    aliases: [ignited, ignition_success]
+    safety_weight: 1.0
