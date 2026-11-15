@@ -138,6 +138,7 @@ export default function Investigations() {
         conditions, what it measured, and which part of spacecraft fire safety it informs.
         Rank them for your mission, then compare them side by side.
       </PageHeader>
+      <Downloads />
       <Ranker compare={compare} toggle={toggle} />
       <Compare ids={compare} toggle={toggle} />
       <CatalogList compare={compare} toggle={toggle} />
@@ -146,6 +147,57 @@ export default function Investigations() {
 }
 
 /* ---------------------------------------------------------------------------------- */
+
+/** Extract data for modelling: the catalog as CSV and the FLEX flight table as published. */
+function Downloads() {
+  const csv = () => {
+    const cols: [string, (i: Investigation) => string | number][] = [
+      ["id", (i) => i.id],
+      ["acronym", (i) => i.acronym],
+      ["title", (i) => i.title],
+      ["fuel_type", (i) => i.fuel],
+      ["fire_safety_pillars", (i) => i.pillars.join("; ")],
+      ["oxygen_min_percent", (i) => i.oxygen_range?.[0] ?? ""],
+      ["oxygen_max_percent", (i) => i.oxygen_range?.[1] ?? ""],
+      ["oxygen_source", (i) => i.oxygen_source ?? ""],
+      ["pressure_as_stated", (i) => quotes(i, "pressure")],
+      ["flow_as_stated", (i) => quotes(i, "flow")],
+      ["measurements", (i) => i.measurements.join("; ")],
+      ["hardware", (i) => i.hardware],
+      ["platform", (i) => i.platform],
+      ["start", (i) => i.start],
+      ["end", (i) => i.end],
+      ["publications", (i) => i.publications],
+      ["doi", (i) => i.doi],
+      ["psi_url", (i) => i.psi_url],
+      ["objective", (i) => i.objective],
+    ];
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""').replace(/\s+/g, " ")}"`;
+    const text = [cols.map((c) => c[0]).join(","), ...ALL.map((i) => cols.map((c) => esc(c[1](i))).join(","))].join("\n");
+    const url = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "falmex-psi-combustion-investigations.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <Card title="Extract data for modelling">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <button type="button" onClick={csv} className="rounded-lg border border-line px-3.5 py-2 text-ink hover:bg-surface-2">
+          Download investigation catalog (CSV)
+        </button>
+        <a href="/data/psi-69-flex-experimental-table.csv" download className="rounded-lg border border-line px-3.5 py-2 text-ink hover:bg-surface-2">
+          Download FLEX flight table, 274 tests (CSV, as published)
+        </a>
+        <span className="text-xs text-muted">
+          Raw instrument files and images for every investigation are in NASA PSI (links in
+          the catalog).
+        </span>
+      </div>
+    </Card>
+  );
+}
 
 function Ranker({ compare, toggle }: { compare: string[]; toggle: (id: string) => void }) {
   const [hid, setHid] = useState<(typeof HABITATS)[number]["id"]>("moon");
