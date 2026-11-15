@@ -31,16 +31,14 @@ export interface Space {
 // sunlight from the upper left, slightly towards the viewer (y up, z towards the camera)
 const SUN = new THREE.Vector3(-0.62, 0.38, 0.68).normalize();
 
-/** Every map the scene needs: the loading screen preloads these into the HTTP cache. */
+/**
+ * The tiny (~10 KB) maps that let every planet appear at once, even on a slow connection.
+ * The loading screen waits for these; the sharp maps and extra layers stream in afterwards.
+ */
 export const TEXTURES = [
-  "/textures/earth.webp",
-  "/textures/earth-night.webp",
-  "/textures/earth-clouds.webp",
-  "/textures/earth-normal.webp",
-  "/textures/earth-specular.webp",
-  "/textures/moon.webp",
-  "/textures/moon-height.webp",
-  "/textures/mars.webp",
+  "/textures/earth-lo.webp",
+  "/textures/moon-lo.webp",
+  "/textures/mars-lo.webp",
 ];
 
 const TILT: Record<PlanetKey, number> = { earth: 0.41, moon: 0.03, mars: 0.44 };
@@ -68,6 +66,7 @@ const earthFragment = /* glsl */ `
   uniform sampler2D cloudMap;
   uniform vec3 sunDir;
   uniform float cloudShift;
+  uniform vec4 has; // night, clouds, specular, normal maps arrived (0/1)
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vViewPos;
@@ -88,7 +87,7 @@ const earthFragment = /* glsl */ `
     vec3 n = normalize(vNormal);
     vec3 mapN = texture2D(normalMap, vUv).xyz * 2.0 - 1.0;
     mapN.xy *= 0.8;
-    vec3 nb = perturb(vViewPos, n, vUv, mapN);
+    vec3 nb = has.w > 0.5 ? perturb(vViewPos, n, vUv, mapN) : n;
 
     float sunN = dot(n, sunDir);
     float lit = max(dot(nb, sunDir), 0.0);
@@ -97,12 +96,12 @@ const earthFragment = /* glsl */ `
     vec3 day = texture2D(dayMap, vUv).rgb;
     day = pow(day, vec3(0.92)) * 1.12;
     float cloud = texture2D(cloudMap, vec2(vUv.x + cloudShift, vUv.y)).r;
-    cloud = smoothstep(0.12, 0.9, cloud);
+    cloud = smoothstep(0.12, 0.9, cloud) * has.y;
     // soft cloud shadow, offset away from the sun
-    float shadow = texture2D(cloudMap, vec2(vUv.x + cloudShift + 0.0025, vUv.y - 0.002)).r;
+    float shadow = texture2D(cloudMap, vec2(vUv.x + cloudShift + 0.0025, vUv.y - 0.002)).r * has.y;
 
     vec3 surface = day * (lit * 1.15 + 0.03) * (1.0 - 0.35 * smoothstep(0.2, 0.9, shadow));
-    float ocean = texture2D(specMap, vUv).r;
+    float ocean = texture2D(specMap, vUv).r * has.z;
     vec3 h = normalize(sunDir + vec3(0.0, 0.0, 1.0));
     float glint = pow(max(dot(n, h), 0.0), 220.0) * ocean;
     surface += vec3(1.0, 0.93, 0.8) * glint * 0.4 * (1.0 - cloud);
@@ -110,7 +109,7 @@ const earthFragment = /* glsl */ `
     vec3 dayCol = mix(surface, clouds, cloud * 0.92);
 
     vec3 lights = texture2D(nightMap, vUv).rgb;
-    vec3 nightCol = lights * vec3(1.35, 1.1, 0.8) * 1.6 * (1.0 - cloud * 0.75);
+    vec3 nightCol = lights * vec3(1.35, 1.1, 0.8) * 1.6 * (1.0 - cloud * 0.75) * has.x;
 
     vec3 col = mix(nightCol, dayCol, dayMix);
     // thin blue atmosphere at the limb, on the lit side
@@ -191,20 +190,33 @@ export function createSpace(
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -6000, 6000);
   camera.position.z = 3000;
 
-  const manager = new THREE.LoadingManager();
-  manager.onProgress = () => onTexture?.(); // redraw as each map arrives
-  manager.onLoad = () => onReady?.();
-  const loader = new THREE.TextureLoader(manager);
+  const loader = new THREE.TextureLoader();
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
   const textures: THREE.Texture[] = [];
-  const tex = (src: string, color = true) => {
-    const t = loader.load(src);
+  let disposed = false;
+  const prep = (t: THREE.Texture, color: boolean) => {
     t.wrapS = THREE.RepeatWrapping; // clouds drift across the date line
     t.anisotropy = Math.min(8, maxAniso);
     if (color) t.colorSpace = THREE.SRGBColorSpace;
     textures.push(t);
     return t;
   };
+  /** load a map; call `use` when it arrives (never throws: a missing map just stays off) */
+  const load = (src: string, color: boolean, use: (t: THREE.Texture) => void) => {
+    loader.load(
+      src,
+      (t) => {
+        if (disposed) return t.dispose();
+        use(prep(t, color));
+        onTexture?.();
+      },
+      undefined,
+      () => {},
+    );
+  };
+  const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
+  blank.needsUpdate = true;
+  const loaded: Record<PlanetKey, boolean> = { earth: false, moon: false, mars: false };
 
   // ---- lights (Moon, Mars, the station) ----
   const sunDir = SUN.clone();
@@ -212,19 +224,45 @@ export function createSpace(
   sun.position.copy(SUN).multiplyScalar(1000);
   scene.add(sun, new THREE.AmbientLight(0x6070a0, 0.06));
 
-  // ---- Earth ----
+  // ---- Earth: tiny day map first, then the sharp one and the extra layers ----
+  const has = new THREE.Vector4(0, 0, 0, 0);
   const earthMat = new THREE.ShaderMaterial({
     vertexShader: earthVertex,
     fragmentShader: earthFragment,
     uniforms: {
-      dayMap: { value: tex("/textures/earth.webp") },
-      nightMap: { value: tex("/textures/earth-night.webp") },
-      specMap: { value: tex("/textures/earth-specular.webp", false) },
-      normalMap: { value: tex("/textures/earth-normal.webp", false) },
-      cloudMap: { value: tex("/textures/earth-clouds.webp", false) },
+      dayMap: { value: blank },
+      nightMap: { value: blank },
+      specMap: { value: blank },
+      normalMap: { value: blank },
+      cloudMap: { value: blank },
       sunDir: { value: sunDir },
       cloudShift: { value: 0 },
+      has: { value: has },
     },
+  });
+  const U = earthMat.uniforms;
+  load("/textures/earth-lo.webp", true, (t) => {
+    if (U.dayMap.value === blank) U.dayMap.value = t;
+    loaded.earth = true;
+    onReady?.();
+    // the sharp map and the layers, most visible first
+    load("/textures/earth.webp", true, (hi) => (U.dayMap.value = hi));
+    load("/textures/earth-clouds.webp", false, (c) => {
+      U.cloudMap.value = c;
+      has.y = 1;
+    });
+    load("/textures/earth-night.webp", true, (n) => {
+      U.nightMap.value = n;
+      has.x = 1;
+    });
+    load("/textures/earth-specular.webp", false, (sp) => {
+      U.specMap.value = sp;
+      has.z = 1;
+    });
+    load("/textures/earth-normal.webp", false, (nm) => {
+      U.normalMap.value = nm;
+      has.w = 1;
+    });
   });
   const sphere = new THREE.SphereGeometry(1, 128, 96);
   const earth = new THREE.Mesh(sphere, earthMat);
@@ -232,22 +270,33 @@ export function createSpace(
   earthHalo.mat.uniforms.sunDir.value = sunDir;
 
   // ---- Moon ----
-  const moonMat = new THREE.MeshStandardMaterial({
-    map: tex("/textures/moon.webp"),
-    bumpMap: tex("/textures/moon-height.webp", false),
-    bumpScale: 2.2,
-    roughness: 1,
-    metalness: 0,
+  const moonMat = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0, bumpScale: 2.2 });
+  load("/textures/moon-lo.webp", true, (t) => {
+    if (!moonMat.map) moonMat.map = t;
+    moonMat.needsUpdate = true;
+    loaded.moon = true;
+    load("/textures/moon.webp", true, (hi) => {
+      moonMat.map = hi;
+      moonMat.needsUpdate = true;
+    });
+    load("/textures/moon-height.webp", false, (b) => {
+      moonMat.bumpMap = b;
+      moonMat.needsUpdate = true;
+    });
   });
   const moon = new THREE.Mesh(sphere, moonMat);
 
   // ---- Mars ----
-  const marsMat = new THREE.MeshStandardMaterial({
-    map: tex("/textures/mars.webp"),
-    bumpMap: tex("/textures/mars.webp", false),
-    bumpScale: 1.6,
-    roughness: 0.95,
-    metalness: 0,
+  const marsMat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0, bumpScale: 1.6 });
+  load("/textures/mars-lo.webp", true, (t) => {
+    if (!marsMat.map) marsMat.map = t;
+    marsMat.needsUpdate = true;
+    loaded.mars = true;
+    load("/textures/mars.webp", true, (hi) => {
+      marsMat.map = hi;
+      marsMat.bumpMap = hi;
+      marsMat.needsUpdate = true;
+    });
   });
   const mars = new THREE.Mesh(sphere, marsMat);
   const marsHalo = halo("#ff8f5a", 1.06, 0.55);
@@ -364,8 +413,8 @@ export function createSpace(
         const g = groups[key];
         const visible =
           r > 1 && x + r * 1.4 > -60 && x - r * 1.4 < W + 60 && y + r * 1.4 > -60 && y - r * 1.4 < H + 60;
-        g.visible = visible;
-        if (!visible) continue;
+        g.visible = visible && loaded[key];
+        if (!g.visible) continue;
         g.position.set(x - W / 2, H / 2 - y, -r * 1.5); // bigger (nearer) planets in front
         g.scale.setScalar(r);
         g.rotation.set(state.tiltX, state.tiltY, 0);
@@ -413,6 +462,8 @@ export function createSpace(
       ringMat.color.set(isLight ? 0x3a55d8 : 0x9fb8ff);
     },
     dispose() {
+      disposed = true;
+      blank.dispose();
       renderer.dispose();
       sphere.dispose();
       earthMat.dispose();

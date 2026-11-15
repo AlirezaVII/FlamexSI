@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: __dirname,
   devIndicators: false,
+  // planet maps rarely change: let browsers keep them for a week (revalidate in background)
+  async headers() {
+    return [
+      {
+        source: "/textures/:file*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     if (!backend) return [];
     return [
