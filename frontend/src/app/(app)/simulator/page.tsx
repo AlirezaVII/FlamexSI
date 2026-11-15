@@ -406,8 +406,14 @@ function ReferenceLimits({
   }
 
   async function remove(id: string) {
-    await api.deleteReferenceLimit(id);
-    onChange((limits ?? []).filter((l) => l.limit_id !== id));
+    setError(null);
+    try {
+      await api.deleteReferenceLimit(id);
+      onChange((limits ?? []).filter((l) => l.limit_id !== id));
+    } catch (e) {
+      setOpen(true); // the error note lives in the form area
+      setError((e as Error).message);
+    }
   }
 
   return (
