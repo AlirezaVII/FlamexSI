@@ -2,7 +2,7 @@ import Image from "next/image";
 
 interface Member {
   name: string;
-  handle: string;
+  handle?: string;
   photo?: string;
   owner?: boolean;
 }
@@ -10,23 +10,32 @@ interface Member {
 // As registered on the NASA Space Apps Challenge team page.
 const CREW: Member[] = [
   {
-    name: "Fariba Shahrouei",
-    handle: "faribashahrouei1",
-    photo: "/team/fariba-shahrouei.jpg",
-    owner: true,
-  },
-  {
     name: "Pouya Latifiyan",
     handle: "pouyalatifiyan",
-    photo: "/team/pouya-latifiyan.jpg",
+    photo: "/team/pouya-latifiyan-2026.jpg",
+    owner: true,
   },
   {
     name: "Alireza Mosavi",
     handle: "alirezamosavi4130",
-    photo: "/team/alireza-mosavi.jpg",
+    photo: "/team/alireza-mosavi-2026.jpg",
   },
-  { name: "Fatemeh Iranmanesh", handle: "ftm.iranmanesh" },
-  { name: "Mohammad Ali Hatefi", handle: "mahtfa" },
+  {
+    name: "Fatemeh Iranmanesh",
+    handle: "ftm.iranmanesh",
+    photo: "/team/fatemeh-iranmanesh.jpg",
+  },
+  {
+    name: "Mohammad Ali Hatefi",
+    handle: "mahtfa",
+    photo: "/team/mohammad-ali-hatefi.jpg",
+  },
+  { name: "Haniyeh Z. Budaqi", photo: "/team/haniyeh-budaqi.jpg" },
+  {
+    name: "Fariba Shahrouei",
+    handle: "faribashahrouei1",
+    photo: "/team/fariba-shahrouei.jpg",
+  },
 ];
 
 const initials = (name: string) => {
@@ -51,7 +60,7 @@ export function Team() {
       </p>
       <ul className="crew">
         {CREW.map((m, i) => (
-          <li key={m.handle} className="member" data-reveal>
+          <li key={m.name} className="member" data-reveal>
             <div className="patch" style={{ ["--orbit" as string]: `${14 + i * 3}s` }}>
               <span className="ring" aria-hidden>
                 <i />
@@ -72,7 +81,7 @@ export function Team() {
               )}
             </div>
             <h3 className="serif">{m.name}</h3>
-            <p className="handle">@{m.handle}</p>
+            {m.handle && <p className="handle">@{m.handle}</p>}
             {m.owner && <span className="owner">Team owner</span>}
           </li>
         ))}

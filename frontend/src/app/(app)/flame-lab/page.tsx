@@ -63,9 +63,18 @@ export default function FlameLab() {
     tMaxBurnRef.current = tMaxBurn;
   });
 
-  // phones and small GPUs start in the lighter mode (after mount: the server cannot know)
+  // phones and small GPUs start in the lighter mode (after mount: the server cannot know);
+  // ?a=<test>&b=<test> (e.g. from Ask FlamexSI) opens those tests
   useEffect(() => {
     const id = requestAnimationFrame(() => {
+      const p = new URLSearchParams(window.location.search);
+      const qa = Number(p.get("a"));
+      const qb = Number(p.get("b"));
+      if (byN.has(qa)) {
+        setA(qa);
+        if (byN.has(qb)) setB(qb);
+        else setCompare(false);
+      }
       if (window.innerWidth < 700 || (navigator.hardwareConcurrency ?? 8) <= 4) setQuality("low");
       if (!hasWebGL2()) setWebgl(false);
     });

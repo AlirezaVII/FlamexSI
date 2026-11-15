@@ -27,7 +27,11 @@ def test_stream_has_real_stages_in_order(client):
     assert stages.index("read") < stages.index("analyse") < stages.index("compose") \
         < stages.index("verify")
     sources = next(e for e in ev if e["type"] == "sources")["sources"]
-    assert sources[0]["id"] == "smoke", "a smoke question reads the smoke card first"
+    ids = [x["id"] for x in sources]
+    assert ids[0] == "tool-smoke_by_material", "the chart it drew is the first source"
+    assert "smoke" in ids, "and the smoke card is read too"
+    tool = next(e for e in ev if e["type"] == "tool")
+    assert tool["result"]["kind"] == "bars" and tool["result"]["rows"]
     assert any(s["id"] == "limits" for s in sources), "limits always come along"
     text = "".join(e["text"] for e in ev if e["type"] == "delta")
     assert "[S1]" in text
@@ -97,5 +101,64 @@ def test_a_new_topic_beats_the_previous_question(client):
     ev = _events(_ask(client, question="How late did the station's smoke detector notice the fire?",
                       history=[{"question": "Does more oxygen make droplets burn faster in FLEX?",
                                 "answer": "Yes [S1]."}]))
-    ids = [s["id"] for s in next(e for e in ev if e["type"] == "sources")["sources"]]
+    ids = [s["id"] for s in next(e for e in ev if e["type"] == "sources")["sources"]
+           if not s["id"].startswith("tool-")]
     assert ids[0] == "smoke", ids
+
+
+@pytest.mark.parametrize("name", list(__import__("falmex.assistant_tools").assistant_tools.TOOLS))
+def test_every_tool_runs_on_the_real_data(name):
+    from falmex import assistant_tools as t
+
+    args = {"flex_scatter": {"x": "oxygen", "y": "burn_time", "fuel": "Heptane"},
+            "flame_replay": {"tests": [1, 2]}, "find_tests": {"fuel": "Methanol",
+                                                              "oxygen_min": 0.3}}.get(name, {})
+    result, card = t.run(name, args)
+    assert result["kind"] in ("scatter", "bars", "line", "table", "replay")
+    assert result["title"] and card["title"].startswith("Tool:") and card["page"].startswith("/")
+    json.dumps(result)  # must be JSON for the stream
+
+
+def test_a_bad_tool_argument_never_breaks_the_answer(client, monkeypatch):
+    monkeypatch.setattr(assistant, "plan", lambda p, q: [
+        {"name": "flex_scatter", "args": {"x": "nonsense", "y": "nonsense"}}])
+    ev = _events(_ask(client))
+    assert not any(e["type"] == "tool" for e in ev) and ev[-1]["type"] == "done"
+
+
+def test_replay_tool_returns_real_tests(client):
+    ev = _events(_ask(client, question="Show me a 3D replay of a heptane burn"))
+    tool = next(e for e in ev if e["type"] == "tool")
+    assert tool["result"]["kind"] == "replay"
+    assert all(k in tool["result"]["tests"][0] for k in ("d0", "k", "tb", "end"))
+
+
+@pytest.mark.parametrize("name,args", [
+    ("correlate", {"x": "oxygen", "y": "burning_rate", "control": "pressure", "fuel": "Heptane"}),
+    ("compare_groups", {"variable": "burn_time", "by": "end"}),
+    ("describe", {"variable": "initial_diameter", "oxygen_min": 0.2, "oxygen_max": 0.3}),
+    ("fit_model", {"outcome": "extinction_ratio", "predictors": ["oxygen", "pressure"]}),
+])
+def test_data_science_tools_compute_real_statistics(name, args):
+    from falmex import assistant_tools as t
+
+    result, card = t.run(name, args)
+    assert result.get("stats"), "every analysis states its statistics"
+    assert card["facts"]
+    json.dumps(result)
+
+
+@pytest.mark.parametrize("args", [{"x": "nope", "y": "oxygen"}, {"x": "oxygen", "y": "oxygen"},
+                                  {"x": "oxygen", "y": "burn_time", "fuel": "Heptane",
+                                   "oxygen_min": 0.9}])
+def test_correlate_refuses_bad_requests(args):
+    from falmex import assistant_tools as t
+
+    with pytest.raises(ValueError):
+        t.run("correlate", args)
+
+
+def test_a_relationship_question_is_tested_with_statistics(client):
+    ev = _events(_ask(client, question="Does the burning rate depend on oxygen?"))
+    names = [e["name"] for e in ev if e["type"] == "tool"]
+    assert "correlate" in names

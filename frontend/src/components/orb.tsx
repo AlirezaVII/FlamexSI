@@ -11,11 +11,14 @@
 import { useEffect, useRef } from "react";
 import { MODE_DRAWS, resolvePreset, type OrbState } from "thinking-orbs/engine";
 
-export type Stage = "idle" | "think" | "read" | "analyse" | "compose" | "verify" | "error";
+export type Stage =
+  | "idle" | "think" | "plan" | "tool" | "read" | "analyse" | "compose" | "verify" | "error";
 
 export const STAGE_MODE: Record<Stage, OrbState> = {
   idle: "breathing",
   think: "shaping",
+  plan: "weaving",
+  tool: "working",
   read: "searching",
   analyse: "solving",
   compose: "composing",
@@ -93,7 +96,12 @@ export function Orb({
         r = resolvePreset("breathing", tuned);
       }
       ctx.globalAlpha = alpha;
-      MODE_DRAWS[r.mode](ctx, size, still ? 0 : t * r.speed, isDark, r.opts);
+      try {
+        MODE_DRAWS[r.mode](ctx, size, still ? 0 : t * r.speed, isDark, r.opts);
+      } catch {
+        // the library's modules can still be initialising on the very first frames after a
+        // page load; skip this frame, the next one draws normally
+      }
     };
     const render = (now: number) => {
       raf = requestAnimationFrame(render);

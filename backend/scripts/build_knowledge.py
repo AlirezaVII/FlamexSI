@@ -123,8 +123,19 @@ def build() -> list[dict]:
     return cards
 
 
+def saffire_series() -> dict:
+    """The Saffire-III time series for the assistant's timeline tool."""
+    sf = load("flight/saffire.json")
+    return {"t0": sf["series_t0"], "rows": sf["series"],
+            "ignitions": [{"label": f"ignite {x['sample']}",
+                           "t": round(x["ignition_s"] - sf["series_t0"])} for x in sf["samples"]],
+            "summary": [{k: x.get(k) for k in ("sample", "burn_s", "spread_lag_s", "pressure",
+                                                "temperature")} for x in sf["samples"]]}
+
+
 if __name__ == "__main__":
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    (OUT.parent / "saffire_series.json").write_text(json.dumps(saffire_series()) + "\n")
     cards = build()
     OUT.write_text(json.dumps(cards, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(len(cards), "cards,", OUT.stat().st_size, "bytes")

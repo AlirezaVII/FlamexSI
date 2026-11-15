@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FlameLab } from "@/components/landing/flame-lab";
 import { LandingFX } from "@/components/landing/landing-fx";
 import { Team } from "@/components/landing/team";
+import { AskShowcase } from "@/components/landing/ask-showcase";
 import { TrustCard } from "@/components/landing/trust-card";
 import { BrandLogo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -136,6 +137,9 @@ export default function Landing() {
           <a className="nl" href="#pillars">
             Fire safety
           </a>
+          <a className="nl" href="#ask">
+            Ask FlamexSI
+          </a>
           <a className="nl" href="#trust">
             Why trust it
           </a>
@@ -201,7 +205,10 @@ export default function Landing() {
                 <Link className="btn primary" href="/investigations">
                   Rank the investigations →
                 </Link>
-                <Link className="btn ghost" href="/flight-evidence">
+                <Link className="btn ghost" href="/assistant">
+                Ask FlamexSI
+              </Link>
+              <Link className="btn ghost" href="/flight-evidence">
                   Flight evidence
                 </Link>
               </div>
@@ -347,6 +354,8 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        <AskShowcase />
 
         <section className="wrap block" id="trust">
           <div className="trust">

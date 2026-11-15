@@ -24,6 +24,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from falmex import assistant_tools as tools
 from falmex.ai.providers import LLMError
 
 PACK = Path(__file__).parent / "knowledge" / "pack.json"
@@ -155,6 +156,34 @@ def pick(question: str, history: list[Turn], cards: list[dict]) -> list[dict]:
     return chosen[:MAX_CARDS]
 
 
+PLAN = """You choose tools for a research assistant about NASA microgravity combustion data.
+Act as a careful data scientist. When the question is about a relationship, a difference or
+whether one condition affects another, test it with correlate (add a control when another
+condition could explain it), compare_groups or fit_model before answering; use describe for
+"how much / how spread". Use the chart and replay tools when a picture helps. Pick at most
+three tools, or none if words are enough. Use filters (fuel, oxygen or pressure ranges) when
+the question names a subset. Return JSON {"tools": [{"name": ..., "args": {...}}]} using only
+these tools and arguments:
+""" + "\n".join(f"- {name}: {desc}" for name, (_, desc) in tools.TOOLS.items())
+
+
+def plan(provider, question: str) -> list[dict]:
+    """Gemini picks the tools; without Gemini (or if it fails) a keyword plan is used."""
+    chosen = None
+    if provider.name == "gemini":
+        try:
+            out = provider.generate_json(PLAN, json.dumps({"question": question},
+                                                          ensure_ascii=False))
+            chosen = out.get("tools") if isinstance(out, dict) else None
+        except Exception:
+            chosen = None
+    if not isinstance(chosen, list):
+        chosen = tools.keyword_plan(question)
+    ok = [t for t in chosen if isinstance(t, dict) and t.get("name") in tools.TOOLS]
+    return [{"name": t["name"], "args": t.get("args") if isinstance(t.get("args"), dict) else {}}
+            for t in ok][:3]
+
+
 SYSTEM = """You are Ask FlamexSI, the research assistant of FlamexSI, a NASA Space Apps 2026
 project that analyses NASA microgravity combustion data for spacecraft fire safety.
 Rules:
@@ -172,7 +201,12 @@ Rules:
 - Be clear and short: at most about 220 words unless the user asks for detail. You may use
   short paragraphs, bullet lists and **bold**. No tables, no headings larger than ###.
 - Plain text only: no LaTeX and no $...$ math. Write symbols directly (ρ, O₂, M1, ≤).
-- Never invent papers, thresholds, test numbers or results."""
+- Never invent papers, thresholds, test numbers or results.
+- When a tool card holds statistics, read them like a data scientist: give the effect size,
+  its interval, n and p, say whether a held-fixed control changed it, and name the limits
+  (observational data, subset size, multiple comparisons).
+- Cards whose title starts with "Tool:" are charts, tables or replays the user can see next
+  to your answer; refer to them ("the chart shows…") and cite them like any card."""
 
 
 def router() -> APIRouter:
@@ -209,9 +243,20 @@ def router() -> APIRouter:
                 return json.dumps(kw, ensure_ascii=False) + "\n"
 
             yield ev(type="stage", stage="think", text="Understanding the question")
-            chosen = extra + [c for c in pick(payload.question, payload.history, cards)
-                              if c not in extra]
-            chosen = chosen[:MAX_CARDS + len(extra)]
+            yield ev(type="stage", stage="plan", text="Choosing tools: charts, tables, replays")
+            ran = []
+            for t in plan(provider, payload.question):
+                desc = tools.TOOLS[t["name"]][1].split(".")[0]
+                yield ev(type="stage", stage="tool", text=f"Running: {desc}")
+                try:
+                    result, card = tools.run(t["name"], t["args"])
+                except Exception:
+                    continue  # a bad argument from the planner never breaks the answer
+                yield ev(type="tool", name=t["name"], result=result)
+                ran.append({"id": f"tool-{t['name']}", "keywords": [], **card})
+            chosen = ran + extra + [c for c in pick(payload.question, payload.history, cards)
+                                    if c not in extra]
+            chosen = chosen[:MAX_CARDS + len(extra) + len(ran)]
             for c in chosen:
                 yield ev(type="stage", stage="read", text=f"Reading: {c['title']}")
             yield ev(type="sources", sources=[

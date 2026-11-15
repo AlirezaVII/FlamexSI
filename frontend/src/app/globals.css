@@ -638,3 +638,10 @@ html.lenis body {
 @keyframes think-sheen { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 @keyframes think-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .think-sheen { animation: none; color: var(--ink-2); } }
+
+/* Ask FlamexSI tool charts: bars grow and lines draw in when they arrive */
+.bar-grow { animation: bar-grow 0.7s cubic-bezier(.2,.7,.2,1) both; transform-origin: left; }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.line-draw { stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: line-draw 1.4s ease-out forwards; }
+@keyframes line-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .bar-grow, .line-draw { animation: none; stroke-dashoffset: 0; } }

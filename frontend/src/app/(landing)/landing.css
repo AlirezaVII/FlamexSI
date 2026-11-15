@@ -140,6 +140,11 @@ html:has(.landing) {
 .landing .open-app,
 .landing .brand {
   white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 1360px) {
+  .landing .navrow { gap: 16px; }
+  .landing .nl { font-size: 13px; }
 }
 .landing .nl:hover {
   color: var(--l-ink);
@@ -904,8 +909,8 @@ html:has(.landing) {
   padding: 0;
   margin: 48px 0 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
 }
 .landing .member {
   text-align: center;
@@ -1140,3 +1145,34 @@ html.lenis body {
     font-size: 15px;
   }
 }
+
+/* ---- Ask FlamexSI section ------------------------------------------------------- */
+.landing .ask { display: grid; grid-template-columns: 1fr 1.05fr; gap: 48px; align-items: center; }
+@media (max-width: 900px) { .landing .ask { grid-template-columns: 1fr; gap: 28px; } }
+.landing .ask-how { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; color: var(--l-ink2); font-size: 15px; line-height: 1.55; }
+.landing .ask-how b { color: var(--l-ink); }
+.landing .ask-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 6px; }
+.landing .ask-tool { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--l-line); background: var(--l-pill); color: var(--l-ink2); font-size: 12.5px; }
+.landing .ask-tool i { width: 7px; height: 7px; border-radius: 99px; background: linear-gradient(135deg, #4f7cff, #ff7a3d); box-shadow: 0 0 10px #ff7a3d88; }
+.landing .ask-demo { padding: 22px; min-height: 440px; position: relative; overflow: hidden; }
+.landing .ask-demo::before { content: ""; position: absolute; inset: -40% -20% auto auto; width: 70%; aspect-ratio: 1;
+  background: radial-gradient(circle, #ff7a3d22, transparent 60%); pointer-events: none; }
+.landing .ask-demo-head { display: flex; align-items: center; gap: 12px; }
+.landing .ask-demo-head b { display: block; font-size: 20px; color: var(--l-ink); }
+.landing .ask-demo-head span { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--l-muted); }
+.landing .ask-q { margin: 20px 0 0 auto; max-width: 88%; width: fit-content; padding: 10px 14px; border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(135deg, #4353ff, #6a5cff); color: #fff; font-size: 14px; min-height: 40px; }
+.landing .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: #fff; animation: ask-blink 1s steps(1) infinite; }
+@keyframes ask-blink { 50% { opacity: 0; } }
+.landing .ask-stage { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; }
+.landing .ask-stage .think-sheen { --ink-2: var(--l-ink2); --accent: #ff9a5c; }
+.landing .ask-chart { margin-top: 14px; padding: 12px; border-radius: 14px; border: 1px solid var(--l-line); background: #0000001a; display: grid; gap: 7px; }
+.landing .ask-bar { display: grid; grid-template-columns: 8rem 1fr 3rem; align-items: center; gap: 10px; font-size: 12px; color: var(--l-ink2); }
+.landing .ask-bar div { height: 10px; border-radius: 99px; background: var(--l-pill); overflow: hidden; }
+.landing .ask-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4f7cff, #ff7a3d); }
+.landing .ask-bar em { font-style: normal; text-align: right; color: var(--l-ink); font-variant-numeric: tabular-nums; }
+.landing .ask-chart small { font-size: 10.5px; color: var(--l-muted); }
+.landing .ask-a { margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--l-ink); }
+.landing .ask-cite { display: inline-block; margin: 0 2px; padding: 0 4px; border-radius: 4px; font-size: 9.5px; font-weight: 600;
+  color: #ff9a5c; background: #ff7a3d22; }

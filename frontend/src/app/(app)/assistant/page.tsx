@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ToolCard, type ToolResult } from "@/components/assistant-charts";
 import { Orb, type Stage } from "@/components/orb";
 
 /* Ask FlamexSI: answers only from FlamexSI's NASA results, streamed with the real stages
@@ -12,6 +13,7 @@ interface Msg {
   role: "user" | "assistant";
   text: string;
   sources?: Source[];
+  tools?: ToolResult[];
   cited?: number[];
   invalid?: number[];
   followups?: string[];
@@ -140,6 +142,8 @@ export default function Assistant() {
           const e = JSON.parse(line);
           if (e.type === "stage") patch((m) => ({ ...m, stage: e.stage, stageText: e.text }));
           else if (e.type === "sources") patch((m) => ({ ...m, sources: e.sources }));
+          else if (e.type === "tool")
+            patch((m) => ({ ...m, tools: [...(m.tools ?? []), e.result as ToolResult] }));
           else if (e.type === "delta") patch((m) => ({ ...m, text: m.text + e.text }));
           else if (e.type === "done")
             patch((m) => ({ ...m, status: "done", cited: e.cited, invalid: e.invalid,
@@ -331,6 +335,7 @@ function Answer({ m, onAsk, busy, now }: {
             <span className="tabular-nums text-muted">· {secs ?? 0} s</span>
           </div>
         )}
+        {m.tools?.map((t, j) => <ToolCard key={j} r={t} />)}
         {m.text && (
           <div dir="auto" className="prose-chat text-sm leading-relaxed text-ink">
             {renderMarkdown(m.text, (n) => setOpen(open === n ? null : n))}
