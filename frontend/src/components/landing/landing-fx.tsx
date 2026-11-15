@@ -71,6 +71,18 @@ export function LandingFX() {
           hi: null,
         };
         render();
+        // Mars is drawn very large near the end: build its sharp version in an idle moment
+        // now, so scrolling or a glide never stalls on it
+        if (key === "mars") {
+          const idle =
+            window.requestIdleCallback ??
+            ((cb: () => void) => window.setTimeout(cb, 400));
+          idle(() => {
+            const pk = planets.mars;
+            if (!disposed && pk && !pk.hi)
+              pk.hi = makePlanet(img, PLANETS.mars, 1200);
+          });
+        }
       };
       img.src = PLANETS[key].src;
     }
@@ -248,6 +260,89 @@ export function LandingFX() {
       else render();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+
+    // ---- in-page links glide like a reader scrolling, instead of jumping --------------
+    let glide = 0;
+    const stopGlide = () => {
+      if (glide) cancelAnimationFrame(glide);
+      glide = 0;
+    };
+    const easeInOut = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    function glideTo(targetY: number) {
+      stopGlide();
+      const startY = window.scrollY;
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      const endY = clamp(targetY, 0, maxY);
+      const dist = Math.abs(endY - startY);
+      if (dist < 2) return;
+      if (reduce) {
+        window.scrollTo(0, endY);
+        return;
+      }
+      // longer trips take longer, like a real scroll: ~0.7 s to ~1.8 s
+      const duration = clamp(500 + dist * 0.45, 700, 1800);
+      // a virtual clock that advances at most ~2 frames per step: if the page stalls for a
+      // moment the glide pauses and resumes instead of jumping ahead
+      let elapsed = 0;
+      let last = performance.now();
+      const step = (now: number) => {
+        elapsed += Math.min(now - last, 34);
+        last = now;
+        const t = clamp(elapsed / duration);
+        window.scrollTo(0, startY + (endY - startY) * easeInOut(t));
+        glide = t < 1 ? requestAnimationFrame(step) : 0;
+      };
+      glide = requestAnimationFrame(step);
+    }
+    const onLinkClick = (e: MouseEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+      const a = (e.target as Element).closest<HTMLAnchorElement>("a[href]");
+      if (!a || !root.contains(a)) return;
+      const href = a.getAttribute("href") ?? "";
+      if (href === "/" && window.location.pathname === "/") {
+        e.preventDefault();
+        glideTo(0);
+        history.replaceState(null, "", "/");
+        return;
+      }
+      if (!href.startsWith("#")) return;
+      const target =
+        href.length > 1 ? root.querySelector<HTMLElement>(href) : null;
+      if (!target) return;
+      e.preventDefault();
+      const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      glideTo(target.getBoundingClientRect().top + window.scrollY - margin);
+      history.replaceState(null, "", href);
+    };
+    // the reader takes over: stop gliding immediately
+    const interrupt = () => stopGlide();
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        [
+          "ArrowUp",
+          "ArrowDown",
+          "PageUp",
+          "PageDown",
+          "Home",
+          "End",
+          " ",
+        ].includes(e.key)
+      )
+        stopGlide();
+    };
+    root.addEventListener("click", onLinkClick as EventListener);
+    window.addEventListener("wheel", interrupt, { passive: true });
+    window.addEventListener("touchstart", interrupt, { passive: true });
+    window.addEventListener("keydown", onKey);
     window.addEventListener("resize", render);
     document.addEventListener("visibilitychange", wake);
     render();
@@ -261,6 +356,11 @@ export function LandingFX() {
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
       window.removeEventListener("scroll", onScroll);
+      stopGlide();
+      root.removeEventListener("click", onLinkClick as EventListener);
+      window.removeEventListener("wheel", interrupt);
+      window.removeEventListener("touchstart", interrupt);
+      window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", render);
       document.removeEventListener("visibilitychange", wake);
     };
