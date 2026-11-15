@@ -1,4 +1,4 @@
-name: CI
+name: CI / Deploy
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a run on main mid-deploy; superseded PR runs can go.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend:
@@ -17,11 +18,11 @@ jobs:
       run:
         working-directory: backend
     env:
-      # Tests never call a real LLM; no secrets are needed in CI.
+      # Tests never call a real LLM; no secrets are needed here.
       FALMEX_LLM_PROVIDER: mock
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -37,8 +38,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -47,3 +48,68 @@ jobs:
       - run: npm run lint
       - run: npx next typegen && npm run typecheck
       - run: npm run build
+
+  deploy:
+    name: Deploy to droplet
+    # Only after every check passed, and only for pushes to main.
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: http://${{ vars.FALMEX_DEPLOY_HOST }}:3000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build web app (API proxied through port 3000)
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: ""
+          FALMEX_BACKEND_URL: http://127.0.0.1:8010
+        run: |
+          npm ci
+          npm run build
+          cp -r public .next/standalone/
+          cp -r .next/static .next/standalone/.next/
+          rm -rf .next/standalone/node_modules/@img   # image optimisation is not used
+
+      - name: Bundle release
+        run: |
+          mkdir -p bundle
+          cp -r frontend/.next/standalone bundle/web
+          rsync -a --exclude tests --exclude __pycache__ --exclude '*.egg-info' backend/ bundle/backend/
+          cp deploy/run.sh bundle/run.sh
+          tar czf release.tgz -C bundle .
+          ls -lh release.tgz
+
+      - name: Ship to droplet
+        env:
+          HOST: ${{ vars.FALMEX_DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.FALMEX_DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf '%s\n' "${{ secrets.FALMEX_DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # The key is restricted server-side to deploy/deploy.sh, which reads the bundle
+          # from stdin, swaps it in, health-checks it and rolls back on failure.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o ServerAliveInterval=15 deploy@"$HOST" < release.tgz
+
+      - name: Smoke test
+        env:
+          HOST: ${{ vars.FALMEX_DEPLOY_HOST }}
+        run: |
+          curl -fsS --retry 5 --retry-delay 3 "http://$HOST:3000/health"
+          curl -fsS -o /dev/null "http://$HOST:3000/"
+
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

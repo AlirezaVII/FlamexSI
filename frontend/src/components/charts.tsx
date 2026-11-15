@@ -1,14 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { fmt, label } from "@/lib/api";
 import type { Row } from "@/lib/types";
 
-const W = 640;
 const H = 320;
 const M = { top: 16, right: 20, bottom: 44, left: 56 };
-const PW = W - M.left - M.right;
 const PH = H - M.top - M.bottom;
+
+/** Draw at the container's real pixel width so labels stay 11px on every screen. */
+function useChartWidth() {
+  const [width, setWidth] = useState(640);
+  const ref = useCallback((el: HTMLElement | null) => {
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(280, Math.round(entry.contentRect.width))),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
 
 function ticks(min: number, max: number, count = 5): number[] {
   if (min === max) return [min];
@@ -30,8 +42,8 @@ interface Tip {
 
 function Tooltip({ tip }: { tip: Tip | null }) {
   if (!tip) return null;
-  const left = `${(tip.x / W) * 100}%`;
-  const top = `${(tip.y / H) * 100}%`;
+  const left = `${tip.x}px`;
+  const top = `${tip.y}px`;
   return (
     <div
       className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+10px)] whitespace-nowrap rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs text-ink shadow-md"
@@ -47,6 +59,7 @@ function Tooltip({ tip }: { tip: Tip | null }) {
 }
 
 function Axes({
+  W,
   xTicks,
   yTicks,
   sx,
@@ -55,6 +68,7 @@ function Axes({
   yLabel,
   yFormat = (v: number) => fmt(v),
 }: {
+  W: number;
   xTicks: number[];
   yTicks: number[];
   sx: (v: number) => number;
@@ -79,7 +93,7 @@ function Axes({
         </text>
       ))}
       <line x1={M.left} x2={W - M.right} y1={H - M.bottom} y2={H - M.bottom} stroke="var(--line)" />
-      <text x={M.left + PW / 2} y={H - 6} textAnchor="middle" fill="var(--ink-2)">
+      <text x={M.left + (W - M.left - M.right) / 2} y={H - 6} textAnchor="middle" fill="var(--ink-2)">
         {xLabel}
       </text>
       <text
@@ -106,6 +120,8 @@ export function ScatterChart({
   idKey?: string;
 }) {
   const [tip, setTip] = useState<Tip | null>(null);
+  const [ref, W] = useChartWidth();
+  const PW = W - M.left - M.right;
   const points = useMemo(
     () =>
       rows
@@ -130,10 +146,11 @@ export function ScatterChart({
   const jitter = (i: number) => (isBool ? (((i * 7919) % 100) / 100 - 0.5) * 0.3 : 0);
 
   return (
-    <figure className="relative" onMouseLeave={() => setTip(null)}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img"
+    <figure ref={ref} className="relative w-full min-w-0" onMouseLeave={() => setTip(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full" role="img"
         aria-label={`Scatter plot of ${label(y)} against ${label(x)}, ${points.length} points`}>
         <Axes
+          W={W}
           xTicks={ticks(x0, x1)}
           yTicks={isBool ? [0, 1] : ticks(y0, y1)}
           sx={sx}
@@ -182,6 +199,8 @@ export function GroupBars({
   yLabel: string;
 }) {
   const [tip, setTip] = useState<Tip | null>(null);
+  const [ref, W] = useChartWidth();
+  const PW = W - M.left - M.right;
   const entries = Object.entries(values);
   if (entries.length === 0) return <p className="text-sm text-muted">No data to plot.</p>;
   const max = Math.max(...entries.map(([, v]) => v), 0) || 1;
@@ -192,10 +211,10 @@ export function GroupBars({
   const bw = Math.min(56, band * 0.6);
 
   return (
-    <figure className="relative" onMouseLeave={() => setTip(null)}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img"
+    <figure ref={ref} className="relative w-full min-w-0" onMouseLeave={() => setTip(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full" role="img"
         aria-label={`Bar chart of ${yLabel} by ${xLabel}`}>
-        <Axes xTicks={[]} yTicks={yTicks} sx={() => 0} sy={sy} xLabel={xLabel} yLabel={yLabel} />
+        <Axes W={W} xTicks={[]} yTicks={yTicks} sx={() => 0} sy={sy} xLabel={xLabel} yLabel={yLabel} />
         {entries.map(([k, v], i) => {
           const cx = M.left + band * i + band / 2;
           const y = sy(v);

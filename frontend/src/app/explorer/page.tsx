@@ -35,6 +35,7 @@ export default function ExplorerPage() {
   const [offset, setOffset] = useState(0);
   const [sort, setSort] = useState<{ col: string; desc: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const datasetId = dataset?.dataset_id;
 
@@ -87,10 +88,23 @@ export default function ExplorerPage() {
       </PageHeader>
       {dataset.synthetic && <SyntheticBanner />}
 
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-        <Card title="Filters" className="h-fit">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr] [&>*]:min-w-0">
+        <Card
+          title={`Filters${filters.length ? ` (${filters.length})` : ""}`}
+          className="h-fit"
+          action={
+            <Button
+              variant="ghost"
+              className="lg:hidden"
+              aria-expanded={showFilters}
+              onClick={() => setShowFilters((s) => !s)}
+            >
+              {showFilters ? "Hide" : "Show"}
+            </Button>
+          }
+        >
           <form
-            className="space-y-3"
+            className={`space-y-3 ${showFilters ? "" : "hidden"} lg:block`}
             onSubmit={(e) => {
               e.preventDefault();
               setOffset(0);
