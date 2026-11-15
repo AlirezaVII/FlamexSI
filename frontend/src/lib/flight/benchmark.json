@@ -1,0 +1,56 @@
+[
+  {
+    "title": "Oxygen \u2192 burning rate",
+    "chosen": "Ridge",
+    "train": 210,
+    "test": 48,
+    "developmentMAE": {
+      "Ridge": 0.06831065547775653,
+      "Extra Trees": 0.08030280343342257,
+      "Fuel median": 0.12226470588235293,
+      "Planner": 0.07952941176470588
+    },
+    "finalMAE": {
+      "Ridge": 0.06042648844400496,
+      "Extra Trees": 0.15433198775829288,
+      "Fuel median": 0.14635416666666667,
+      "Planner": 0.1690625
+    }
+  },
+  {
+    "title": "Initial diameter \u2192 extinction diameter",
+    "chosen": "Ridge",
+    "train": 158,
+    "test": 39,
+    "developmentMAE": {
+      "Ridge": 0.6008371433468646,
+      "Extra Trees": 0.6969000424146939,
+      "Fuel median": 1.0503623188405797,
+      "Planner": 0.8872826086956522
+    },
+    "finalMAE": {
+      "Ridge": 1.5963141535475167,
+      "Extra Trees": 0.37602628657566967,
+      "Fuel median": 0.7741025641025641,
+      "Planner": 0.762051282051282
+    }
+  },
+  {
+    "title": "Oxygen \u2192 extinction diameter ratio",
+    "chosen": "Ridge",
+    "train": 158,
+    "test": 39,
+    "developmentMAE": {
+      "Ridge": 0.1883694641426668,
+      "Extra Trees": 0.19732758385289045,
+      "Fuel median": 0.25745078995977516,
+      "Planner": 0.2346851762664972
+    },
+    "finalMAE": {
+      "Ridge": 0.5566376052300044,
+      "Extra Trees": 0.12226924068944979,
+      "Fuel median": 0.21064130105977447,
+      "Planner": 0.1824228202688794
+    }
+  }
+]

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, PageHeader, Stat } from "@/components/ui";
 import burning from "@/lib/flight/burning.json";
 import frames from "@/lib/flight/frames.json";
+import benchmark from "@/lib/flight/benchmark.json";
 import audit from "@/lib/flight/holdout-audit.json";
 import models from "@/lib/flight/models.json";
 
@@ -613,6 +614,20 @@ function EvidenceMethods() {
           </table>
         </div>
         <p className="mt-3 text-sm text-ink-2">All three intervals include zero. These experiments leave the direction of the predictive advantage uncertain. Each interval is exploratory and applies to FLEX only. Gemini explains the selected statistical finding. Its text does not estimate a cabin hazard.</p>
+        <details className="mt-4 rounded-lg border border-line p-3 text-sm">
+          <summary className="cursor-pointer font-medium">Can a multivariable model predict better?</summary>
+          <p className="mt-2 text-ink-2">Using fuel, gas composition, pressure and starting diameter, we compared standardized Ridge and Extra Trees against the planner and fuel median. Three expanding date windows selected the lowest mean absolute error before scoring the final window. These dates have been studied previously, so this is an exploratory benchmark.</p>
+          <div className="mt-2 overflow-x-auto"><table className="w-full text-left text-xs tabular-nums">
+            <caption className="pb-2 text-left">Final-window mean absolute errors. Lower is better within each row.</caption>
+            <thead><tr>{["Outcome", "Selected", "Ridge", "Extra Trees", "Planner", "Fuel median"].map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
+            <tbody>{benchmark.map(r => <tr key={r.title} className="border-t border-line">
+              <td className="p-2">{r.title}</td><td className="p-2">{r.chosen}</td>
+              {(["Ridge", "Extra Trees", "Planner", "Fuel median"] as const).map(k => <td key={k} className="p-2">{r.finalMAE[k].toFixed(3)}</td>)}
+            </tr>)}</tbody>
+          </table></div>
+          <p className="mt-2 text-ink-2">Ridge improved the burning-rate estimate and lost to the fuel median for both extinction outcomes. The fuel and oxygen controls alone cannot reproduce a multivariable prediction.</p>
+          <a className="text-xs text-accent underline" href={repo + "backend/scripts/benchmark_flex_models.py"}>Model settings, input columns and chronological selection code</a>
+        </details>
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-accent underline">
           <a href={source}>FLEX source table</a>
           <a href={repo + "backend/scripts/build_flex_decision_review.py"}>Prediction formula and units</a>
