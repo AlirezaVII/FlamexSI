@@ -11,6 +11,7 @@ import models from "@/lib/flight/models.json";
 import nextExperiments from "@/lib/flight/next_experiments.json";
 import transitions from "@/lib/flight/transitions.json";
 import smoke from "@/lib/flight/smoke.json";
+import saffire from "@/lib/flight/saffire.json";
 
 /*
  * Flight evidence: NASA FLEX (PSI-69) droplet measurements and BASS-II frames.
@@ -102,6 +103,7 @@ const SECTIONS = [
   ["next", "Next experiment"],
   ["atmosphere", "Mission check"],
   ["smoke", "Smoke detection"],
+  ["saffire", "Saffire cabin fire"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
   ["methods", "Methods & uncertainty"],
@@ -139,6 +141,7 @@ export default function FlightEvidence() {
       <NextExperiment />
       <AtmosphereCheck />
       <SmokeDetection />
+      <SaffireCabin />
       <Ranking />
       <ReportAndPlanner />
       <EvidenceMethods />
@@ -680,6 +683,99 @@ function SmokeDetection() {
         <a className="text-accent underline" href="/data/psi-101-same-smoke-tests.csv">
           Download the {smoke.tests}-test table (CSV)
         </a>
+      </p>
+    </Card>
+  );
+}
+
+/** Saffire-III: a real fire on a Cygnus cargo craft (build_saffire_summary.py). */
+function SaffireCabin() {
+  const big = saffire.samples.find((x) => x.burn_s && x.burn_s > 60) ?? saffire.samples[0];
+  const scat = big.detectors.CDH_F2PCM_SMK_DET_SCAT_SENS_P as {
+    responded: boolean; first_s?: number; peak_s?: number; peak?: number; baseline?: number };
+  const obs = big.detectors.CDH_F2PCM_SMK_DET_OBS_SENS_P as { responded: boolean };
+  const t0 = saffire.series_t0;
+  const rows = saffire.series as (number | null)[][];
+  const tMin = (rows[0][0] as number) - t0;
+  const tMax = (rows[rows.length - 1][0] as number) - t0;
+  const rMax = Math.max(...rows.flatMap((r) => [r[1] ?? 0, r[2] ?? 0]));
+  const sMax = Math.max(...rows.map((r) => r[3] ?? 0));
+  const X = (t: number) => 40 + ((t - tMin) / (tMax - tMin)) * 540;
+  const Yr = (v: number) => 170 - Math.max(0, (v + 20) / (rMax + 20)) * 150;
+  const Ys = (v: number) => 170 - (v / sMax) * 150;
+  const line = (i: number, y: (v: number) => number) =>
+    rows.filter((r) => r[i] != null)
+      .map((r) => `${X((r[0] as number) - t0).toFixed(1)},${y(r[i] as number).toFixed(1)}`).join(" ");
+  const stats: [string, string][] = [
+    ["Burn (radiometers lit)", `${big.burn_s} s`],
+    ["Flame front: pair 1+3 → 2+4", `${big.spread_lag_s} s`],
+    ["Smoke detector first responds", scat.responded ? `${scat.first_s} s after ignition` : "no response"],
+    ["Cabin pressure rise", `+${big.pressure.rise} psi (${(big.pressure.rise * 6.895).toFixed(2)} kPa)`],
+    ["Cabin temperature rise", `+${big.temperature.rise} °C`],
+  ];
+  return (
+    <Card title="Saffire-III · a real fire inside a spacecraft" className="scroll-mt-24 print:hidden">
+      <span id="saffire" className="sr-only" />
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        On 5 June 2017, after leaving the ISS, the Cygnus cargo craft burned large material
+        samples inside a closed box and logged what its sensors saw. Below is sample{" "}
+        {big.sample}, from the craft&apos;s own telemetry: how long it burned, how the flame
+        front moved, and when the smoke detector noticed.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {stats.map(([k, v]) => (
+          <div key={k} className="rounded-xl border border-line bg-surface-2 p-3">
+            <p className="text-xs text-muted">{k}</p>
+            <p className="mt-1 font-display text-lg tabular-nums text-ink">{v}</p>
+          </div>
+        ))}
+      </div>
+      <svg viewBox="0 0 600 200" className="mt-5 w-full" role="img" aria-label="Flame radiation and smoke over time">
+        {[0, 300, 600, 900, 1200].filter((t) => t >= tMin && t <= tMax).map((t) => (
+          <g key={t}>
+            <line x1={X(t)} x2={X(t)} y1={20} y2={170} stroke="var(--line)" />
+            <text x={X(t)} y={186} fontSize={10} textAnchor="middle" fill="var(--muted)">{t} s</text>
+          </g>
+        ))}
+        {saffire.samples.map((x) => (
+          <g key={x.sample}>
+            <line x1={X(x.ignition_s - t0)} x2={X(x.ignition_s - t0)} y1={14} y2={170} stroke="var(--serious)" strokeDasharray="3 3" />
+            <text x={X(x.ignition_s - t0) + 3} y={24} fontSize={10} fill="var(--serious)">ignite {x.sample}</text>
+          </g>
+        ))}
+        <polyline points={line(1, Yr)} fill="none" stroke="#ff8a3d" strokeWidth={2} />
+        <polyline points={line(2, Yr)} fill="none" stroke="#ffc53d" strokeWidth={2} />
+        <polyline points={line(3, Ys)} fill="none" stroke="#4f7cff" strokeWidth={2} />
+      </svg>
+      <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted">
+        <span><span style={{ color: "#ff8a3d" }}>━</span> radiometers 1+3</span>
+        <span><span style={{ color: "#ffc53d" }}>━</span> radiometers 2+4 (further along the sample)</span>
+        <span><span style={{ color: "#4f7cff" }}>━</span> smoke detector, light scattering</span>
+        <span>time from the first ignition</span>
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        The smoke spike before the first ignition comes from the experiment&apos;s smoke wire
+        (switched on about two minutes earlier to show the airflow): the detector reacted to
+        that smoke within about half a minute.
+      </p>
+      <div className="mt-4 rounded-lg border-l-4 border-accent bg-surface-2 p-3 text-sm text-ink-2">
+        <b className="text-ink">What it means for detection:</b> the flame was radiating from{" "}
+        {big.pairs["radiometers 1+3"] && "first_s" in big.pairs["radiometers 1+3"]
+          ? `${(big.pairs["radiometers 1+3"] as { first_s: number }).first_s} s`
+          : "the start"}{" "}
+        after ignition, but the cabin&apos;s scattering smoke detector only crossed its
+        threshold at {scat.first_s} s and peaked near the end of the burn; its signal was still
+        raised 15 minutes later, because smoke lingers in still air.{" "}
+        {!obs.responded && "The obscuration (light-blocking) channel did not change at all. "}
+        The radiometers sit next to the sample, unlike a cabin sensor, but the gap is a
+        question worth testing: a sensor that sees the flame itself could warn earlier than
+        one waiting for smoke to drift to it.
+      </div>
+      <p className="mt-3 text-xs text-muted">
+        One flight and one large burn: sample {saffire.samples.find((x) => x !== big)?.sample}{" "}
+        gave only a brief, weak signal. The file gives no distance between the radiometers, so
+        no spread speed is computed; radiometer values are in the file&apos;s units. The second
+        detector&apos;s channels are empty in this file. Source: {saffire.source}.
       </p>
     </Card>
   );
