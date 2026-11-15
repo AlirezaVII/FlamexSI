@@ -12,13 +12,20 @@ DATA = ROOT / "backend/review_seed/PSI-69_Experimental table_FLEX.csv"
 REVIEW = ROOT / "backend/falmex/review_artifacts/review/eight_findings_review.csv"
 PAGE = ROOT / "frontend/public/flex-comparison.html"
 TASKS = [
-    ("Oxygen → burning rate", "Initial oxygen mole fraction", "Burning rate (source scale)", 6, 12, False,
-     "Compare the two fuels at the same oxygen fraction. Their positive associations differ in strength, so fuel matters when planning a follow-up test."),
-    ("Initial diameter → extinction diameter", "Initial diameter (mm)", "Visible extinction diameter (mm)", 10, 11, False,
-     "Account for starting droplet size when comparing visible extinction. Match initial diameters across experiments before interpreting differences."),
-    ("Oxygen → extinction diameter ratio", "Initial oxygen mole fraction", "Extinction / initial diameter", 6, 11, True,
-     "Compare normalized extinction diameters within one fuel. The ratio shares a measurement with extinction diameter, so the two results provide overlapping evidence."),
+    ("Oxygen → burning rate", "Initial oxygen mole fraction",
+     "Burning rate (source scale)", 6, 12, False,
+     "Compare the two fuels at the same oxygen fraction. Their positive associations differ "
+     "in strength, so fuel matters when planning a follow-up test."),
+    ("Initial diameter → extinction diameter", "Initial diameter (mm)",
+     "Visible extinction diameter (mm)", 10, 11, False,
+     "Account for starting droplet size when comparing visible extinction. Match initial "
+     "diameters across experiments before interpreting differences."),
+    ("Oxygen → extinction diameter ratio", "Initial oxygen mole fraction",
+     "Extinction / initial diameter", 6, 11, True,
+     "Compare normalized extinction diameters within one fuel. The ratio shares a measurement "
+     "with extinction diameter, so the two results provide overlapping evidence."),
 ]
+MODELS_TAG = '<script type="application/json" id="models">'
 
 
 def date(value):
@@ -30,7 +37,7 @@ def estimate(samples, x):
     # At the fifth-neighbour boundary include every tie, independent of row order.
     distances = [round(abs(value - x), 10) for value, _ in samples]
     radius = sorted(distances)[min(4, len(samples) - 1)]
-    neighbors = [y for (_, y), d in zip(samples, distances) if d <= radius]
+    neighbors = [y for (_, y), d in zip(samples, distances, strict=True) if d <= radius]
     return median(neighbors), len(neighbors)
 
 
@@ -68,14 +75,17 @@ def build():
         options = {fuel: [[x, *estimate(samples, x)] for x in sorted({p[0] for p in samples})]
                    for fuel, samples in training.items()}
         review = reviews[index]
-        finding = next(f for f in findings if all(f[k] == review[k] for k in ("condition", "outcome", "analyzer")))
-        tasks.append(dict(id=finding["finding_id"], title=title, xname=xname, yname=yname, insight=insight, options=options,
-                          train=sum(map(len, training.values())), test=len(testing), mae=mean(errors),
-                          baseline=mean(baseline), cutoff=cutoff.date().isoformat(),
+        keys = ("condition", "outcome", "analyzer")
+        finding = next(f for f in findings if all(f[k] == review[k] for k in keys))
+        tasks.append(dict(id=finding["finding_id"], title=title, xname=xname, yname=yname,
+                          insight=insight, options=options,
+                          train=sum(map(len, training.values())), test=len(testing),
+                          mae=mean(errors), baseline=mean(baseline),
+                          cutoff=cutoff.date().isoformat(),
                           rho=float(review["date_holdout_effect"]), finding=review["review_id"]))
     tasks.sort(key=lambda t: 1 - t["mae"] / t["baseline"], reverse=True)
     page = PAGE.read_text()
-    start = page.index('<script type="application/json" id="models">') + len('<script type="application/json" id="models">')
+    start = page.index(MODELS_TAG) + len(MODELS_TAG)
     end = page.index("</script>", start)
     PAGE.write_text(page[:start] + json.dumps(tasks, ensure_ascii=False) + page[end:])
     for t in tasks:
