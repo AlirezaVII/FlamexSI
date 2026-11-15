@@ -4,6 +4,7 @@ import io
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from functools import lru_cache
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,6 +48,9 @@ class DiscoverRequest(BaseModel):
     extra_outcomes: list[str] = []
     extra_conditions: list[str] = []
     weights: dict[str, float] | None = None  # ranking weights (see /api/meta)
+    # what to keep together when splitting discovery / held-out data: the experiment ID by
+    # default, or e.g. "_source_id" or a campaign column when experiments are not independent
+    split_by: str | None = None
     analyzers: list[str] | None = None
     validators: list[str] | None = None
     test_fraction: float | None = Field(None, gt=0, lt=0.9)
@@ -69,6 +73,52 @@ class InsightRequest(BaseModel):
 class SyntheticRequest(BaseModel):
     n_experiments: int = Field(200, ge=10, le=100_000)
     seed: int = 0
+
+
+@lru_cache(maxsize=1)
+def _cached_showcase(min_samples: int, seed: int) -> dict:
+    from falmex.pipeline import standardize
+
+    base = Schema.load()
+    frame, _ = standardize(synthetic.generate(300, seed=7), base, "showcase-synthetic")
+    run_schema = base.extended(frame, extra_conditions=["sample_mass"])
+    findings = run_discovery(
+        frame, run_schema, dataset_id="showcase", synthetic=True,
+        config=DiscoveryConfig(outcomes=["burn_time"], min_samples=min_samples, seed=seed,
+                               extra={"extra_conditions": ["sample_mass"]}),
+    )
+    f = next(x for x in findings if x.condition == "sample_mass")
+    holdout = next(v for v in f.validations if v.method == "holdout_replication").metrics
+    perm = next(v for v in f.validations if v.method == "permutation_test").metrics
+    checks = {p.params["control"]: p.metrics for p in f.deep if p.probe == "third_variable"}
+    return {
+        "synthetic": True,
+        "dataset": "Synthetic test data (seed 7, 300 experiments) — not NASA data",
+        "headline": f.headline,
+        "status": f.status,
+        "method": f.effect_metric,
+        "n_experiments": f.evidence.n_experiments,
+        "split": f.split.model_dump(),
+        "discovery_effect": holdout["discovery_effect"],
+        "unseen_effect": holdout["test_effect"],
+        "shuffles_as_strong": perm["shuffles_as_strong"],
+        "permutations": perm["permutations"],
+        # third-variable check, all on the same rows (the full dataset)
+        "effect_all_rows": checks["oxygen"]["effect_without_control"],
+        "controls": {
+            z: {"effect": m["effect_with_control"], "retained_share": m["retained_share"]}
+            for z, m in checks.items() if z in ("oxygen", "pressure")
+        },
+        "explained_by": [p.params["control"] for p in f.deep
+                         if p.probe == "third_variable" and p.verdict == "weakens"],
+        "score": f.score,
+        "rank": findings.index(f) + 1,
+        "of": sum(x.status == Status.VALIDATED for x in findings),
+    }
+
+
+def _showcase(schema: Schema, min_samples: int, seed: int) -> dict:
+    return _cached_showcase(min_samples, seed)
 
 
 def create_app(settings: Settings | None = None, provider: LLMProvider | None = None) -> FastAPI:
@@ -189,7 +239,14 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         dataset_or_404(request, dataset_id)
         frame = store(request).load_frame(dataset_id)
         return {"goals": questions.discovery_goals(frame, schema(request)),
-                "conditions": questions.candidate_conditions(frame, schema(request))}
+                "conditions": questions.candidate_conditions(frame, schema(request)),
+                "split_options": questions.split_options(frame, schema(request))}
+
+    @app.get("/api/showcase")
+    def showcase(request: Request):
+        """The landing page's 'why trust it' example, computed live by the engine on
+        synthetic test data — never typed in by hand."""
+        return _showcase(schema(request), settings.min_samples, settings.random_seed)
 
     @app.get("/api/datasets")
     def list_datasets(request: Request):
@@ -248,7 +305,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         cfg = DiscoveryConfig(
             analyzers=body.analyzers, validators=body.validators, outcomes=body.outcomes,
             conditions=body.conditions, goal=body.goal or "Open exploration",
-            weights=body.weights,
+            weights=body.weights, split_by=body.split_by,
             test_fraction=body.test_fraction or settings.test_fraction,
             alpha=body.alpha or settings.alpha, min_samples=settings.min_samples,
             seed=settings.random_seed,

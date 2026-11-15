@@ -13,6 +13,7 @@ import type {
   ProbeResult,
   Quality,
   Row,
+  Showcase,
   Source,
   Status,
 } from "./types";
@@ -134,6 +135,7 @@ export const api = {
       conditions?: string[];
       extra_outcomes?: string[];
       extra_conditions?: string[];
+      split_by?: string;
     } = {},
   ) => request<DiscoverResult>(`/api/datasets/${id}/discover`, json(body)),
   deep: (id: string) =>
@@ -153,6 +155,7 @@ export const api = {
     },
   ) => request<Insight>(`/api/findings/${id}/insight`, json(body)),
   insights: () => request<Insight[]>("/api/insights"),
+  showcase: () => request<Showcase>("/api/showcase"),
   findings: (params: {
     dataset_id?: string;
     status?: Status;

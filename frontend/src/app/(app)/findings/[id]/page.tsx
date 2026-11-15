@@ -253,8 +253,21 @@ export default function FindingPage() {
                   {f.split.discovery_rows} rows) used to find the association;{" "}
                   {f.split.holdout_experiments} experiments (
                   {f.split.holdout_rows} rows) held back and never seen by
-                  discovery. Split by {label(f.split.by)}, so no experiment is
-                  on both sides.
+                  discovery. Split by{" "}
+                  {f.split.by === "_source_id"
+                    ? "source file"
+                    : label(f.split.by)}
+                  {f.split.groups_holdout != null &&
+                    f.split.by !== "experiment_id" &&
+                    ` (${f.split.groups_discovery} / ${f.split.groups_holdout} groups)`}
+                  , so no group is on both sides. Leakage check:{" "}
+                  {Object.entries(f.split.shared_across_split ?? {})
+                    .map(
+                      ([k, v]) =>
+                        `${v} ${k === "_source_id" ? "source files" : label(k)} shared`,
+                    )
+                    .join(", ") || "not recorded for this run"}
+                  .
                 </p>
               ) : (
                 <p className="text-ink-2">

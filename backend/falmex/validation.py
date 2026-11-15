@@ -26,16 +26,32 @@ class ValidationResult:
 def split_by_experiment(
     frame: pd.DataFrame, id_col: str | None, test_fraction: float, seed: int
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Train/test split that never puts rows of one experiment on both sides."""
+    """Train/test split that never puts rows of one group on both sides.
+
+    `id_col` is what must stay together: the experiment ID by default, or a coarser group
+    (source file, test campaign, facility...) when experiments within it are not independent,
+    so nothing leaks from the discovery part into the held-out part.
+    """
     rng = np.random.default_rng(seed)
     if id_col and id_col in frame:
         ids = rng.permutation(np.asarray(frame[id_col].dropna().unique(), dtype=object))
         n_test = int(round(len(ids) * test_fraction))
+        if len(ids) >= 2:
+            n_test = min(max(n_test, 1), len(ids) - 1)  # both sides get at least one group
         test_ids = set(ids[:n_test])
         mask = frame[id_col].isin(test_ids)
     else:
         mask = pd.Series(rng.random(len(frame)) < test_fraction, index=frame.index)
     return frame[~mask], frame[mask]
+
+
+def leakage(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> dict[str, int]:
+    """How many values of each column appear on both sides of a split (should all be 0)."""
+    out = {}
+    for c in cols:
+        if c in train and c in test:
+            out[c] = len(set(train[c].dropna().astype(str)) & set(test[c].dropna().astype(str)))
+    return out
 
 
 class Validator(ABC):

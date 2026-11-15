@@ -144,6 +144,9 @@ export interface Finding {
     holdout_rows: number;
     holdout_experiments: number;
     by: string;
+    groups_discovery?: number | null;
+    groups_holdout?: number | null;
+    shared_across_split?: Record<string, number>;
   } | null;
   validations: Validation[];
   uncertainty: {
@@ -196,6 +199,7 @@ export interface DiscoveryGoal {
 export interface Goals {
   goals: DiscoveryGoal[];
   conditions: { mapped: string[]; unmapped: string[] };
+  split_options: { column: string; label: string; groups: number }[];
 }
 
 export interface QualityVariable {
@@ -278,4 +282,29 @@ export interface DiscoverResult {
   tested: number;
   by_status: Record<Status, number>;
   findings: Finding[];
+}
+
+export interface Showcase {
+  synthetic: boolean;
+  dataset: string;
+  headline: string;
+  status: Status;
+  method: string;
+  n_experiments: number;
+  split: {
+    discovery_experiments: number;
+    holdout_experiments: number;
+    by: string;
+    shared_across_split: Record<string, number>;
+  };
+  discovery_effect: number;
+  unseen_effect: number;
+  shuffles_as_strong: number;
+  permutations: number;
+  effect_all_rows: number;
+  controls: Record<string, { effect: number; retained_share: number }>;
+  explained_by: string[];
+  score: number;
+  rank: number;
+  of: number;
 }

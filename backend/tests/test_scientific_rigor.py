@@ -107,3 +107,25 @@ def test_discovery_goals_follow_the_columns(frame, schema):
                for g in goals)
     fewer = questions.discovery_goals(frame.drop(columns=["extinction"]), schema)
     assert "outcome:extinction" not in {g["id"] for g in fewer}
+
+
+def test_split_can_keep_whole_sources_together_without_leakage(schema):
+    # 6 "campaigns" of 50 experiments each; experiments inside a campaign are not independent
+    parts = []
+    for i in range(6):
+        part = synthetic.generate(50, seed=i)
+        part["experiment_id"] = [f"C{i}-{k:03d}" for k in range(50)]
+        part["campaign"] = f"campaign-{i}"
+        parts.append(part)
+    raw = pd.concat(parts, ignore_index=True)
+    frame, _ = standardize(raw, schema, "campaigns00000000")
+    findings = run_discovery(frame, schema, dataset_id="c", synthetic=True,
+                             config=DiscoveryConfig(split_by="campaign", outcomes=["burning_rate"]))
+    split = findings[0].split
+    assert split.by == "campaign"
+    assert split.groups_discovery + split.groups_holdout == 6
+    assert split.groups_holdout >= 1 and split.groups_discovery >= 1
+    assert split.shared_across_split == {"experiment_id": 0, "campaign": 0}
+    with pytest.raises(ValueError):
+        run_discovery(frame, schema, dataset_id="c", synthetic=True,
+                      config=DiscoveryConfig(split_by="nope"))

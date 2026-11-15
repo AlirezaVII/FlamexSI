@@ -21,6 +21,7 @@ export default function DiscoverPage() {
   const [goals, setGoals] = useState<Goals | null>(null);
   const [goalId, setGoalId] = useState("open");
   const [conditions, setConditions] = useState<Set<string>>(new Set());
+  const [splitBy, setSplitBy] = useState<string>("");
   const [findings, setFindings] = useState<Finding[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export default function DiscoverPage() {
         outcomes: goal.outcomes.length ? goal.outcomes : undefined,
         extra_outcomes: goal.extra_outcomes,
         conditions: chosen,
+        split_by: splitBy || undefined,
         extra_conditions: chosen.filter((c) =>
           goals.conditions.unmapped.includes(c),
         ),
@@ -186,6 +188,28 @@ export default function DiscoverPage() {
               </div>
             )}
           </div>
+        )}
+        {goals && goals.split_options.length > 0 && (
+          <label className="mt-5 block text-sm">
+            <span className="mb-1 block text-xs text-muted">
+              Keep together when splitting discovery / unseen data (choose a
+              coarser group if experiments in it are not independent, so nothing
+              leaks between the parts):
+            </span>
+            <select
+              value={splitBy}
+              onChange={(e) => setSplitBy(e.target.value)}
+              disabled={goals.split_options.length < 2}
+              aria-label="Keep together when splitting"
+              className="rounded-md border border-line bg-surface px-2 py-1.5"
+            >
+              {goals.split_options.map((o, i) => (
+                <option key={o.column} value={i === 0 ? "" : o.column}>
+                  {o.label} · {o.groups} groups
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button

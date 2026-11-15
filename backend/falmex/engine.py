@@ -33,7 +33,13 @@ from falmex.findings import (
 )
 from falmex.pipeline import SOURCE_COL
 from falmex.schema import Schema
-from falmex.validation import Validator, benjamini_hochberg, get_validators, split_by_experiment
+from falmex.validation import (
+    Validator,
+    benjamini_hochberg,
+    get_validators,
+    leakage,
+    split_by_experiment,
+)
 
 MAX_EVIDENCE_IDS = 200
 BOOTSTRAP_RESAMPLES = 200
@@ -47,6 +53,7 @@ class DiscoveryConfig:
     conditions: list[str] | None = None  # restrict to these conditions
     goal: str = "Open exploration"
     weights: dict | None = None  # ranking weights, see findings.DEFAULT_WEIGHTS
+    split_by: str | None = None  # column kept together when splitting (default: experiment)
     test_fraction: float = 0.3
     alpha: float = 0.05
     min_samples: int = 8
@@ -158,12 +165,22 @@ def run_discovery(
     validators = validators or get_validators(cfg.validators, alpha=cfg.alpha, seed=cfg.seed)
     id_col = schema.id_column
 
-    train, test = split_by_experiment(frame, id_col, cfg.test_fraction, cfg.seed)
+    group_col = cfg.split_by or id_col
+    if cfg.split_by and cfg.split_by not in frame:
+        raise ValueError(f"Cannot split by unknown column '{cfg.split_by}'")
+    train, test = split_by_experiment(frame, group_col, cfg.test_fraction, cfg.seed)
+    check = [c for c in dict.fromkeys([id_col, group_col]) if c]
+    shared = leakage(train, test, check)
+    if any(shared.values()):  # never true for a group split; a guard against future changes
+        raise RuntimeError(f"Leakage between discovery and held-out data: {shared}")
     split = Split(
         discovery_rows=len(train), holdout_rows=len(test),
         discovery_experiments=int(train[id_col].nunique()) if id_col in train else len(train),
         holdout_experiments=int(test[id_col].nunique()) if id_col in test else len(test),
-        by=id_col if id_col in frame else "row",
+        by=group_col if group_col in frame else "row",
+        groups_discovery=int(train[group_col].nunique()) if group_col in train else None,
+        groups_holdout=int(test[group_col].nunique()) if group_col in test else None,
+        shared_across_split=shared,
     )
 
     tested = []

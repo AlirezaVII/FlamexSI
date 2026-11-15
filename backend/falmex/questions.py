@@ -74,3 +74,28 @@ def candidate_conditions(frame: pd.DataFrame, schema: Schema) -> dict:
         "unmapped": [c for c in present if c not in mapped and frame[c].nunique(dropna=True) > 1
                      and infer_type(frame[c]) != VarType.TEXT],
     }
+
+
+def split_options(frame: pd.DataFrame, schema: Schema) -> list[dict]:
+    """What the discovery / held-out split can keep together, from the dataset's columns.
+
+    Experiments that share a source file, campaign or facility may not be independent;
+    splitting by that group keeps them on one side so nothing leaks into the test part.
+    """
+    id_col = schema.id_column
+    out = []
+    if id_col and id_col in frame:
+        out.append({"column": id_col, "label": "Experiment (default)",
+                    "groups": int(frame[id_col].nunique())})
+    if "_source_id" in frame and frame["_source_id"].nunique() > 1:
+        out.append({"column": "_source_id", "label": "Source file",
+                    "groups": int(frame["_source_id"].nunique())})
+    mapped = {v.name for v in schema.variables.values() if v.role != Role.META}
+    for c in frame.columns:
+        if c.startswith("_") or c in mapped:
+            continue
+        n = frame[c].nunique(dropna=True)
+        kind = infer_type(frame[c])
+        if kind in (VarType.CATEGORICAL, VarType.TEXT) and 2 <= n <= len(frame) / 3:
+            out.append({"column": c, "label": f"Column: {_label(c)}", "groups": int(n)})
+    return out

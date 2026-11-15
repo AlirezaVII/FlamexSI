@@ -134,3 +134,24 @@ def test_goals_deep_analysis_and_insight_rules(client):
             "fire_safety_relevance": "z" * 6, "reviewer": "QA"}
     assert client.post(f"/api/findings/{f['finding_id']}/insight", json=body).status_code == 409
     assert client.get("/api/insights").json() == []
+
+
+def test_raw_file_is_kept_byte_for_byte(client, settings):
+    csv = b"Test ID,Pressure (atm),O2\nE1,1,21\nE1,1,21\nE2,x,15\n"
+    res = client.post("/api/datasets", files={"file": ("raw.csv", csv, "text/csv")}).json()
+    raw_files = list((settings.data_dir / "raw").iterdir())
+    assert len(raw_files) == 1 and raw_files[0].read_bytes() == csv  # untouched original
+    # while the processed copy was cleaned, converted and is traceable to that file
+    q = client.get(f"/api/datasets/{res['dataset']['dataset_id']}/quality").json()
+    assert q["rows_removed"]["exact duplicate row"] == 1
+    assert q["unit_conversions"][0]["from"] == "atm" and q["unit_conversions"][0]["to"] == "kPa"
+    assert res["source"]["sha256"] in raw_files[0].name
+
+
+def test_showcase_numbers_come_from_the_engine_and_agree(client):
+    s = client.get("/api/showcase").json()
+    assert s["synthetic"] and s["explained_by"] == ["oxygen"]
+    assert abs(s["controls"]["oxygen"]["effect"]) < 0.5 * abs(s["effect_all_rows"])
+    assert abs(s["controls"]["pressure"]["effect"]) > 0.8 * abs(s["effect_all_rows"])
+    assert s["shuffles_as_strong"] < s["permutations"] * 0.05
+    assert s["split"]["shared_across_split"] == {"experiment_id": 0}

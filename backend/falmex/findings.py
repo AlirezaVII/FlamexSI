@@ -67,7 +67,11 @@ class Split(BaseModel):
     discovery_experiments: int
     holdout_rows: int
     holdout_experiments: int
-    by: str  # what the split keeps together (e.g. "experiment_id")
+    by: str  # what the split keeps together (e.g. "experiment_id", "_source_id", a campaign)
+    groups_discovery: int | None = None
+    groups_holdout: int | None = None
+    # values found on both sides after splitting; all zero = no leakage between the parts
+    shared_across_split: dict[str, int] = {}
 
 
 class Uncertainty(BaseModel):

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingFX } from "@/components/landing/landing-fx";
+import { TrustCard } from "@/components/landing/trust-card";
 import { BrandLogo } from "@/components/logo";
 
 export const metadata: Metadata = {
   title: "Falmex — Findings you can verify",
   description:
-    "Falmex searches NASA microgravity combustion data for associations, re-tests every one on experiments it never saw, and shows the evidence behind it.",
+    "Falmex is built to find associations in NASA microgravity combustion data, re-test each one on experiments it never saw, and show the evidence behind it. Currently tested on synthetic data.",
 };
 
 // Deterministic star layers (rendered on the server; moved by parallax on the client).
@@ -88,10 +89,14 @@ export default function Landing() {
           <a className="nl" href="#trust">
             Why trust it
           </a>
+          <a className="nl" href="#status">
+            Status
+          </a>
           <span style={{ flex: 1 }} />
           <div
             className="journey"
-            aria-label="Journey: where the page has taken you"
+            aria-label="Journey: where the page has taken you. Gravity values are reference physical constants, not experiment data."
+            title="Reference surface gravity of Earth, orbit, the Moon and Mars (physical constants) — part of the story, not experiment data"
           >
             <ol>
               <li>Earth</li>
@@ -100,7 +105,7 @@ export default function Landing() {
               <li>Mars</li>
             </ol>
             <span className="g">
-              <small>gravity</small>
+              <small>ref. gravity</small>
               <b data-gravity>1.00 g</b>
             </span>
           </div>
@@ -120,7 +125,7 @@ export default function Landing() {
           <div className="wrap hero-grid">
             <div data-hero-copy>
               <div className="eyebrow">
-                NASA Space Apps 2026 · Flame in Freefall
+                NASA Space Apps Challenge 2026 · Flame in Freefall
               </div>
               <h1 className="serif">
                 Decades of microgravity flame experiments.
@@ -130,9 +135,11 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="lead">
-                Falmex searches NASA combustion data for patterns, re-tests
-                every one on experiments it never saw, and shows the evidence
-                behind it — so fire-safety researchers can trust what they read.
+                Falmex is built to search NASA combustion data for patterns,
+                re-test every one on experiments it never saw, and show the
+                evidence behind it — so fire-safety researchers can trust what
+                they read. Today it runs on synthetic test data; NASA&apos;s
+                challenge data comes next.
               </p>
               <div className="cta">
                 <Link className="btn primary" href="/relationships">
@@ -228,11 +235,12 @@ export default function Landing() {
                 Falmex tries to prove itself wrong.
               </h2>
               <p className="sub">
-                A pattern that looks real is not enough. Here a variable seemed
-                strongly linked to burn time and even held up on unseen
-                experiments — until Falmex held oxygen fixed and the link
-                disappeared. It is flagged and ranked down, not reported as a
-                discovery.
+                A pattern that looks real is not enough. In this example a
+                variable is strongly associated with burn time and the
+                association even holds up on unseen experiments — but when
+                Falmex holds oxygen fixed, it almost disappears. It is flagged
+                and ranked down, not reported as a discovery. The numbers on the
+                card are computed live by the engine.
               </p>
               <p
                 className="sub"
@@ -242,86 +250,81 @@ export default function Landing() {
                 NASA&apos;s challenge data is released.
               </p>
             </div>
-            <div
-              className="card"
-              data-reveal
-              data-trust-card
-              style={{ padding: 30 }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                  flexWrap: "wrap",
-                }}
-              >
-                <span className="badge">
-                  <span
-                    className="dot"
-                    style={{ background: "var(--l-good)" }}
-                  />
-                  Replicated on unseen data
-                </span>
-                <span className="synth">Synthetic test data · not NASA</span>
-              </div>
-              <p
-                className="serif"
-                style={{ fontSize: 28, margin: "18px 0 6px", lineHeight: 1.2 }}
-              >
-                Higher sample mass is associated with lower burn time
-              </p>
-              <p style={{ fontSize: 13, color: "var(--l-muted)" }}>
-                Rank correlation · 300 experiments · discovery 210 / unseen 90
-              </p>
-              <div className="checks">
-                <div className="check">
-                  Discovery data<b>ρ = −0.67</b>
-                </div>
-                <div className="check">
-                  Unseen data<b>ρ = −0.73</b>
-                </div>
-                <div className="check">
-                  Random shuffles as strong<b>0 / 200</b>
-                </div>
-              </div>
-              <div className="bars">
-                <div className="bar">
-                  <span>Effect as found</span>
-                  <div className="track">
-                    <div
-                      className="fill"
-                      data-bar="found"
-                      style={{ background: "var(--l-blue)" }}
-                    />
-                  </div>
-                  <span>−0.69</span>
-                </div>
-                <div className="bar">
-                  <span>Holding oxygen fixed</span>
-                  <div className="track">
-                    <div className="fill" data-bar="oxygen" />
-                  </div>
-                  <span data-bar-value="oxygen">−0.69</span>
-                </div>
-                <div className="bar">
-                  <span>Holding pressure fixed</span>
-                  <div className="track">
-                    <div
-                      className="fill"
-                      data-bar="pressure"
-                      style={{ background: "#2d4f8f" }}
-                    />
-                  </div>
-                  <span>−0.69</span>
-                </div>
-              </div>
-              <div className="verdict" data-verdict>
-                <b>Third-variable check:</b> the association is largely
-                explained by oxygen. Kept visible with this warning, ranked
-                below every independent finding.
-              </div>
+            <TrustCard />
+          </div>
+        </section>
+
+        <section className="wrap block" id="status">
+          <div className="eyebrow">Status</div>
+          <h2 className="serif" data-reveal>
+            What works today, and what does not yet.
+          </h2>
+          <p className="sub">
+            So that this page never claims more than the program can do.
+            Everything in the first column runs and is covered by automated
+            tests — on synthetic test data, because NASA&apos;s challenge data
+            has not been released yet.
+          </p>
+          <div className="statusgrid">
+            <div className="card" data-reveal>
+              <h3 className="serif">
+                <span
+                  className="dot"
+                  style={{ background: "var(--l-good)", marginRight: 10 }}
+                />
+                Working and tested
+              </h3>
+              <ul>
+                <li>
+                  Load CSV, Excel, JSON and Parquet files; the original is
+                  stored untouched
+                </li>
+                <li>
+                  Cleaning, unit conversion and a data-quality report with a
+                  reason for every change
+                </li>
+                <li>
+                  Filters, comparison and discovery goals generated from the
+                  dataset&apos;s own columns
+                </li>
+                <li>
+                  Associations found on 70% of experiments, re-tested on the
+                  unseen 30% (split by experiment or by source, with a leakage
+                  check)
+                </li>
+                <li>
+                  Random-shuffle test, multiple-testing correction, bootstrap
+                  uncertainty
+                </li>
+                <li>
+                  Third-variable checks, evidence and limitations on every
+                  finding
+                </li>
+                <li>
+                  AI explanations written only from the computed statistics
+                </li>
+              </ul>
+            </div>
+            <div className="card" data-reveal>
+              <h3 className="serif">
+                <span
+                  className="dot"
+                  style={{ background: "var(--l-muted)", marginRight: 10 }}
+                />
+                Not yet
+              </h3>
+              <ul>
+                <li>
+                  NASA&apos;s challenge data — not released yet; nothing here is
+                  a NASA result
+                </li>
+                <li>Images and video are stored but not analysed</li>
+                <li>Non-linear and multi-variable (interaction) analyses</li>
+                <li>
+                  Expert-reviewed insights — none exist yet; they can only come
+                  from real data
+                </li>
+              </ul>
             </div>
           </div>
         </section>
@@ -389,7 +392,8 @@ export default function Landing() {
       </main>
       <footer>
         <span>
-          Falmex · NASA Space Apps 2026 · Flame in Freefall · Planet maps: NASA
+          Falmex · NASA Space Apps Challenge 2026 · Flame in Freefall · Planet
+          maps: NASA
         </span>
         <span>
           Findings are statistical associations and require expert review.

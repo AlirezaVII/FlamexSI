@@ -454,6 +454,24 @@ html:has(.landing) {
   will-change: transform, opacity;
 }
 
+.landing .statusgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 40px;
+}
+.landing .statusgrid ul {
+  list-style: disc;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--l-ink2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.landing .statusgrid li + li {
+  margin-top: 6px;
+}
+
 /* ---- small screens ---- */
 @media (max-width: 900px) {
   .landing .wrap {
@@ -476,6 +494,7 @@ html:has(.landing) {
     border-left: 0;
   }
   .landing .hero-grid,
+  .landing .statusgrid,
   .landing .grid3,
   .landing .steps,
   .landing .trust,

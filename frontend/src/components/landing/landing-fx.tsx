@@ -41,12 +41,6 @@ export function LandingFX() {
     const grab = $<HTMLElement>("[data-grab]");
     const hint = $<HTMLElement>("[data-grab-hint]");
     const reveals = [...root.querySelectorAll<HTMLElement>("[data-reveal]")];
-    const card = $<HTMLElement>("[data-trust-card]");
-    const b1 = $<HTMLElement>("[data-bar='found']");
-    const b2 = $<HTMLElement>("[data-bar='oxygen']");
-    const b2n = $<HTMLElement>("[data-bar-value='oxygen']");
-    const b3 = $<HTMLElement>("[data-bar='pressure']");
-    const verdict = $<HTMLElement>("[data-verdict]");
 
     reveals.forEach((el) => {
       const siblings = [...(el.parentElement?.children ?? [])].filter((c) =>
@@ -179,8 +173,14 @@ export function LandingFX() {
         el.style.transform = `translate3d(0,${(1 - t) * 46}px,0) scale(${0.97 + 0.03 * t})`;
       });
 
-      // trust card: bars fill, then the oxygen control collapses the association
-      if (card && b1 && b2 && b2n && b3 && verdict) {
+      // trust card: the bars fill as it enters; the "oxygen held fixed" bar then shrinks from
+      // the uncontrolled effect to its controlled value. The numbers next to the bars are
+      // always the final, computed values — only the bar widths animate.
+      const card = root!.querySelector<HTMLElement>("[data-trust-card]");
+      if (card?.dataset.found) {
+        const F = parseFloat(card.dataset.found) * 100;
+        const O = parseFloat(card.dataset.oxygen ?? "0") * 100;
+        const Pr = parseFloat(card.dataset.pressure ?? "0") * 100;
         const cr = card.getBoundingClientRect();
         const fill = reduce
           ? 1
@@ -188,12 +188,13 @@ export function LandingFX() {
         const drop = reduce
           ? 1
           : easeOut(clamp((H * 0.62 - cr.top) / (H * 0.28)));
-        b1.style.width = `${69 * fill}%`;
-        b3.style.width = `${69 * fill}%`;
-        b2.style.width = `${69 * fill * (1 - drop) + 4 * drop}%`;
-        b2.style.background = drop > 0.5 ? "var(--l-bad)" : "var(--l-blue)";
-        b2n.textContent = `−${(0.69 - 0.65 * drop).toFixed(2)}`;
-        verdict.style.opacity = String(clamp((drop - 0.6) / 0.4));
+        const set = (k: string, w: number) => {
+          const el = card.querySelector<HTMLElement>(`[data-bar='${k}']`);
+          if (el) el.style.width = `${w}%`;
+        };
+        set("found", F * fill);
+        set("pressure", Pr * fill);
+        set("oxygen", (F * (1 - drop) + O * drop) * fill);
       }
 
       // planets, farthest (smallest) first

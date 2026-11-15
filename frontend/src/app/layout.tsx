@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Falmex — Microgravity Combustion Insights",
+  title: "Falmex — Microgravity Combustion Findings",
   description:
     "Explore, compare and validate findings from NASA microgravity combustion experiments.",
 };
