@@ -18,7 +18,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-xl border border-line bg-surface p-5 ${className}`}
+      className={`rounded-xl border border-line bg-surface p-5 shadow-card ${className}`}
     >
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -146,7 +146,7 @@ export function ErrorNote({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-2"
+      className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-2 shadow-card"
     >
       <span className="mr-1 font-semibold" style={{ color: "var(--critical)" }}>
         ⚠ Error:

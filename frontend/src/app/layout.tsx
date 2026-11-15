@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Nav } from "@/components/nav";
+import { ProgressBar } from "@/components/progress-bar";
 import { Splash } from "@/components/splash";
-import { themeInitScript } from "@/lib/boot-scripts";
+import { splashInitScript, themeInitScript } from "@/lib/boot-scripts";
 import { WorkspaceProvider } from "@/lib/workspace";
 import "./globals.css";
 
@@ -43,13 +44,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: themeInitScript,
+            __html: themeInitScript + splashInitScript,
           }}
         />
       </head>
       <body className="flex min-h-full flex-col pb-16 md:pb-0">
         <WorkspaceProvider>
           <Splash />
+          <ProgressBar />
           <Nav />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
             {children}

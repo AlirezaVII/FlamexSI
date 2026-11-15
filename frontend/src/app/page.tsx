@@ -49,7 +49,7 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-line bg-surface px-6 py-10 sm:px-10">
+      <section className="rounded-2xl border border-line bg-surface px-6 py-10 shadow-card sm:px-10">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
           NASA Microgravity Combustion
         </p>
@@ -82,7 +82,7 @@ export default function Home() {
           <Link
             key={s.href}
             href={s.href}
-            className="group rounded-xl border border-line bg-surface p-5 transition hover:border-accent"
+            className="group rounded-xl border border-line bg-surface p-5 shadow-card transition duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-card-hover motion-reduce:hover:translate-y-0"
           >
             <h2 className="font-display text-xl font-medium text-ink">
               {s.title}{" "}

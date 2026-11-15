@@ -42,6 +42,7 @@ const TITLE = "FALMEX".split("");
 
 type Engine = "connecting" | "ready" | "offline";
 
+
 function skip() {
   const root = document.documentElement;
   if (root.dataset.splash === "leaving" || root.dataset.splash === "gone")
@@ -60,6 +61,8 @@ export function Splash() {
   // mark the screen as driven by JS (disables the CSS-only fallback), run the counter
   useEffect(() => {
     const root = document.documentElement;
+    // skipped by the boot script, or already lifted: a remount must never replay it
+    if (root.dataset.splash === "gone") return;
     root.dataset.splash = "active";
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -108,6 +111,7 @@ export function Splash() {
   useEffect(() => {
     if (!((minDone && ready) || timedOut)) return;
     const root = document.documentElement;
+    if (root.dataset.splash !== "active") return; // skipped, already lifted, or never shown
     // give an "engine offline" message a moment to be read
     const delay = engine === "offline" && !timedOut ? 1200 : 0;
     const t1 = window.setTimeout(

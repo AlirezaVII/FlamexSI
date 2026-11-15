@@ -114,7 +114,7 @@ export function Nav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur">
+      <nav className="sticky top-0 z-30 border-b border-line bg-surface/90 shadow-bar backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Logo />
           <div className="hidden gap-1 text-sm md:flex">
