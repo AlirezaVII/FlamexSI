@@ -138,13 +138,19 @@ def build() -> list[dict]:
 
 def _s12(x: dict) -> dict:
     """One Saffire-I/II sample, trimmed for the assistant's prompt."""
-    keep = {k: x.get(k) for k in ("sample", "igniter_on_for_s", "burned",
-                                  "hot_after_igniter_off_s", "front_lag_s")}
+    keep = {k: x.get(k) for k in ("sample", "igniter_on_for_s", "burned")}
+    keep["stayed_hot_s_after_igniter_off"] = x.get("hot_after_igniter_off_s")
+    keep["first_to_last_thermocouple_peak_s"] = x.get("front_lag_s")
     keep["air_speed_cm_s"] = x["before"]["air_speed_cm_s"]
     keep["oxygen_before_pct"] = x["before"]["oxygen_pct"]
-    keep["box"] = x["box"]
-    keep["hottest_thermocouples"] = [[t["thermocouple"], t["peak_c"], t["peak_at_s"]]
-                                     for t in x["sample_thermocouples"]]
+    keep["box_change_percentage_points"] = {
+        "oxygen": x["box"]["oxygen_change_pct"], "oxygen_noise": x["box"]["oxygen_noise_pct"],
+        "co2": x["box"]["co2_change_pct"], "co2_noise": x["box"]["co2_noise_pct"]}
+    keep["pressure_rise_psia"] = x["box"]["pressure_rise_psia"]
+    keep["sample_thermocouples_over_100C_rise"] = [
+        {"tc": t["thermocouple"], "peak_temperature_c": t["peak_c"],
+         "peak_rise_above_start_c": t["peak_rise_c"], "peak_s_after_ignition": t["peak_at_s"]}
+        for t in x["sample_thermocouples"]]
     return keep
 
 
