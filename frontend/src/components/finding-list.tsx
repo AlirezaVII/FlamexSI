@@ -1,3 +1,4 @@
+import { ReadinessChip } from "./readiness";
 import { PipelineLink as Link } from "./pipeline-link";
 import { fmt, label } from "@/lib/api";
 import type { Finding } from "@/lib/types";
@@ -48,6 +49,7 @@ export function FindingList({
               </span>
               <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <StatusBadge status={f.status} />
+                <ReadinessChip f={f} />
                 <span>
                   {label(f.effect_metric)} {fmt(f.effect_size, 2)}
                 </span>

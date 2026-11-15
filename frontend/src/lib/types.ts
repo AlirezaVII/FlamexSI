@@ -359,6 +359,7 @@ export interface DeepSuggestion {
 }
 
 export interface Finding {
+  readiness?: { level: number; of: number; label: string; next: string };
   finding_id: string;
   dataset_id: string;
   created_at: string;

@@ -18,7 +18,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, computed_field
 
 
 class Status(StrEnum):
@@ -184,6 +184,12 @@ class Finding(BaseModel):
     interpretation: Interpretation | None = None
     prior_knowledge: PriorKnowledge | None = None
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def readiness(self) -> dict:
+        """Evidence readiness level (0-7): how far this finding has been proven."""
+        return evidence_readiness(self)
+
 
 class SafetyArea(StrEnum):
     """Where an insight could help spacecraft fire safety."""
@@ -275,3 +281,49 @@ def rank_score(
     else:
         score = math.exp(sum(w[k] * math.log(factors[k]) for k in factors if w[k] > 0) / total)
     return round(score, 4), {k: round(v, 4) for k, v in factors.items()}, w
+
+
+READINESS_LEVELS = [
+    (0, "No supported relationship"),
+    (1, "Signal in the discovery data"),
+    (2, "Not chance: random shuffles are weaker"),
+    (3, "Replicated on unseen experiments"),
+    (4, "Survives the third-variable checks"),
+    (5, "Uncertainty bounded: stable bootstrap interval"),
+    (6, "Compared with published knowledge"),
+    (7, "Signed off by a domain expert"),
+]
+READINESS_NEXT = {
+    0: "Collect data where this condition varies more, or drop the question.",
+    1: "Test against random shuffles of the data.",
+    2: "Re-test on experiments the engine has not seen.",
+    3: "Run the third-variable checks (Deep analysis on the finding page).",
+    4: "Needs a tighter, stable bootstrap interval: more experiments.",
+    5: "Record what NASA reports and papers say (prior-knowledge check).",
+    6: "A combustion expert reviews and signs off. Falmex cannot do this step itself.",
+    7: "Independent replication in another investigation or flight.",
+}
+
+
+def evidence_readiness(f: "Finding") -> dict:
+    """Cumulative: each level needs all the levels below it. Level 7 is never automatic."""
+    val = {v.method: v.passed for v in f.validations}
+    tv = [p for p in f.deep if p.probe == "third_variable" and p.verdict != "not_run"]
+    u = f.uncertainty
+    directional = f.direction in ("positive", "negative", "increase", "decrease")
+    steps = [
+        f.status in (Status.VALIDATED, Status.CANDIDATE, Status.REJECTED),
+        val.get("permutation_test") is True,
+        val.get("holdout_replication") is True and f.status == Status.VALIDATED,
+        bool(tv) and all(p.verdict != "weakens" for p in tv),
+        u is not None and u.stable_share >= 0.9
+        and (not directional or u.low > 0 or u.high < 0),
+        f.prior_knowledge is not None,
+    ]
+    level = 0
+    for ok in steps:
+        if not ok:
+            break
+        level += 1
+    return {"level": level, "of": 7, "label": READINESS_LEVELS[level][1],
+            "next": READINESS_NEXT[level]}

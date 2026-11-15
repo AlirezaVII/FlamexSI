@@ -1,5 +1,6 @@
 "use client";
 
+import { ReadinessChip, ReadinessLadder } from "@/components/readiness";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { GroupBars, ScatterChart } from "@/components/charts";
@@ -141,6 +142,7 @@ export default function FindingPage() {
       >
         <span className="flex flex-wrap items-center gap-2">
           <StatusBadge status={f.status} />
+          <ReadinessChip f={f} />
           <span>{f.status_explanation}</span>
         </span>
       </PageHeader>
@@ -234,6 +236,10 @@ export default function FindingPage() {
           <p className="mt-3 text-xs text-muted">{f.method}</p>
         </Card>
       </div>
+
+      <Card title={`Evidence readiness: level ${f.readiness?.level ?? 0} of 7`} className="mt-4">
+        <ReadinessLadder f={f} />
+      </Card>
 
       {/* 2. validation, in detail */}
       <Card title="Validation — is it real, or chance?" className="mt-4">

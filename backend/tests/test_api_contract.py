@@ -469,3 +469,13 @@ def test_error_details_are_never_stack_traces(client):
     for res in probes:
         text = res.text
         assert "Traceback" not in text and "/Users/" not in text and "site-packages" not in text
+
+
+def test_evidence_readiness_levels(client, finding):
+    _, fid = finding
+    f = client.get(f"/api/findings/{fid}").json()
+    r = f["readiness"]
+    assert 3 <= r["level"] <= 6 and r["of"] == 7  # validated: at least replicated
+    assert r["level"] < 7, "expert sign-off is never automatic"
+    for x in client.get("/api/findings?status=not_significant&limit=5").json():
+        assert x["readiness"]["level"] == 0
