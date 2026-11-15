@@ -4,8 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { ProgressBar } from "@/components/progress-bar";
 import { PwaRegistration } from "@/components/pwa-registration";
+import { Splash } from "@/components/splash";
 import {
   sidebarInitScript,
+  splashInitScript,
   themeInitScript,
 } from "@/lib/boot-scripts";
 import { WorkspaceProvider } from "@/lib/workspace";
@@ -71,12 +73,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: themeInitScript + sidebarInitScript,
+            __html: themeInitScript + splashInitScript + sidebarInitScript,
           }}
         />
       </head>
       <body className="min-h-full">
         <WorkspaceProvider>
+          <Splash />
           <ProgressBar />
           <PwaRegistration />
           {children}

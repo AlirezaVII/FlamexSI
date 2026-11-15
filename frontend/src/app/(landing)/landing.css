@@ -80,6 +80,10 @@ html:has(.landing) {
 .landing .space {
   position: fixed;
   inset: 0;
+  /* a canvas is a replaced element: without an explicit size it shows at its pixel size,
+     i.e. 2x the viewport on Retina screens, pushing the planets off screen */
+  width: 100%;
+  height: 100%;
   z-index: 0;
   pointer-events: none;
 }

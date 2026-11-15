@@ -37,7 +37,7 @@ export function FindingList({
         <li key={f.finding_id}>
           <Link
             href={`/findings/${f.finding_id}`}
-            className="grid grid-cols-[2rem_1fr_auto] items-start gap-3 py-3 hover:bg-surface-2 sm:px-2"
+            className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-3 py-3 hover:bg-surface-2 sm:px-2"
           >
             <span className="pt-0.5 text-sm tabular-nums text-muted">
               {start + i}

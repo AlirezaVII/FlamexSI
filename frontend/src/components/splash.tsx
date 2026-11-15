@@ -24,7 +24,7 @@ const DROP_M = 132;
 const DROP_S = 5.18;
 const ARM = 900; // ms of "armed, 1 g" before release
 const FALL = 2300; // ms the visual fall takes at the earliest
-const MAX_WAIT = 12000; // never trap anyone if something is down
+const MAX_WAIT = 7000; // never trap anyone if something is down
 const EXIT = 900;
 
 type Engine = "connecting" | "ready" | "offline";

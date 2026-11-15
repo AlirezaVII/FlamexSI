@@ -51,12 +51,12 @@ export function ListSkeleton({ rows = 4 }: { rows?: number }) {
       {Array.from({ length: rows }, (_, i) => (
         <li
           key={i}
-          className="grid grid-cols-[2rem_1fr_auto] items-start gap-3 py-3.5 sm:px-2"
+          className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-3 py-3.5 sm:px-2"
         >
           <Skeleton className="mt-0.5 h-3.5 w-4" />
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <Skeleton className={`h-4 ${i % 2 ? "w-3/5" : "w-4/5"}`} />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 overflow-hidden">
               <Skeleton className="h-5 w-20 rounded-full" />
               <Skeleton className="h-5 w-28" />
               <Skeleton className="hidden h-5 w-24 sm:block" />
@@ -80,7 +80,7 @@ export function TableSkeleton({
     <div className="space-y-3" aria-hidden>
       <div className="flex gap-4">
         {Array.from({ length: cols }, (_, c) => (
-          <Skeleton key={c} className="h-3 flex-1 opacity-70" />
+          <Skeleton key={c} className="h-3 min-w-0 flex-1 opacity-70" />
         ))}
       </div>
       {Array.from({ length: rows }, (_, r) => (
@@ -92,7 +92,7 @@ export function TableSkeleton({
           {Array.from({ length: cols }, (_, c) => (
             <Skeleton
               key={c}
-              className={`h-4 flex-1 ${c === 0 ? "max-w-24" : ""}`}
+              className={`h-4 min-w-0 flex-1 ${c === 0 ? "max-w-24" : ""}`}
             />
           ))}
         </div>
