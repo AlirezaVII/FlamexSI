@@ -83,6 +83,14 @@ html:has(.landing) {
   z-index: 0;
   pointer-events: none;
 }
+/* planets fade in only once every texture has arrived (never a black globe) */
+.landing canvas.space {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.landing canvas.space.ready {
+  opacity: 1;
+}
 
 /* ---- sticky glass navbar ---- */
 .landing .topbar {

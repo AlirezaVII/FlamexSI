@@ -26,7 +26,31 @@ export function LandingFX() {
     const canvas = canvasRef.current;
     const root = canvas?.closest(".landing");
     if (!canvas || !root) return;
-    const space = createSpace(canvas, () => render());
+    // planets stay hidden until every map has arrived, then make a cinematic entrance
+    let ready = false;
+    let introStart = 0;
+    const space = createSpace(
+      canvas,
+      () => render(),
+      () => {
+        ready = true;
+        canvas.classList.add("ready");
+        maybeIntro();
+      },
+    );
+    // the entrance waits for the loading screen to lift
+    function maybeIntro() {
+      if (!ready || introStart) return;
+      const splash = document.documentElement.dataset.splash;
+      if (splash && splash !== "gone" && splash !== "leaving") return;
+      introStart = performance.now();
+      wake();
+    }
+    const splashWatch = new MutationObserver(maybeIntro);
+    splashWatch.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-splash"],
+    });
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -69,8 +93,17 @@ export function LandingFX() {
     let lastX = 0;
     let lastT = 0;
 
+    let tiltX = 0; // whole scene leans towards the pointer (radians)
+    let tiltY = 0;
+    let tiltTX = 0;
+    let tiltTY = 0;
+    let spinBoost = 0; // fast scrolling flings the planets round a little
+    let lastScroll = window.scrollY;
+
     const onMove = (e: PointerEvent) => {
       hoverTarget = (e.clientX / window.innerWidth - 0.5) * 0.07;
+      tiltTY = (e.clientX / window.innerWidth - 0.5) * 0.22;
+      tiltTX = (e.clientY / window.innerHeight - 0.5) * 0.16;
       if (!dragging) return;
       const dx = e.clientX - lastX;
       const now = performance.now();
@@ -183,19 +216,36 @@ export function LandingFX() {
       }
 
       // planets (real 3D spheres in WebGL)
+      const now = performance.now();
+      // entrance: Earth rushes in from far away while spinning down (expo ease-out)
+      const t = introStart ? clamp((now - introStart) / 2600) : 0;
+      const intro = reduce ? 1 : t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
       const poses = {} as Record<Key, PlanetPose>;
       for (const k of Object.keys(paths) as Key[]) {
         const [, xv, yv, rv, spin] = along(paths[k], p);
-        const r = rv * scale;
-        if (k === "earth") earthR = r;
-        poses[k] = {
-          x: xv * W,
-          y: yv * H,
-          r,
-          spin: spin + (k === "earth" ? yaw + hover : 0),
-        };
+        let r = rv * scale;
+        let x = xv * W;
+        let yy = yv * H;
+        let extra = 0;
+        if (k === "earth") {
+          earthR = r;
+          r *= 0.18 + 0.82 * intro;
+          x += (1 - intro) * W * 0.12;
+          yy -= (1 - intro) * H * 0.18;
+          extra = yaw + hover - (1 - intro) * 1.4 + spinBoost;
+        } else {
+          // Moon and Mars keep turning slowly on their own
+          extra = now / 240000 + spinBoost * 0.6;
+        }
+        poses[k] = { x, y: yy, r, spin: spin + extra };
       }
-      space?.render(poses, performance.now());
+      space?.render(poses, {
+        time: now,
+        sun: -p * 2.4,
+        tiltX,
+        tiltY,
+        iss: clamp(1 - p / 0.16) * clamp((intro - 0.6) / 0.4),
+      });
     }
 
     // ---- animation loop: planets turn and clouds drift while the tab is visible -----------
@@ -208,6 +258,11 @@ export function LandingFX() {
         if (!reduce) yaw += 0.00045; // slow idle rotation
       }
       hover += (hoverTarget - hover) * 0.06;
+      tiltX += (tiltTX - tiltX) * 0.05;
+      tiltY += (tiltTY - tiltY) * 0.05;
+      const sy = window.scrollY;
+      spinBoost += clamp((sy - lastScroll) / 9000, -0.02, 0.02);
+      lastScroll = sy;
       render();
       if (!document.hidden && !reduce) {
         raf = requestAnimationFrame(tick);
@@ -316,6 +371,7 @@ export function LandingFX() {
     return () => {
       cancelAnimationFrame(raf);
       themeWatch.disconnect();
+      splashWatch.disconnect();
       media.removeEventListener("change", syncTheme);
       space?.dispose();
       window.removeEventListener("pointermove", onMove);

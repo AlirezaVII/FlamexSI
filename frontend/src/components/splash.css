@@ -1,0 +1,447 @@
+/* ---- Loading screen: "Drop 01" -------------------------------------------------------
+   Always dark (it is the inside of a drop tower). Layout: shaft on the left, the capsule
+   window with the live flame in the centre, telemetry on the right. */
+.splash {
+  --sp-ink: #e8eeff;
+  --sp-dim: #8090bd;
+  --sp-line: #22305c;
+  --sp-blue: #7d8bff;
+  --sp-ok: #4fe3a1;
+  --sp-warn: #ffb35c;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--sp-ink);
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 45%, #0e1840 0%, transparent 70%),
+    radial-gradient(ellipse at 50% 120%, #150c2c 0%, transparent 60%), #03050c;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* fallback: disappears even if the app script never runs */
+  animation: sp-auto-hide 0.01s linear 15s forwards;
+}
+:root[data-splash="active"] .splash {
+  animation: none;
+}
+:root[data-splash="gone"] .splash {
+  display: none;
+}
+/* exit: an iris closes onto the flame, revealing the page around it */
+:root[data-splash="leaving"] .splash {
+  pointer-events: none;
+  animation: sp-iris 0.9s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+}
+@keyframes sp-iris {
+  0% {
+    clip-path: circle(150% at 50% 44%);
+  }
+  70% {
+    clip-path: circle(9% at 50% 44%);
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(0% at 50% 44%);
+    opacity: 0;
+  }
+}
+@keyframes sp-auto-hide {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* faint engineering grid, drifting upward as the capsule falls */
+.sp-grid {
+  position: absolute;
+  inset: -50% 0;
+  background-image:
+    linear-gradient(#ffffff08 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 75%);
+}
+.splash[data-phase="falling"] .sp-grid {
+  animation: sp-rush 0.5s linear infinite;
+}
+@keyframes sp-rush {
+  to {
+    transform: translateY(-64px);
+  }
+}
+
+/* ---- shaft ---- */
+.sp-shaft {
+  position: absolute;
+  left: max(28px, 6vw);
+  top: 14vh;
+  bottom: 14vh;
+  display: flex;
+  gap: 14px;
+}
+.sp-shaft-scale {
+  position: relative;
+  width: 44px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--sp-dim);
+  text-align: right;
+}
+.sp-shaft-scale span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+}
+.sp-shaft-rail {
+  position: relative;
+  width: 2px;
+  background: linear-gradient(var(--sp-line), #2f3f7a 50%, var(--sp-line));
+}
+.sp-shaft-rail::before,
+.sp-shaft-rail::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  width: 14px;
+  height: 1px;
+  background: var(--sp-dim);
+}
+.sp-shaft-rail::before {
+  top: 0;
+}
+.sp-shaft-rail::after {
+  bottom: 0;
+}
+.sp-capsule {
+  --depth: 0;
+  position: absolute;
+  left: 50%;
+  top: calc(var(--depth) * 100%);
+  width: 14px;
+  height: 26px;
+  margin: -13px 0 0 -7px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #9aa8d6, #e7ecff 40%, #7f8cbc);
+  box-shadow: 0 0 18px #7d8bff99;
+}
+.sp-capsule i {
+  /* motion streak above the capsule while it falls */
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 2px;
+  height: 0;
+  margin-left: -1px;
+  background: linear-gradient(transparent, #9fb3ff);
+  transition: height 0.3s;
+}
+.splash[data-phase="falling"] .sp-capsule i {
+  height: 70px;
+}
+
+/* ---- capsule window with the live flame ---- */
+.sp-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.sp-window {
+  position: relative;
+  width: min(46vh, 74vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  margin-top: -6vh;
+  box-shadow:
+    inset 0 0 0 1px #2c3a6e,
+    0 0 0 10px #070b1a,
+    0 0 0 11px #1f2b55,
+    0 0 80px -10px #3a4fd066;
+  overflow: hidden;
+  background: radial-gradient(circle, #050915 0%, #02040a 70%);
+  animation: sp-window-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes sp-window-in {
+  from {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+}
+.sp-window canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.sp-reticle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(#7d8bff22, #7d8bff22) center / 1px 100% no-repeat,
+    linear-gradient(#7d8bff22, #7d8bff22) center / 100% 1px no-repeat;
+  box-shadow: inset 0 0 60px #000;
+}
+.sp-reticle::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 1px dashed #7d8bff2e;
+  animation: sp-spin 30s linear infinite;
+}
+@keyframes sp-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.sp-g {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  translate: -50% 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: #ffd38a;
+  text-shadow: 0 0 12px #000;
+}
+.sp-g b {
+  font-size: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sp-g small {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.splash:not([data-phase="armed"]) .sp-g {
+  color: #a9b6ff;
+}
+
+.sp-title {
+  margin: 26px 0 0;
+  font-family: var(--font-display), serif;
+  font-weight: 400;
+  font-size: clamp(34px, 6vh, 56px);
+  letter-spacing: 0.42em;
+  margin-right: -0.42em;
+}
+.sp-title span {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(14px);
+  animation: sp-letter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes sp-letter {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+.sp-tag {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--sp-dim);
+  opacity: 0;
+  animation: sp-fade 0.8s ease 0.8s forwards;
+}
+@keyframes sp-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- telemetry ---- */
+.sp-telemetry {
+  position: absolute;
+  right: max(28px, 6vw);
+  top: 50%;
+  translate: 0 -50%;
+  width: 290px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--sp-dim);
+  opacity: 0;
+  animation: sp-fade 0.6s ease 0.3s forwards;
+}
+.sp-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--sp-ink);
+  letter-spacing: 0.14em;
+}
+.sp-rec {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: #ff5468;
+  box-shadow: 0 0 10px #ff5468;
+  animation: sp-blink 1.2s steps(2, start) infinite;
+}
+@keyframes sp-blink {
+  to {
+    visibility: hidden;
+  }
+}
+.splash[data-phase="landed"] .sp-rec {
+  background: var(--sp-ok);
+  box-shadow: 0 0 10px var(--sp-ok);
+  animation: none;
+}
+.sp-facility {
+  margin: 0 0 18px;
+  line-height: 1.6;
+  font-size: 11px;
+}
+.sp-read {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.sp-read div {
+  border: 1px solid var(--sp-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #070c1d;
+}
+.sp-read dt {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.sp-read dd {
+  margin: 4px 0 0;
+  color: var(--sp-ink);
+}
+.sp-read b {
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sp-checks {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.sp-check {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sp-check-dots {
+  flex: 1;
+  border-bottom: 1px dotted #2f3f74;
+  translate: 0 -3px;
+}
+.sp-check-value {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.sp-check.is-ok .sp-check-value {
+  color: var(--sp-ok);
+}
+.sp-check.is-warn .sp-check-value {
+  color: var(--sp-warn);
+}
+.sp-check.is-wait .sp-check-value {
+  color: var(--sp-blue);
+  animation: sp-pulse 1s ease-in-out infinite;
+}
+@keyframes sp-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.sp-cap {
+  margin: 0;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sp-ink);
+  opacity: 0.85;
+  min-height: 3em;
+}
+
+.sp-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  font-size: 12px;
+  color: var(--sp-dim);
+  background: none;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.sp-skip:hover {
+  color: var(--sp-ink);
+}
+
+/* ---- phones: shaft becomes a thin line at the edge, telemetry moves below ---- */
+@media (max-width: 900px) {
+  .sp-shaft {
+    left: 14px;
+    top: 12vh;
+    bottom: 12vh;
+  }
+  .sp-shaft-scale {
+    display: none;
+  }
+  .sp-center {
+    align-content: start;
+    padding-top: 9vh;
+  }
+  .sp-window {
+    margin-top: 0;
+    width: min(70vw, 40vh);
+  }
+  .sp-title {
+    margin-top: 18px;
+    font-size: 30px;
+  }
+  .sp-tag {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+  .sp-telemetry {
+    top: auto;
+    bottom: 64px;
+    translate: none;
+    left: 40px;
+    right: 20px;
+    width: auto;
+  }
+  .sp-facility,
+  .sp-cap {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash *,
+  .splash {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+  }
+  :root[data-splash="leaving"] .splash {
+    animation: none;
+    opacity: 0;
+  }
+}

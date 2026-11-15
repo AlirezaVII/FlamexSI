@@ -1,313 +1,296 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { FLAME_FRAGMENT, FLAME_VERTEX } from "@/components/flame-shader";
+import { TEXTURES } from "@/components/landing/space";
 import { api } from "@/lib/api";
 import { useWorkspace } from "@/lib/workspace";
+import "./splash.css";
 
 /*
- * "Flame in freefall" loading screen, shown on every page load.
+ * "Drop 01" loading screen.
  *
- * On Earth, buoyancy pulls hot gas upward and a flame stretches into a yellow teardrop.
- * Take gravity away, as in NASA's droplet-combustion experiments on the ISS, and the flame
- * becomes a dim-centred blue sphere around the fuel droplet. The screen plays that
- * transition while a gravity readout falls from 1.00 g to 0.00 g, then waits until the app
- * is ready (analysis engine reachable, workspace loaded) before it lifts.
+ * The wait is staged as a real microgravity experiment: a capsule is released down NASA
+ * Glenn's Zero Gravity Research Facility (a 132 m drop, about 5.18 s of freefall). The moment
+ * it is released the capsule is in freefall, gravity inside reads 0.00 g, and the flame in the
+ * window collapses from a buoyant teardrop into a dim blue sphere. The capsule's depth is the
+ * loading progress: it falls on a freefall curve but holds just above the bottom until the app
+ * is really ready (engine reachable, workspace loaded, planet maps cached on the landing page).
  */
 
-const MIN_SHOW = 3300; // let the story reach the title and tagline before lifting
-const MAX_WAIT = 12000; // never trap the user if the engine is down; the app shows the error
-const EXIT = 500;
-
-// deterministic starfield
-const STARS = Array.from({ length: 70 }, (_, i) => ({
-  x: (i * 7919) % 100,
-  y: (i * 104729) % 100,
-  r: ((i * 31) % 3) * 0.35 + 0.5,
-  d: ((i * 13) % 20) / 10,
-}));
-// soot rising on Earth, then drifting outward in all directions in orbit
-const RISE = Array.from({ length: 9 }, (_, i) => ({
-  x: 88 + ((i * 37) % 26),
-  d: i * 0.11,
-}));
-const DRIFT = Array.from({ length: 14 }, (_, i) => {
-  const a = (i / 14) * Math.PI * 2;
-  return {
-    dx: Math.cos(a) * 70,
-    dy: Math.sin(a) * 70,
-    d: 1.55 + (i % 4) * 0.06,
-  };
-});
-const TITLE = "FALMEX".split("");
+const DROP_M = 132;
+const DROP_S = 5.18;
+const ARM = 900; // ms of "armed, 1 g" before release
+const FALL = 2300; // ms the visual fall takes at the earliest
+const MAX_WAIT = 12000; // never trap anyone if something is down
+const EXIT = 900;
 
 type Engine = "connecting" | "ready" | "offline";
 
-function skip() {
+function lift() {
   const root = document.documentElement;
-  if (root.dataset.splash === "leaving" || root.dataset.splash === "gone")
-    return;
+  if (root.dataset.splash === "leaving" || root.dataset.splash === "gone") return;
   root.dataset.splash = "leaving";
   window.setTimeout(() => (root.dataset.splash = "gone"), EXIT);
 }
 
 export function Splash() {
-  const gRef = useRef<HTMLSpanElement>(null);
+  const pathname = usePathname();
   const { loading } = useWorkspace();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const capsuleRef = useRef<HTMLDivElement>(null);
+  const readRef = useRef<{ g: HTMLElement | null; t: HTMLElement | null; h: HTMLElement | null; v: HTMLElement | null }>({ g: null, t: null, h: null, v: null });
   const [engine, setEngine] = useState<Engine>("connecting");
-  const [minDone, setMinDone] = useState(false);
+  const [maps, setMaps] = useState(0);
+  const [phase, setPhase] = useState<"armed" | "falling" | "landed">("armed");
   const [timedOut, setTimedOut] = useState(false);
+  const needMaps = pathname === "/";
+  const readyRef = useRef(false);
 
-  // mark the screen as driven by JS (disables the CSS-only fallback), run the counter
+  const mapsDone = !needMaps || maps >= TEXTURES.length;
+  const ready = (engine !== "connecting" && !loading && mapsDone) || timedOut;
+  useEffect(() => {
+    readyRef.current = ready;
+  }, [ready]);
+
+  // engine link, planet maps, give-up timer
   useEffect(() => {
     const root = document.documentElement;
-    // skipped by the boot script, or already lifted: a remount must never replay it
     if (root.dataset.splash === "gone") return;
     root.dataset.splash = "active";
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    let frame = 0;
-
-    // gravity readout 1.00 g -> 0.00 g, read off the flame animation's own clock so the
-    // number falls exactly while the teardrop collapses (0.55s -> 1.6s of the scene)
-    const earth = document.querySelector(".splash-earth");
-    const tick = (now: number) => {
-      const clock = earth?.getAnimations()[0]?.currentTime;
-      const elapsed = typeof clock === "number" ? clock : now;
-      const t = Math.min(1, Math.max(0, (elapsed - 550) / 1050));
-      const eased = t * t * (3 - 2 * t);
-      if (gRef.current) gRef.current.textContent = (1 - eased).toFixed(2);
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    if (reduce) {
-      if (gRef.current) gRef.current.textContent = "0.00";
-    } else {
-      frame = requestAnimationFrame(tick);
-    }
-
-    const since = performance.now();
-    const minTimer = window.setTimeout(
-      () => setMinDone(true),
-      Math.max(0, (reduce ? 700 : MIN_SHOW) - since),
-    );
-    const maxTimer = window.setTimeout(() => setTimedOut(true), MAX_WAIT);
-
     api
       .health()
       .then(() => setEngine("ready"))
       .catch(() => setEngine("offline"));
-
-    return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(minTimer);
-      clearTimeout(maxTimer);
-    };
-  }, []);
-
-  const ready = engine !== "connecting" && !loading;
-
-  // lift once the story has played and the app is ready (or we gave up waiting)
-  useEffect(() => {
-    if (!((minDone && ready) || timedOut)) return;
-    const root = document.documentElement;
-    if (root.dataset.splash !== "active") return; // skipped, already lifted, or never shown
-    // give an "engine offline" message a moment to be read
-    const delay = engine === "offline" && !timedOut ? 1200 : 0;
-    const t1 = window.setTimeout(
-      () => (root.dataset.splash = "leaving"),
-      delay,
-    );
-    const t2 = window.setTimeout(
-      () => (root.dataset.splash = "gone"),
-      delay + EXIT,
-    );
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [minDone, ready, timedOut, engine]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") skip();
-    };
+    if (needMaps) {
+      for (const src of TEXTURES) {
+        const img = new Image();
+        img.onload = img.onerror = () => setMaps((m) => m + 1);
+        img.src = src;
+      }
+    }
+    const give = window.setTimeout(() => setTimedOut(true), MAX_WAIT);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && lift();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(give);
+      window.removeEventListener("keydown", onKey);
+    };
+    // the splash runs once per document load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const status =
-    engine === "offline"
-      ? "Analysis engine unreachable — opening anyway"
-      : ready
-        ? "Ready for launch"
-        : engine === "ready"
-          ? "Loading experiment datasets…"
-          : "Connecting to the analysis engine…";
+  // the drop: capsule, telemetry and flame share one clock
+  useEffect(() => {
+    const root = document.documentElement;
+    if (root.dataset.splash === "gone") return;
+    const canvas = canvasRef.current;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let renderer: THREE.WebGLRenderer | null = null;
+    let uniforms: Record<string, THREE.IUniform> | null = null;
+    let scene: THREE.Scene | null = null;
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    let mat: THREE.ShaderMaterial | null = null;
+    if (canvas) {
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, premultipliedAlpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
+        uniforms = {
+          res: { value: new THREE.Vector2(1, 1) },
+          g: { value: 1 },
+          time: { value: 0 },
+          mode: { value: 1 },
+          bg: { value: 1 },
+          zoom: { value: 1.75 },
+        };
+        mat = new THREE.ShaderMaterial({
+          vertexShader: FLAME_VERTEX,
+          fragmentShader: FLAME_FRAGMENT,
+          uniforms,
+          transparent: true,
+        });
+        scene = new THREE.Scene();
+        scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+      } catch {
+        renderer = null;
+      }
+    }
+
+    const start = performance.now();
+    let depth = 0; // 0..1 of the shaft
+    let gNow = 1;
+    let raf = 0;
+    let landedAt = 0;
+    let lastPhase = "armed";
+    const setP = (p: typeof lastPhase) => {
+      if (p !== lastPhase) {
+        lastPhase = p;
+        setPhase(p as "armed" | "falling" | "landed");
+      }
+    };
+
+    const frame = (now: number) => {
+      const el = now - start;
+      // freefall curve (depth ~ t^2) for the visual fall; hold at 94% until really ready
+      const f = reduce ? 1 : Math.min(1, Math.max(0, (el - ARM) / FALL));
+      let target = f * f;
+      if (!readyRef.current) target = Math.min(target, 0.94);
+      depth += (target - depth) * (reduce ? 1 : 0.18);
+      const released = el > ARM || reduce;
+      if (!released) setP("armed");
+      else if (depth < 0.999) setP("falling");
+      // inside a freely falling capsule the measured gravity drops to ~0 almost instantly
+      const gTarget = released ? 0 : 1;
+      gNow += (gTarget - gNow) * (reduce ? 1 : 0.12);
+
+      // physical readouts derived from the capsule's depth in the real tower
+      const h = depth * DROP_M;
+      const t = Math.sqrt((2 * h) / 9.80665);
+      const r = readRef.current;
+      if (r.g) r.g.textContent = gNow.toFixed(2);
+      if (r.t) r.t.textContent = Math.min(t, DROP_S).toFixed(2);
+      if (r.h) r.h.textContent = h.toFixed(1);
+      if (r.v) r.v.textContent = (9.80665 * Math.min(t, DROP_S)).toFixed(1);
+      if (capsuleRef.current) capsuleRef.current.style.setProperty("--depth", String(depth));
+
+      if (renderer && uniforms && scene && canvas) {
+        const w = canvas.clientWidth;
+        const hh = canvas.clientHeight;
+        const pr = renderer.getPixelRatio();
+        if (canvas.width !== Math.round(w * pr) || canvas.height !== Math.round(hh * pr)) {
+          renderer.setSize(w, hh, false);
+        }
+        renderer.getDrawingBufferSize(uniforms.res.value);
+        uniforms.g.value = gNow;
+        uniforms.time.value = reduce ? 2 : el / 1000;
+        renderer.render(scene, camera);
+      }
+
+      if (depth >= 0.999 && readyRef.current) {
+        if (!landedAt) {
+          landedAt = now;
+          setP("landed");
+        }
+        // a beat to read "drop complete", then the iris closes onto the flame
+        if (now - landedAt > (reduce ? 200 : 650)) {
+          lift();
+          return;
+        }
+      }
+      if (root.dataset.splash === "gone") return;
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(raf);
+      renderer?.dispose();
+      mat?.dispose();
+    };
+  }, []);
+
+  const check = (label: string, state: "wait" | "ok" | "warn", value: string) => (
+    <li className={`sp-check is-${state}`}>
+      <span className="sp-check-label">{label}</span>
+      <span className="sp-check-dots" aria-hidden />
+      <span className="sp-check-value">{value}</span>
+    </li>
+  );
 
   return (
-    <div className="splash" onClick={skip} role="presentation">
-      <svg
-        className="splash-stars"
-        aria-hidden
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        {STARS.map((s, i) => (
-          <circle
-            key={i}
-            cx={s.x}
-            cy={s.y}
-            r={s.r * 0.12}
-            style={{ animationDelay: `${s.d}s` }}
-          />
-        ))}
-      </svg>
+    <div className="splash" onClick={lift} role="presentation" data-phase={phase}>
+      <div className="sp-grid" aria-hidden />
 
-      <div className="splash-stage" aria-hidden>
-        <svg viewBox="0 0 200 200" className="splash-flame">
-          <defs>
-            <radialGradient id="sp-earth" cx="50%" cy="72%" r="60%">
-              <stop offset="0%" stopColor="#fff7d6" />
-              <stop offset="28%" stopColor="#ffd35a" />
-              <stop offset="58%" stopColor="#ff8a1f" />
-              <stop offset="85%" stopColor="#e2441b" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#e2441b" stopOpacity="0" />
-            </radialGradient>
-            <radialGradient id="sp-orbit" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#0a1633" stopOpacity="0" />
-              <stop offset="52%" stopColor="#10306e" stopOpacity="0.35" />
-              <stop offset="74%" stopColor="#3f8dff" />
-              <stop offset="84%" stopColor="#9fd0ff" />
-              <stop offset="92%" stopColor="#2f6bff" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#2f6bff" stopOpacity="0" />
-            </radialGradient>
-            <filter id="sp-glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="6" />
-            </filter>
-          </defs>
-
-          {/* orbit path */}
-          <g className="splash-orbit">
-            <ellipse
-              cx="100"
-              cy="100"
-              rx="86"
-              ry="30"
-              fill="none"
-              stroke="#6f8cc7"
-              strokeOpacity="0.35"
-              strokeDasharray="2 5"
-            />
-            <circle
-              className="splash-sat"
-              cx="0"
-              cy="0"
-              r="2.2"
-              fill="#cfe0ff"
-            />
-          </g>
-
-          {/* Earth flame: buoyancy stretches it upward */}
-          <g className="splash-earth">
-            <path
-              d="M100 118 C 78 110 76 82 100 30 C 124 82 122 110 100 118 Z"
-              fill="url(#sp-earth)"
-              filter="url(#sp-glow)"
-              opacity="0.7"
-            />
-            <path
-              d="M100 118 C 80 110 79 84 100 36 C 121 84 120 110 100 118 Z"
-              fill="url(#sp-earth)"
-            />
-            {RISE.map((p, i) => (
-              <circle
-                key={i}
-                className="splash-rise"
-                cx={p.x}
-                cy={70}
-                r={1.4}
-                style={{ animationDelay: `${p.d}s` }}
-              />
-            ))}
-          </g>
-
-          {/* microgravity flame: a blue sphere around the droplet */}
-          <g className="splash-sphere">
-            <circle
-              cx="100"
-              cy="100"
-              r="46"
-              fill="#3f8dff"
-              opacity="0.35"
-              filter="url(#sp-glow)"
-            />
-            <circle cx="100" cy="100" r="40" fill="url(#sp-orbit)" />
-            {DRIFT.map((p, i) => (
-              <circle
-                key={i}
-                className="splash-drift"
-                cx={100}
-                cy={100}
-                r={1.3}
-                style={
-                  {
-                    "--dx": `${p.dx}px`,
-                    "--dy": `${p.dy}px`,
-                    animationDelay: `${p.d}s`,
-                  } as React.CSSProperties
-                }
-              />
-            ))}
-          </g>
-
-          {/* fuel droplet */}
-          <circle
-            cx="100"
-            cy="100"
-            r="5"
-            fill="#1b2233"
-            stroke="#8aa4d6"
-            strokeOpacity="0.6"
-          />
-          <circle cx="98.4" cy="98.4" r="1.4" fill="#dfe8ff" opacity="0.8" />
-        </svg>
-
-        <div className="splash-readout">
-          <span className="splash-readout-label">gravity</span>
-          <span className="splash-readout-value">
-            <span ref={gRef}>1.00</span> g
-          </span>
+      {/* the drop tower shaft, with the capsule falling down it */}
+      <div className="sp-shaft" aria-hidden>
+        <div className="sp-shaft-scale">
+          {Array.from({ length: 12 }, (_, i) => (
+            <span key={i} style={{ top: `${(i / 11) * 100}%` }}>
+              {Math.round((i / 11) * DROP_M)} m
+            </span>
+          ))}
         </div>
-
-        <div className="splash-captions">
-          <p className="splash-cap splash-cap-1">
-            On Earth, hot gas rises and flames stretch upward.
-          </p>
-          <p className="splash-cap splash-cap-2">
-            In orbit there is no “up”, so a flame becomes a sphere.
-          </p>
+        <div className="sp-shaft-rail">
+          <div className="sp-capsule" ref={capsuleRef}>
+            <i />
+          </div>
         </div>
+      </div>
 
-        <h1 className="splash-title" aria-label="Falmex">
-          {TITLE.map((c, i) => (
-            <span key={i} style={{ animationDelay: `${1.95 + i * 0.07}s` }}>
+      <div className="sp-center">
+        <div className="sp-window">
+          <canvas ref={canvasRef} aria-hidden />
+          <div className="sp-reticle" aria-hidden />
+          <div className="sp-g" aria-label="Gravity inside the capsule">
+            <b ref={(el) => void (readRef.current.g = el)}>1.00</b>
+            <small>g</small>
+          </div>
+        </div>
+        <h1 className="sp-title" aria-label="Falmex">
+          {"FALMEX".split("").map((c, i) => (
+            <span key={i} style={{ animationDelay: `${0.25 + i * 0.06}s` }}>
               {c}
             </span>
           ))}
         </h1>
-        <p className="splash-tagline">
-          AI insights from NASA microgravity combustion
-        </p>
-        <p
-          className={`splash-status ${ready ? "is-ready" : ""} ${engine === "offline" ? "is-offline" : ""}`}
-          role="status"
-        >
-          <span className="splash-status-dot" aria-hidden />
-          {status}
-        </p>
+        <p className="sp-tag">AI insights from NASA microgravity combustion</p>
       </div>
 
-      <button type="button" className="splash-skip" onClick={skip}>
+      <aside className="sp-telemetry" aria-live="polite">
+        <p className="sp-kicker">
+          <span className="sp-rec" /> DROP 01 ·{" "}
+          {phase === "armed" ? "ARMED" : phase === "falling" ? "FREEFALL" : "DROP COMPLETE"}
+        </p>
+        <p className="sp-facility">
+          NASA Glenn · Zero Gravity Research Facility
+          <br />
+          {DROP_M} m drop · {DROP_S} s of freefall
+        </p>
+        <dl className="sp-read">
+          <div>
+            <dt>t</dt>
+            <dd>
+              <b ref={(el) => void (readRef.current.t = el)}>0.00</b> s
+            </dd>
+          </div>
+          <div>
+            <dt>depth</dt>
+            <dd>
+              <b ref={(el) => void (readRef.current.h = el)}>0.0</b> m
+            </dd>
+          </div>
+          <div>
+            <dt>speed</dt>
+            <dd>
+              <b ref={(el) => void (readRef.current.v = el)}>0.0</b> m/s
+            </dd>
+          </div>
+        </dl>
+        <ul className="sp-checks">
+          {check(
+            "Analysis engine",
+            engine === "connecting" ? "wait" : engine === "ready" ? "ok" : "warn",
+            engine === "connecting" ? "linking" : engine === "ready" ? "linked" : "offline",
+          )}
+          {check("Workspace", loading ? "wait" : "ok", loading ? "loading" : "loaded")}
+          {needMaps &&
+            check(
+              "Planet maps",
+              mapsDone ? "ok" : "wait",
+              `${Math.min(maps, TEXTURES.length)}/${TEXTURES.length}`,
+            )}
+        </ul>
+        <p className="sp-cap">
+          {phase === "armed"
+            ? "On the ground, hot gas rises: the flame is a tall teardrop."
+            : "Falling freely, nothing rises: the flame closes into a sphere."}
+        </p>
+      </aside>
+
+      <button type="button" className="sp-skip" onClick={lift}>
         Skip
       </button>
     </div>

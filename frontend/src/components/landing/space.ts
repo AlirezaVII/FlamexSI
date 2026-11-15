@@ -14,14 +14,34 @@ export interface PlanetPose {
   spin: number; // turns
 }
 
+export interface SceneState {
+  time: number; // ms
+  sun: number; // radians the sunlight has swung around the scene (scroll-driven)
+  tiltX: number; // pointer tilt, radians
+  tiltY: number;
+  iss: number; // 0..1 visibility of the orbiting station
+}
+
 export interface Space {
-  render: (poses: Record<PlanetKey, PlanetPose>, time: number) => void;
+  render: (poses: Record<PlanetKey, PlanetPose>, state: SceneState) => void;
   setTheme: (light: boolean) => void;
   dispose: () => void;
 }
 
 // sunlight from the upper left, slightly towards the viewer (y up, z towards the camera)
 const SUN = new THREE.Vector3(-0.62, 0.38, 0.68).normalize();
+
+/** Every map the scene needs: the loading screen preloads these into the HTTP cache. */
+export const TEXTURES = [
+  "/textures/earth.webp",
+  "/textures/earth-night.webp",
+  "/textures/earth-clouds.webp",
+  "/textures/earth-normal.webp",
+  "/textures/earth-specular.webp",
+  "/textures/moon.webp",
+  "/textures/moon-height.webp",
+  "/textures/mars.webp",
+];
 
 const TILT: Record<PlanetKey, number> = { earth: 0.41, moon: 0.03, mars: 0.44 };
 // turn each globe so the interesting side faces the reader at spin 0
@@ -150,6 +170,7 @@ function halo(color: string, scale: number, strength: number) {
 export function createSpace(
   canvas: HTMLCanvasElement,
   onTexture?: () => void,
+  onReady?: () => void,
 ): Space | null {
   let renderer: THREE.WebGLRenderer;
   try {
@@ -167,22 +188,26 @@ export function createSpace(
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4000, 4000);
-  camera.position.z = 2000;
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -6000, 6000);
+  camera.position.z = 3000;
 
   const manager = new THREE.LoadingManager();
   manager.onProgress = () => onTexture?.(); // redraw as each map arrives
+  manager.onLoad = () => onReady?.();
   const loader = new THREE.TextureLoader(manager);
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  const textures: THREE.Texture[] = [];
   const tex = (src: string, color = true) => {
     const t = loader.load(src);
     t.wrapS = THREE.RepeatWrapping; // clouds drift across the date line
     t.anisotropy = Math.min(8, maxAniso);
     if (color) t.colorSpace = THREE.SRGBColorSpace;
+    textures.push(t);
     return t;
   };
 
-  // ---- lights (Moon, Mars) ----
+  // ---- lights (Moon, Mars, the station) ----
+  const sunDir = SUN.clone();
   const sun = new THREE.DirectionalLight(0xfff4e6, 3.1);
   sun.position.copy(SUN).multiplyScalar(1000);
   scene.add(sun, new THREE.AmbientLight(0x6070a0, 0.06));
@@ -192,23 +217,24 @@ export function createSpace(
     vertexShader: earthVertex,
     fragmentShader: earthFragment,
     uniforms: {
-      dayMap: { value: tex("/textures/earth.jpg") },
-      nightMap: { value: tex("/textures/earth-night.jpg") },
-      specMap: { value: tex("/textures/earth-specular.jpg", false) },
-      normalMap: { value: tex("/textures/earth-normal.jpg", false) },
-      cloudMap: { value: tex("/textures/earth-clouds.jpg", false) },
-      sunDir: { value: SUN.clone() },
+      dayMap: { value: tex("/textures/earth.webp") },
+      nightMap: { value: tex("/textures/earth-night.webp") },
+      specMap: { value: tex("/textures/earth-specular.webp", false) },
+      normalMap: { value: tex("/textures/earth-normal.webp", false) },
+      cloudMap: { value: tex("/textures/earth-clouds.webp", false) },
+      sunDir: { value: sunDir },
       cloudShift: { value: 0 },
     },
   });
   const sphere = new THREE.SphereGeometry(1, 128, 96);
   const earth = new THREE.Mesh(sphere, earthMat);
   const earthHalo = halo("#4f95ff", 1.13, 1.25);
+  earthHalo.mat.uniforms.sunDir.value = sunDir;
 
   // ---- Moon ----
   const moonMat = new THREE.MeshStandardMaterial({
-    map: tex("/textures/moon.jpg"),
-    bumpMap: tex("/textures/moon-height.jpg", false),
+    map: tex("/textures/moon.webp"),
+    bumpMap: tex("/textures/moon-height.webp", false),
     bumpScale: 2.2,
     roughness: 1,
     metalness: 0,
@@ -216,16 +242,16 @@ export function createSpace(
   const moon = new THREE.Mesh(sphere, moonMat);
 
   // ---- Mars ----
-  const marsMap = tex("/textures/mars.jpg");
   const marsMat = new THREE.MeshStandardMaterial({
-    map: marsMap,
-    bumpMap: tex("/textures/mars.jpg", false),
+    map: tex("/textures/mars.webp"),
+    bumpMap: tex("/textures/mars.webp", false),
     bumpScale: 1.6,
     roughness: 0.95,
     metalness: 0,
   });
   const mars = new THREE.Mesh(sphere, marsMat);
   const marsHalo = halo("#ff8f5a", 1.06, 0.55);
+  marsHalo.mat.uniforms.sunDir.value = sunDir;
 
   // each planet: a tilt group holding the spinning globe (and its halo, which does not spin)
   const groups = {} as Record<PlanetKey, THREE.Group>;
@@ -241,6 +267,71 @@ export function createSpace(
     groups[key] = outer;
     scene.add(outer);
   }
+
+  // ---- the ISS: where NASA's flame experiments burn, circling Earth ----
+  const ORBIT = 1.3;
+  const orbitPlane = new THREE.Group();
+  orbitPlane.rotation.set(1.18, 0, -0.42); // seen almost edge-on, inclined
+  groups.earth.add(orbitPlane);
+  const ringPts: THREE.Vector3[] = [];
+  for (let i = 0; i <= 256; i++) {
+    const a = (i / 256) * Math.PI * 2;
+    ringPts.push(new THREE.Vector3(Math.cos(a) * ORBIT, Math.sin(a) * ORBIT, 0));
+  }
+  const ringGeo = new THREE.BufferGeometry().setFromPoints(ringPts);
+  const ringMat = new THREE.LineDashedMaterial({
+    color: 0x9fb8ff,
+    dashSize: 0.025,
+    gapSize: 0.03,
+    transparent: true,
+    opacity: 0.35,
+  });
+  const ring = new THREE.Line(ringGeo, ringMat);
+  ring.computeLineDistances();
+  orbitPlane.add(ring);
+
+  // glowing trail behind the station: an arc whose alpha fades towards its tail
+  const TRAIL = 90;
+  const trailPos = new Float32Array(TRAIL * 3);
+  const trailCol = new Float32Array(TRAIL * 4);
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+  trailGeo.setAttribute("color", new THREE.BufferAttribute(trailCol, 4));
+  const trailMat = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+  });
+  const trail = new THREE.Line(trailGeo, trailMat);
+  orbitPlane.add(trail);
+
+  const iss = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0xd9dde6, metalness: 0.6, roughness: 0.35 });
+  const panel = new THREE.MeshStandardMaterial({
+    color: 0x2a3f8a,
+    metalness: 0.7,
+    roughness: 0.25,
+    emissive: 0x0a1440,
+    side: THREE.DoubleSide,
+  });
+  const truss = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.006, 0.006), metal);
+  const modules = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.07, 12), metal);
+  modules.rotation.x = Math.PI / 2;
+  iss.add(truss, modules);
+  for (const side of [-1, 1]) {
+    for (const off of [-0.018, 0.018]) {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.022), panel);
+      p.position.set(side * 0.06, 0, off);
+      p.rotation.x = -Math.PI / 2;
+      iss.add(p);
+    }
+  }
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.008, 12, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }),
+  );
+  iss.add(beacon);
+  orbitPlane.add(iss);
 
   let W = 0;
   let H = 0;
@@ -258,27 +349,68 @@ export function createSpace(
     camera.updateProjectionMatrix();
   }
 
+  let light = false;
+  const trailColor = new THREE.Color();
+
   return {
-    render(poses, time) {
+    render(poses, state) {
       resize();
+      // sunlight swings around the scene as the reader travels: the terminator sweeps
+      sunDir.copy(SUN).applyAxisAngle(new THREE.Vector3(0, 1, 0), state.sun);
+      sun.position.copy(sunDir).multiplyScalar(1000);
+
       for (const key of Object.keys(poses) as PlanetKey[]) {
         const { x, y, r, spin } = poses[key];
         const g = groups[key];
         const visible =
-          r > 1 && x + r > -60 && x - r < W + 60 && y + r > -60 && y - r < H + 60;
+          r > 1 && x + r * 1.4 > -60 && x - r * 1.4 < W + 60 && y + r * 1.4 > -60 && y - r * 1.4 < H + 60;
         g.visible = visible;
         if (!visible) continue;
-        g.position.set(x - W / 2, H / 2 - y, -r); // bigger (nearer) planets in front
+        g.position.set(x - W / 2, H / 2 - y, -r * 1.5); // bigger (nearer) planets in front
         g.scale.setScalar(r);
+        g.rotation.set(state.tiltX, state.tiltY, 0);
         globes[key].rotation.y = (spin + SPIN0[key]) * Math.PI * 2;
       }
-      earthMat.uniforms.cloudShift.value = (time / 1000) * 0.0009;
+
+      // the station: one lap every ~28 s, panels turned to the sun, a comet-like trail
+      const show = state.iss;
+      orbitPlane.visible = show > 0.01;
+      if (orbitPlane.visible) {
+        const theta = (state.time / 28000) * Math.PI * 2;
+        iss.position.set(Math.cos(theta) * ORBIT, Math.sin(theta) * ORBIT, 0);
+        iss.rotation.z = theta + Math.PI / 2;
+        iss.scale.setScalar(0.6 + 0.4 * show);
+        trailColor.set(light ? 0x2f4bd6 : 0xa9c4ff);
+        for (let i = 0; i < TRAIL; i++) {
+          const a = theta - (i / TRAIL) * 1.1;
+          trailPos[i * 3] = Math.cos(a) * ORBIT;
+          trailPos[i * 3 + 1] = Math.sin(a) * ORBIT;
+          trailPos[i * 3 + 2] = 0;
+          const f = Math.pow(1 - i / TRAIL, 1.8) * show;
+          trailCol[i * 4] = trailColor.r;
+          trailCol[i * 4 + 1] = trailColor.g;
+          trailCol[i * 4 + 2] = trailColor.b;
+          trailCol[i * 4 + 3] = f;
+        }
+        trailGeo.attributes.position.needsUpdate = true;
+        trailGeo.attributes.color.needsUpdate = true;
+        ringMat.opacity = (light ? 0.45 : 0.3) * show;
+        (beacon.material as THREE.MeshBasicMaterial).color.setHSL(
+          0.6,
+          0.2,
+          0.6 + 0.4 * Math.max(0, Math.sin(state.time / 180)),
+        );
+      }
+
+      earthMat.uniforms.cloudShift.value = (state.time / 1000) * 0.0009;
       renderer.render(scene, camera);
     },
-    setTheme(light) {
+    setTheme(isLight) {
+      light = isLight;
       // on a bright page the halos would wash out: make them deeper instead of brighter
-      earthHalo.mat.uniforms.strength.value = light ? 0.9 : 1.25;
-      marsHalo.mat.uniforms.strength.value = light ? 0.4 : 0.55;
+      earthHalo.mat.uniforms.strength.value = isLight ? 0.9 : 1.25;
+      marsHalo.mat.uniforms.strength.value = isLight ? 0.4 : 0.55;
+      ringMat.color.set(isLight ? 0x3a55d8 : 0x9fb8ff);
     },
     dispose() {
       renderer.dispose();
@@ -288,7 +420,13 @@ export function createSpace(
       marsMat.dispose();
       earthHalo.mat.dispose();
       marsHalo.mat.dispose();
-      marsMap.dispose();
+      ringGeo.dispose();
+      ringMat.dispose();
+      trailGeo.dispose();
+      trailMat.dispose();
+      metal.dispose();
+      panel.dispose();
+      textures.forEach((t) => t.dispose());
     },
   };
 }
