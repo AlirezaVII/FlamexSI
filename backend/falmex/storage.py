@@ -8,6 +8,7 @@
 import hashlib
 import json
 import math
+import shutil
 import threading
 import uuid
 from datetime import UTC, datetime
@@ -167,6 +168,22 @@ class Store:
         rows = self._fetch("SELECT payload FROM media_analyses WHERE source_id = ?",
                            [source_id])
         return json.loads(rows[0]["payload"]) if rows else None
+
+    def delete_media(self, source_id: str) -> bool:
+        """Remove an uploaded image or video: its analysis, saved frames and record.
+        The raw file goes too unless a dataset still uses it."""
+        found = [x for x in self.get_sources([source_id]) if x.media_type == "media"]
+        if not found:
+            return False
+        source = found[0]
+        self._exec("DELETE FROM media_analyses WHERE source_id = ?", [source_id])
+        folder = self.media_dir(source_id)
+        if folder.is_dir() and folder.parent == self.data_dir / "media":
+            shutil.rmtree(folder)
+        if source_id not in {x for d in self.list_datasets() for x in d.source_ids}:
+            self.raw_path(source).unlink(missing_ok=True)
+        self._exec("DELETE FROM sources WHERE source_id = ?", [source_id])
+        return True
 
     def analyzed_media(self) -> set[str]:
         return {r["source_id"] for r in self._fetch("SELECT source_id FROM media_analyses")}

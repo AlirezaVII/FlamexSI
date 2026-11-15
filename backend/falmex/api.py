@@ -727,6 +727,11 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                  "kind": "video" if m.filename.lower().endswith(tuple(vision.VIDEO_EXT))
                  else "image"} for m in store(request).list_media()]
 
+    @app.delete("/api/media/{source_id}", status_code=204)
+    def delete_media(request: Request, source_id: str):
+        if not store(request).delete_media(source_id):
+            raise HTTPException(404, "Unknown footage")
+
     @app.post("/api/media/synthetic", status_code=201)
     def synthetic_media(request: Request):
         """SYNTHETIC test footage with known ground truth (not NASA)."""

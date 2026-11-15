@@ -479,3 +479,19 @@ def test_evidence_readiness_levels(client, finding):
     assert r["level"] < 7, "expert sign-off is never automatic"
     for x in client.get("/api/findings?status=not_significant&limit=5").json():
         assert x["readiness"]["level"] == 0
+
+
+def test_delete_media(client, settings):
+    _upload(client, "gone.png", _png(value=5), "image/png")
+    sid = next(m["source"]["source_id"] for m in client.get("/api/media").json()
+               if m["source"]["filename"] == "gone.png")
+    assert client.post(f"/api/media/{sid}/analyze", json={}).status_code == 200
+    assert client.delete(f"/api/media/{sid}").status_code == 204
+    assert all(m["source"]["source_id"] != sid for m in client.get("/api/media").json())
+    assert client.get(f"/api/media/{sid}/analysis").status_code == 404
+    assert not (settings.data_dir / "media" / sid).exists()
+    assert client.delete(f"/api/media/{sid}").status_code == 404
+    table = _upload(client, "t.csv", b"Test ID,O2\nE1,21\n").json()["source"]["source_id"]
+    assert client.delete(f"/api/media/{table}").status_code == 404  # tables are not footage
+    for bad in ["..", "nope", "a" * 300]:
+        _ok_json_error(client.delete(f"/api/media/{bad}"))
