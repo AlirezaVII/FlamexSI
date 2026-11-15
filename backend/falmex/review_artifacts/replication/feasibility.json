@@ -1,0 +1,40 @@
+{
+  "investigation": "PSI-68",
+  "acronym": "FLEX-2",
+  "doi": "10.60555/byp8-h018",
+  "version": 6,
+  "license": "CC0-1.0",
+  "release_date": "30-Sep-2019",
+  "official_metadata_url": "https://psi.nasa.gov/geode-py/ws/repo/investigations/PSI-68",
+  "raw_filename": "PSI-68_Experimental table_Flex2.csv",
+  "raw_sha256": "cc57ad1bd9977aa13e7ac6c3aa618303012686e232b36c052c6a9f1a74e5f528",
+  "raw_rows": 8,
+  "raw_columns": [
+    "Sample (Fuel Type)",
+    "Initial Droplet Diameter (mm)",
+    "Ambient Gas Mixture ",
+    "Oxygen Mole Fraction",
+    "Ambient Pressure (atm)",
+    " Ambient Temperature (C)",
+    "Flow Velocity (cm/s)"
+  ],
+  "table_type": "planned experimental matrix, not measured test outcomes",
+  "required_canonical_variables_present": {
+    "oxygen": false,
+    "initial_droplet_diameter": false,
+    "visible_extinction_diameter": false,
+    "droplet_burning_rate_constant": false,
+    "burn_time": false,
+    "material": false
+  },
+  "replication_executable": false,
+  "reason": "No measured K, De, burn time, test identifier, or test date outcomes are present.",
+  "inferential_tests_performed": 0,
+  "protocol_lock": {
+    "protocol_version": "1.0",
+    "protocol_file": "protocol_v1.md",
+    "protocol_sha256": "d5d7fdd4fb384950f22d183fe4ece44d929a324e5aec08f0d192f718333c4174",
+    "external_registry_preregistration": false,
+    "inferential_tests_on_independent_outcomes_before_lock": 0
+  }
+}

@@ -1,0 +1,509 @@
+{
+  "schema": "falmex-independent-review-processing-v1",
+  "created_utc": "2026-11-11T05:25:59.448722+00:00",
+  "status": "awaiting_third_adjudication",
+  "frames": 24,
+  "adjudication_frames": 24,
+  "reviewer_identity_expertise_and_independence_not_technically_verified": true,
+  "agreement_is_not_correctness": true,
+  "operational_readiness": false,
+  "manifest_sha256": "8581a0f2fde8744a503747f4fc36f9c129ae34d3b00e2770ccd6c4ee70cbf435",
+  "processing_script_sha256": "e1c8ba805adcba9a46c4a3ab6c9bca1557daaac7cb3cffe7706f6cafabf433e6",
+  "reviewer_A_inputs": {
+    "001_B14_000000.png": {
+      "json_sha256": "e2efc28fbc3480bf522e68e72e253f637a28249c688be745c981117a5b582dfe",
+      "source_sha256": "e1aa4a42db11c05a3f2219b276a6b7b4ca1db01296dbd2b3477f0026d06565eb",
+      "polygons": 4,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": true
+    },
+    "002_B14_000256.png": {
+      "json_sha256": "f0da483dc8f4d32555bee6fb20b11ec7f32b7547f9185b9098b908678ce28e8d",
+      "source_sha256": "38a3cf86f6e26e493c625bbd4af5db45399f016c2eedf16f1c47876977d55da6",
+      "polygons": 4,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "003_B14_000535.png": {
+      "json_sha256": "ef73350f0d4cb5dc9792e07fb4c9381da3aee834c9e56bafebf9bdb07bfa8f5c",
+      "source_sha256": "73425a8d1e02dda75f7eabc9acf70ae2f6bf9581f0e3e9b1d300e767c4bc29fd",
+      "polygons": 4,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": true
+    },
+    "004_B14_000813.png": {
+      "json_sha256": "4ce3ee408df2b0988c1afd5f1b039575ef8b40151760b9947d64685cb897521a",
+      "source_sha256": "bed3eb891d73c8aaac4b338d1942c12f8407bb234a748bb65693f215cebf1987",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "005_B14_001070.png": {
+      "json_sha256": "18fff328648a60157fabd73a45a4bafe3b9b54143a62dec40db46e2d8070a982",
+      "source_sha256": "fb27ce413c0aa0f00e275f8b32b5dd856b2b79a9f1807c3301e55ee64ea8418d",
+      "polygons": 1,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "006_B14_001326.png": {
+      "json_sha256": "bfbd959b8fdcba60de08a0543c6af8b7475ca0f234eb31425e8822e2b72d972d",
+      "source_sha256": "a3a10183087c8280c3f2556032f3f6f2e893b6c51a720cc4db06ebd1c96529f9",
+      "polygons": 1,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "007_B14_001605.png": {
+      "json_sha256": "ba5978f222b98124ac3d7322e03c863d427fd40fe501844db538beda859ab684",
+      "source_sha256": "79516606312a97948621518cee82661889b64ac014d37c9fc18a9e28d3fa95f9",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "008_B14_001883.png": {
+      "json_sha256": "e930538520745647873dabc6c0089e614ce00fb6263b8e0d7829c4ad9dc65fc4",
+      "source_sha256": "5de1f8faf0f1e53e339f1971598939798eed5714aee8f7817e98eacb6f6aadf4",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "009_B17_000000.png": {
+      "json_sha256": "785a4da00d442dde921ba599d26666ebaf50d64fd1388357caa047d9c952dbb9",
+      "source_sha256": "4e3855b1686ef110efb94db00107701c5a87c89c201d1fd747dad6ef73ad3469",
+      "polygons": 5,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": true
+    },
+    "010_B17_000877.png": {
+      "json_sha256": "8bf064a695c3d3965668137158689066a15d2f6e7db125f289e52a207bb05fdc",
+      "source_sha256": "5fab3873df896aca7f2a468b755e28ef4f6c696f45983f879cec19051bcef3b7",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "011_B17_001827.png": {
+      "json_sha256": "7f749465ad76282bed36c9cc9f711716bd8cab3f7b534178c7fe03361b2ea7cd",
+      "source_sha256": "f2802c62cd3624613e5d18aeec22360e1c148b3a93ce6341e644f019bc746828",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "012_B17_002778.png": {
+      "json_sha256": "c23ea93b7cc710dc1a2505cb660e30d3d171372c030ef2afae7176d38afb81cf",
+      "source_sha256": "89824c0fa718996ae01f10e19dd5c192b7fa42f7f692f5cdbf03a6960743b6b7",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "013_B17_003655.png": {
+      "json_sha256": "1cfe21861f2bbbbafe3c2f66769f8dc2a3b6dad83f364dcf140c9927af5286bd",
+      "source_sha256": "fe938bbb3a94483f5fa1b4e4a969895e59c487850cd2be3ad50789373b75a6fe",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "014_B17_004532.png": {
+      "json_sha256": "f0f3f15ca26e3f801bd00d724adf3e05675498900a53d17d5187ce2d1f17f6ee",
+      "source_sha256": "710ab9887419868ec1191d26763ce6e0973299d8faf18c2528d5da7b28ec5962",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "015_B17_005483.png": {
+      "json_sha256": "f0c8fcefd8e6e570f36adc48e7c742880aa228899bf138351db811a30d131e43",
+      "source_sha256": "e0c52ec985a9bef157c8be52e9d41f4dc1e014936a6187bea7fcb13f7915170b",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "016_B17_006433.png": {
+      "json_sha256": "10277f9b46985c5bdbcf6a23d06bd87c88d636c1d2f2cc8a206c35470e7acb42",
+      "source_sha256": "a1fb7a293c0d54d3be13cb21b1d4c9c641246636a4c02d645c92379541fd3616",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "017_B18_000000.png": {
+      "json_sha256": "e7203dd1f1241cfe2794e364036f14a84bee14b8f8cce5887a163ec5e29b273f",
+      "source_sha256": "91298d008792bfa25ea1ce9067e49e8a739f83005c300c17668bd1e2c283b77b",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "018_B18_000619.png": {
+      "json_sha256": "74fae73a4d5617766be8908d23552cbb8edc372fb8ed274a03e50da1dc3b884d",
+      "source_sha256": "4629dfec924882cef31f4bf7b576467b98c61d0fc88b7f72a13390e4da6776e5",
+      "polygons": 4,
+      "labels": [
+        "flame"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": true
+    },
+    "019_B18_001290.png": {
+      "json_sha256": "cb2443013b45a90603c1911ae6f6bac8e16d27ebfe0eb24b75b0541608bc9ee0",
+      "source_sha256": "c2dc3f9428aefaddef7ed3bac9773c8cd8feef77f4ffab210ca33dba8e71d11c",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "020_B18_001961.png": {
+      "json_sha256": "314ba1492e5d133f07192a19d77a4cf776697e718c7753ee2bae685369da3e85",
+      "source_sha256": "b2a256c400eba060ad9cd7ee0027c179ecfc27713aecf22a41c1c575a03f13c6",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "021_B18_002581.png": {
+      "json_sha256": "f999f67a4de6eca7f93d045a1e7549e236ef94254a818277806dfab27ef30110",
+      "source_sha256": "578732a8842332fd298958e8ce3954097271800252c84a60361bf52469b575dd",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "022_B18_003201.png": {
+      "json_sha256": "6f8482745153b34f2bfe457a904a5382de19bb30e3caff5071d54239afeb3e91",
+      "source_sha256": "710e7c67836be5603c26453b15810bce24b265222989074eb2afe2da7733bf88",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "023_B18_003872.png": {
+      "json_sha256": "c9ee40fa5386878b95ec6eaae2a84f604125b5a38e9581278229eccf371316d2",
+      "source_sha256": "5f877413e1800c0e119c0e13e07724f058ceda94cbb01e255646429be826886f",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    },
+    "024_B18_004543.png": {
+      "json_sha256": "5247a07710b10467615b739afe44860ba340f2e4d6567445dc1d366953c020bc",
+      "source_sha256": "97fd1a2ae7e7c7ca68da0b3502c77ae9c56787d37f7cde0692abeede80827a0c",
+      "polygons": 0,
+      "labels": [],
+      "no_visible_flame": true,
+      "uncertain_boundary": false
+    }
+  },
+  "reviewer_B_inputs": {
+    "001_B14_000000.png": {
+      "json_sha256": "d9e951b0ea741c9ac0172c20ea4c3268ad1f0a880e6fbf65637878c616f77fa5",
+      "source_sha256": "e1aa4a42db11c05a3f2219b276a6b7b4ca1db01296dbd2b3477f0026d06565eb",
+      "polygons": 6,
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "002_B14_000256.png": {
+      "json_sha256": "173ac32f00f5b9af393fa6b074bf36712bddad1412f0fa554eb5eb7e4e31f8fb",
+      "source_sha256": "38a3cf86f6e26e493c625bbd4af5db45399f016c2eedf16f1c47876977d55da6",
+      "polygons": 10,
+      "labels": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "003_B14_000535.png": {
+      "json_sha256": "eb4e6e337a4ff19a84a4bb62fdd2682b63a3670c7533dc86d2b3929b58f2af2b",
+      "source_sha256": "73425a8d1e02dda75f7eabc9acf70ae2f6bf9581f0e3e9b1d300e767c4bc29fd",
+      "polygons": 10,
+      "labels": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "004_B14_000813.png": {
+      "json_sha256": "09538214c5ce151e031730d9588d72fcaecb816cad68592bc06db6b1d91b04df",
+      "source_sha256": "bed3eb891d73c8aaac4b338d1942c12f8407bb234a748bb65693f215cebf1987",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "005_B14_001070.png": {
+      "json_sha256": "ac67370c5d8e4973802a026fa9870cd5b45bb4960af379cd4901fb1bb4aed196",
+      "source_sha256": "fb27ce413c0aa0f00e275f8b32b5dd856b2b79a9f1807c3301e55ee64ea8418d",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "006_B14_001326.png": {
+      "json_sha256": "563dc8b9be1b8c7e71c17f3582a57f3af386467cbec0af328efa97a71b46495f",
+      "source_sha256": "a3a10183087c8280c3f2556032f3f6f2e893b6c51a720cc4db06ebd1c96529f9",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "007_B14_001605.png": {
+      "json_sha256": "203fc8bd72909e756f2b6796892a23eed767fa880ba6bc87550cb4b0c66e0cbb",
+      "source_sha256": "79516606312a97948621518cee82661889b64ac014d37c9fc18a9e28d3fa95f9",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "008_B14_001883.png": {
+      "json_sha256": "c338e65202dd1f0094bb24f3e6d629c328f859b90b82d3860b3e342ddda4de49",
+      "source_sha256": "5de1f8faf0f1e53e339f1971598939798eed5714aee8f7817e98eacb6f6aadf4",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "009_B17_000000.png": {
+      "json_sha256": "7a01120985bda781e1aa02f6a4b950f2075891e20a0ebfddbb790437051a7eb8",
+      "source_sha256": "4e3855b1686ef110efb94db00107701c5a87c89c201d1fd747dad6ef73ad3469",
+      "polygons": 9,
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "010_B17_000877.png": {
+      "json_sha256": "901183fd1c08cd4dc88f903891592fe1987ed83cbe6cab5ac330450f7e71321a",
+      "source_sha256": "5fab3873df896aca7f2a468b755e28ef4f6c696f45983f879cec19051bcef3b7",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "011_B17_001827.png": {
+      "json_sha256": "eba8604d7504a6c61d11b76fd8951009fd3984667e04e6eb420953119d96717c",
+      "source_sha256": "f2802c62cd3624613e5d18aeec22360e1c148b3a93ce6341e644f019bc746828",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "012_B17_002778.png": {
+      "json_sha256": "52fc3332d23bcc7102804f336eda2fa7a848ca26040e59b5f488716e9e72e13d",
+      "source_sha256": "89824c0fa718996ae01f10e19dd5c192b7fa42f7f692f5cdbf03a6960743b6b7",
+      "polygons": 3,
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "013_B17_003655.png": {
+      "json_sha256": "9b65603709e81a38220987ffdc5e23521deec5d9af358f567471a0f340e4ee54",
+      "source_sha256": "fe938bbb3a94483f5fa1b4e4a969895e59c487850cd2be3ad50789373b75a6fe",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "014_B17_004532.png": {
+      "json_sha256": "d1443ed291de1443aa14fca5e084c1e9f823f9a4b12d02aaa8d83401c502ed2f",
+      "source_sha256": "710ab9887419868ec1191d26763ce6e0973299d8faf18c2528d5da7b28ec5962",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "015_B17_005483.png": {
+      "json_sha256": "88f2f6e09a23a289cee3f888381b4e03a7717c03e102f281fa3e46a77e9356b1",
+      "source_sha256": "e0c52ec985a9bef157c8be52e9d41f4dc1e014936a6187bea7fcb13f7915170b",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "016_B17_006433.png": {
+      "json_sha256": "896cc5063dfe468429184425bfa2298bdaa23476ac3e24a609705ab3dee16d8b",
+      "source_sha256": "a1fb7a293c0d54d3be13cb21b1d4c9c641246636a4c02d645c92379541fd3616",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "017_B18_000000.png": {
+      "json_sha256": "dcd73a2beb1cb5936c3e97d05a083f52d85994221b86b263bc694af195f7f566",
+      "source_sha256": "91298d008792bfa25ea1ce9067e49e8a739f83005c300c17668bd1e2c283b77b",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "018_B18_000619.png": {
+      "json_sha256": "2fcc2979f97372af63db63e0285011f90754c975a8fd7073ad99dfd671dc1bdd",
+      "source_sha256": "4629dfec924882cef31f4bf7b576467b98c61d0fc88b7f72a13390e4da6776e5",
+      "polygons": 7,
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "019_B18_001290.png": {
+      "json_sha256": "f9c50aba7e0ef05e9a673693e0f780922ff4052c4291398ba4c7685c8943b984",
+      "source_sha256": "c2dc3f9428aefaddef7ed3bac9773c8cd8feef77f4ffab210ca33dba8e71d11c",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "020_B18_001961.png": {
+      "json_sha256": "2f74dca59a6e47e73698930e3305711ba6146b256aacd9bcfe31dcf212a7a03a",
+      "source_sha256": "b2a256c400eba060ad9cd7ee0027c179ecfc27713aecf22a41c1c575a03f13c6",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "021_B18_002581.png": {
+      "json_sha256": "ddc64ed51ff44e3c6823b1bb2ca300b5a271c57b295b0e7ccf587811020def1d",
+      "source_sha256": "578732a8842332fd298958e8ce3954097271800252c84a60361bf52469b575dd",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "022_B18_003201.png": {
+      "json_sha256": "1ae2f35dceaffe1b2180ef8060c9738c84fb80e8202df611d38bd80b9c79379b",
+      "source_sha256": "710e7c67836be5603c26453b15810bce24b265222989074eb2afe2da7733bf88",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "023_B18_003872.png": {
+      "json_sha256": "62eec65411cd2f847fbf892833c3e28b903342c64662e78faf522ac37ce65697",
+      "source_sha256": "5f877413e1800c0e119c0e13e07724f058ceda94cbb01e255646429be826886f",
+      "polygons": 2,
+      "labels": [
+        "1",
+        "2"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    },
+    "024_B18_004543.png": {
+      "json_sha256": "b76b8f2c976a90985b31d05d728e2b77fb4a250723c394f5e4c2ea0c5ef0d2cb",
+      "source_sha256": "97fd1a2ae7e7c7ca68da0b3502c77ae9c56787d37f7cde0692abeede80827a0c",
+      "polygons": 1,
+      "labels": [
+        "1"
+      ],
+      "no_visible_flame": false,
+      "uncertain_boundary": false
+    }
+  },
+  "original_frozen_predictions_unchanged": true
+}

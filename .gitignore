@@ -34,3 +34,17 @@ data/*.duckdb.wal
 .idea/
 .vscode/
 graphify-out/
+
+# BASS-II large/local evidence (small frozen masks and metrics are tracked)
+bass-cv/raw/
+bass-cv/**/cache/
+bass-cv/**/fold-predictions/
+bass-cv/**/folds/
+bass-cv/**/rejected-downloads/
+bass-cv/**/*.part
+bass-cv/**/*.log
+bass-cv/**/*.pid
+bass-cv/confirmation-v6/error-overlays/
+bass-cv/independent-review-results-v6/adjudication-templates/
+bass-cv/independent-review-results-v6/agreement/disagreement-overlays/
+bass-cv/adjudicated-confirmation-v6/

@@ -24,6 +24,7 @@ import type {
   Reference,
   SafetyArea,
   SearchPlan,
+  ScientificReview,
   ProbeResult,
   Quality,
   Row,
@@ -89,6 +90,10 @@ export const api = {
 
   datasets: () => request<Dataset[]>("/api/datasets"),
   dataset: (id: string) => request<DatasetDetail>(`/api/datasets/${id}`),
+  scientificReview: (id: string) =>
+    request<ScientificReview>(`/api/datasets/${id}/scientific-review`),
+  scientificArtifactUrl: (id: string, key: string) =>
+    `${API_URL}/api/datasets/${id}/scientific-review/artifacts/${key}`,
   upload: (file: File, name?: string) => {
     const form = new FormData();
     form.append("file", file);

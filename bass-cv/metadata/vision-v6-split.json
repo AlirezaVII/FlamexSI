@@ -1,0 +1,35 @@
+{
+  "schema": "falmex-vision-v6-development-confirmation-split-v1",
+  "created_utc": "2026-11-09T12:16:12+00:00",
+  "status": "preregistered before downloading or inspecting any B14/B17/B18 video frames or model outputs",
+  "development_tests": ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B15", "B16"],
+  "reserved_confirmation_tests": ["B14", "B17", "B18"],
+  "confirmation_videos": {
+    "B14": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_174_TESTB14.mp4",
+    "B17": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_175_TESTB15.mp4",
+    "B18": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_176_TESTB18.mp4"
+  },
+  "selection_basis": "B14/B17/B18 were selected only from PSI-25 filenames, file sizes and experimental metadata. They are unused by all earlier model generations. No frames or model outputs from these tests had been downloaded or inspected when this protocol was written. The B17 filename contains TESTB15 while its experimental-table subcategory identifies B17; the exact filename is therefore the provenance key and B17 is the project test identifier.",
+  "development_history": "B13/B15/B16 were inspected as frozen v5 confirmation and are explicitly promoted to v6 development. They can never again be called untouched confirmation for v6 or later models trained with them. B9/B10/B11 remain development as in v5. All earlier model generations and their confirmation artifacts remain frozen.",
+  "development_frames": 132,
+  "confirmation_frames_planned": 24,
+  "feature_plan": "The 58 v5 pixel features plus preregistered gamma, multiscale local-contrast, normalized temporal-change and spatial-support features. Feature extraction uses only the source image and the median of its own video's first 30 frames.",
+  "model_candidates": ["unweighted", "frame_dim_balanced"],
+  "inference_candidates": ["standard", "small_core_bounded_hysteresis_r4", "lowlight_small_core_r4", "ungated_small_core_r4"],
+  "domain_guard_candidates": ["no_guard", "camera_information_guard"],
+  "candidate_count": 16,
+  "camera_information_guard": {
+    "status": "preregistered deterministic source-only candidate; not an independent scene classifier",
+    "roi": "x >= 0.40*width and y >= 0.55*height",
+    "rule": "Reject the complete prediction when the lower-right ROI contains at least 8 percent pixels brighter than max(100/255, its own 75th percentile), and horizontal plus vertical morphology line pixels cover at least 1 percent of the ROI. Lines use Canny edges and 25-pixel horizontal/vertical kernels. The guard receives no annotation, prediction, model score or confirmation-derived parameter.",
+    "limitation": "One known development camera-information frame is insufficient to establish general out-of-domain detection. Guard activations and errors must be reported per development video."
+  },
+  "reference_baseline": "Frozen v5 selected-candidate predictions on identical 132 development frames: existing leave-one-test-out fold predictions for B1-B12 and frozen v5 confirmation predictions for B13/B15/B16. These are retrospective development references, not new confirmation.",
+  "selection_rule": "Rank eligible candidates by pooled small-or-dim positive Macro IoU, then overall positive Macro IoU, then lower pooled FP. Eligibility requires at most two positive detection failures, pooled FP no greater than 1.25 times the frozen-v5 retrospective reference, and negative-frame FP no greater than 1.25 times the same reference. If none is eligible, report constraint failure and select by the same ranking without claiming success.",
+  "small_or_dim_definition": "A positive development frame is included if annotated foreground area is below 3000 pixels or median HSV V of annotated pixels is below 0.35. This subset is for development selection only.",
+  "confirmation_frame_fractions": [0, 0.12, 0.25, 0.38, 0.50, 0.62, 0.75, 0.88],
+  "confirmation_rule": "Download only after this protocol is frozen. Freeze frame selection from metadata, then freeze the selected v6 model and all inference settings before reading confirmation frames. Generate and hash v3, v4, v5 and v6 predictions on identical frame indices before source-only annotation. Do not alter any model, threshold, feature or postprocessing after inspecting confirmation annotations or metrics.",
+  "comparison_rule": "Report v3, v4, v5 and v6 per-video and pooled metrics on identical B14/B17/B18 frames and annotations. Three video clusters remain insufficient for narrow confidence intervals or operational claims.",
+  "annotation_rule": "AI-assistant source-only annotations are coarse reference masks, not independent-expert gold masks. Independent human review and adjudication remain pending until actually supplied.",
+  "operational_claim_rule": "No result establishes operational fire-safety readiness, chemical flame boundaries, extinction time, suppression effectiveness or general out-of-domain rejection."
+}

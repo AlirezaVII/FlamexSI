@@ -1,0 +1,41 @@
+{
+  "schema": "falmex-vision-v6-confirmation-source-manifest-v1",
+  "accession": "PSI-25",
+  "doi": "10.60555/4qc4-de67",
+  "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+  "files": [
+    {
+      "test_id": "B14",
+      "file": "raw/PSI-25_Raw Data_BASS_GMT183_SAMPLE_174_TESTB14_2ND_VIEW.mp4",
+      "bytes": 10228951,
+      "expected_bytes": 10228951,
+      "sha256": "540c29ec254f4de4b9f87f72ff931d01ca33c1905eb4b64e360f36d1e4d3eb81",
+      "source_subcategory": "Reduced Gravity/ Bhattacharjee/B14",
+      "metadata_resource_id": "65e739c18e263688e9f9200d",
+      "size_passed": true,
+      "frames_decoded": false
+    },
+    {
+      "test_id": "B17",
+      "file": "raw/PSI-25_Raw Data_BASS_GMT183_SAMPLE_175_TESTB15.mp4",
+      "bytes": 21089860,
+      "expected_bytes": 21089860,
+      "sha256": "fad4ad4e81f941193331ebc7c60963a9d90b35bba8145881efc8bad2c2bfc277",
+      "source_subcategory": "Reduced Gravity/ Bhattacharjee/B17",
+      "metadata_resource_id": "65e739c18e263688e9f9200d",
+      "size_passed": true,
+      "frames_decoded": false
+    },
+    {
+      "test_id": "B18",
+      "file": "raw/PSI-25_Raw Data_BASS_GMT183_SAMPLE_176_TESTB18_2ND_VIEW.mp4",
+      "bytes": 22103478,
+      "expected_bytes": 22103478,
+      "sha256": "53cc9ad8813fc613e70fc71f6393108222ee7d3c4970725a1e6e58ee6976f347",
+      "source_subcategory": "Reduced Gravity/ Bhattacharjee/B18",
+      "metadata_resource_id": "65e739c18e263688e9f9200d",
+      "size_passed": true,
+      "frames_decoded": false
+    }
+  ]
+}

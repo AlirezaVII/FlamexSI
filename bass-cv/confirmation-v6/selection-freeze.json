@@ -1,0 +1,9 @@
+{
+  "schema": "falmex-vision-v6-confirmation-selection-freeze-v1",
+  "created_utc": "2026-11-09T15:05:31.191591+00:00",
+  "selection_sha256": "9a6e9d67fd24d57a22b73be49d427c726bd587979a4859fa313585ba85d77190",
+  "protocol_sha256": "d53703a8287025f322e460af6b5b215dec04d186562a8d0aa89c792f48129c2c",
+  "source_manifest_sha256": "599ef5200a6f6c4e5a3d2c91f5c818f77e568f2ac0717d650cbba9d223229569",
+  "selection_basis": "video metadata only; no frame pixels or model outputs inspected",
+  "runner_code_sha256": "95642123653652fd55e3f6e31b958c6d8b494e18b3359eac808d070ad292cdaa"
+}

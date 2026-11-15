@@ -1,0 +1,28 @@
+{
+  "schema": "falmex-real-review-upload-provenance-v1",
+  "reviewer_A_archive": {
+    "original_name": "80f3a39a3a9a7e0ff16ad58647bab87b_3437414520635772157_m.zip",
+    "bytes": 30058256,
+    "sha256": "680426a4be3ebc6791227582da14c4c54dde3cefb9a31f53195b199c7d1ca922",
+    "format": "ZIP",
+    "crc_passed": true,
+    "json_files_used": 24,
+    "png_files_checked": 24
+  },
+  "reviewer_B_archive": {
+    "original_name": "reviewer-B.rar",
+    "bytes": 6817883,
+    "sha256": "461cc022d1c9d8f2508a50a80e7cb6b0d3d3d993669559a09eca1f911d3a4052",
+    "format": "RAR5",
+    "all_entries_read_and_size_checked": true,
+    "json_files_used": 24,
+    "png_files_checked": 24
+  },
+  "all_48_supplied_source_images_match_frozen_hashes": true,
+  "original_uploads_modified": false,
+  "reviewer_roles_inferred_only_from_archive_folder_names": true,
+  "reviewer_identity_expertise_and_independence_not_technically_verified": true,
+  "processing_script_sha256": "e1c8ba805adcba9a46c4a3ab6c9bca1557daaac7cb3cffe7706f6cafabf433e6",
+  "annotation_content_edited_by_assistant": false,
+  "model_predictions_or_scores_shown_to_adjudicator": false
+}

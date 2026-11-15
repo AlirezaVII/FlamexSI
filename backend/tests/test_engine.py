@@ -40,6 +40,15 @@ def test_outcome_filter(synthetic_frame, schema):
     assert findings and {f.outcome for f in findings} == {"extinction"}
 
 
+def test_condition_filter_keeps_interactions_of_allowed_variables(synthetic_frame, schema):
+    findings = _run(
+        synthetic_frame, schema, analyzers=["interaction"], outcomes=["burning_rate"],
+        conditions=["oxygen", "pressure"],
+    )
+    assert findings
+    assert {f.condition for f in findings} == {"oxygen × pressure"}
+
+
 def _score(status, **kw):
     args = {"effect_size": 0.5, "n": 100, "status": status, "test_effect": 0.45,
             "chance_p": 0.01, "relevance": 1.0, **kw}

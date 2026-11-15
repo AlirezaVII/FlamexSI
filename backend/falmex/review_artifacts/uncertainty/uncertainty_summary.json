@@ -1,0 +1,51 @@
+{
+  "analysis_type": "literature-based measurement uncertainty sensitivity scenario",
+  "source": {
+    "authors": "Shaw and Yu",
+    "title": "ISS Droplet Combustion Experiments - Uncertainties in Droplet Sizes and Burning Rates",
+    "doi": "10.1007/s12217-014-9377-x",
+    "url": "https://link.springer.com/article/10.1007/s12217-014-9377-x",
+    "method": "Taylor-series propagation",
+    "typical_95_expanded_diameter_mm": 0.1,
+    "typical_95_expanded_burning_rate_mm2_s": 0.005,
+    "applicable_fuels": [
+      "Methanol",
+      "Heptane"
+    ]
+  },
+  "scenario": {
+    "coverage_factor": 1.96,
+    "diameter_standard_uncertainty_mm": 0.05102040816326531,
+    "burning_rate_standard_uncertainty_mm2_s": 0.0025510204081632655,
+    "burn_time_standard_uncertainty_s": 0.0,
+    "simulations": 1000,
+    "seed": 42,
+    "input_errors_assumed_independent": true,
+    "de_perturbations_censored_at_zero": true,
+    "oxygen_pressure_protocol_and_systematic_errors_included": false
+  },
+  "limitations": [
+    "Typical literature values are not per-row PSI-69 uncertainty budgets.",
+    "Shaw and Yu analyze instantaneous local-polynomial rates; PSI K is an average fit.",
+    "The 1.96 conversion and normal perturbations are working sensitivity assumptions.",
+    "Diameter, K, and endpoint errors may be correlated; independence is only an approximation.",
+    "Uncertainty can be larger near ignition and extinction.",
+    "Scenario ranges are not confidence intervals and do not change replication status."
+  ],
+  "residual_qc": {
+    "n": 196,
+    "covered_by_expanded_scenario_count": 177,
+    "covered_by_expanded_scenario_share": 0.9030612244897959,
+    "covered_by_normalized_expanded_scenario_count": 179,
+    "covered_by_normalized_expanded_scenario_share": 0.9132653061224489,
+    "interpretation": "Coverage is endpoint consistency under a scenario, not proof that a row is correct"
+  },
+  "test_129": {
+    "extinction_diameter_ratio": 1.003003003003003,
+    "expanded_95_scenario_interval": [
+      0.9604703123739792,
+      1.0455356936320268
+    ],
+    "interval_contains_one": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "falmex-vision-v6-protocol-freeze-v1",
+  "created_utc": "2026-11-09T12:16:12+00:00",
+  "protocol_file": "metadata/vision-v6-split.json",
+  "protocol_sha256": "d53703a8287025f322e460af6b5b215dec04d186562a8d0aa89c792f48129c2c",
+  "confirmation_videos_unread_at_freeze": [
+    "B14",
+    "B17",
+    "B18"
+  ],
+  "note": "Hash recorded before confirmation download, frame extraction or model inference."
+}

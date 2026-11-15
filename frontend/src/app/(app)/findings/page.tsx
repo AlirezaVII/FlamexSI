@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FindingList } from "@/components/finding-list";
 import { ListSkeleton, LoadingLabel, TextSkeleton } from "@/components/loading";
 import {
@@ -13,12 +13,20 @@ import {
   SyntheticBanner,
 } from "@/components/ui";
 import { api } from "@/lib/api";
-import type { Finding } from "@/lib/types";
+import type { Dataset, Finding, Status } from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
-export default function FindingsPage() {
-  const { dataset } = useWorkspace();
+const FILTERS: { id: Status | "all"; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "validated", label: "Validated" },
+  { id: "candidate", label: "Candidate" },
+  { id: "rejected", label: "Rejected" },
+  { id: "not_significant", label: "No supported relationship" },
+];
+
+function FindingsForDataset({ dataset }: { dataset: Dataset }) {
   const [findings, setFindings] = useState<Finding[] | null>(null);
+  const [filter, setFilter] = useState<Status | "all">("all");
   const [summary, setSummary] = useState<{
     summary: string;
     caveats: string[];
@@ -30,15 +38,22 @@ export default function FindingsPage() {
   const datasetId = dataset?.dataset_id;
 
   useEffect(() => {
-    if (!datasetId) return;
     api
-      .findings({ dataset_id: datasetId, status: "validated" })
+      .findings({ dataset_id: datasetId })
       .then((list) => {
         setFindings(list);
         setSummary(null);
       })
       .catch((e) => setError(e.message));
   }, [datasetId]);
+
+  const counts = useMemo(() => {
+    const result: Record<string, number> = { all: findings?.length ?? 0 };
+    for (const status of ["validated", "candidate", "rejected", "not_significant"])
+      result[status] = findings?.filter((f) => f.status === status).length ?? 0;
+    return result;
+  }, [findings]);
+  const visible = findings?.filter((f) => filter === "all" || f.status === filter);
 
   async function summarize() {
     if (!datasetId) return;
@@ -53,77 +68,106 @@ export default function FindingsPage() {
     }
   }
 
-  if (!dataset) return <NoDataset />;
-
   return (
     <>
-      <PageHeader eyebrow="Findings" title="Validated findings, ranked">
-        These are statistical findings that held up on unseen data — not
-        insights yet. A finding becomes an insight only after a researcher
-        reviews and interprets it. The ranking is a flexible framework: effect
-        strength, amount of data, validation result, stability on unseen data,
-        how unlikely it is to be chance, and relevance to the fire-safety
-        question (neutral by default). Hover a score to see its factors.
+      <PageHeader eyebrow="Findings" title="Every result, with its validation status">
+        Validated, candidate, rejected and non-significant results remain visible
+        together. A validated finding held up on unseen experiments and against
+        random shuffles; it is still an association, not a causal conclusion or
+        external scientific replication. Open any row for its chart, split,
+        uncertainty, checks and source hashes.
       </PageHeader>
+      <div className="mb-5 flex flex-wrap items-center gap-3 text-sm">
+        <Link href="/review" className="font-medium text-accent hover:underline">
+          Open the FLEX scientific review →
+        </Link>
+        <span className="text-muted">
+          Compositional, time-series, replication and uncertainty boundaries
+        </span>
+      </div>
       {dataset.synthetic && <SyntheticBanner />}
       {error && <ErrorNote message={error} />}
 
-      {findings && findings.length === 0 ? (
-        <Card>
-          <p className="text-sm text-ink-2">
-            No validated findings yet.{" "}
-            <Link href="/relationships" className="font-medium text-accent">
-              Run discovery
-            </Link>{" "}
-            first. Findings appear here once they pass validation on unseen
-            data.
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          <Card
-            title="AI summary"
-            action={
-              <Button onClick={summarize} disabled={busy || !findings?.length}>
-                {busy ? "Summarizing…" : summary ? "Regenerate" : "Summarize"}
-              </Button>
-            }
-          >
-            {busy ? (
-              <div className="space-y-3" aria-busy="true">
-                <TextSkeleton lines={4} />
-                <LoadingLabel>
-                  Gemini is reading the ranked findings…
-                </LoadingLabel>
-              </div>
-            ) : summary ? (
-              <div className="space-y-2 text-sm">
-                <p className="text-ink">{summary.summary}</p>
-                <ul className="list-disc pl-5 text-xs text-ink-2">
-                  {summary.caveats.map((c) => (
-                    <li key={c}>{c}</li>
-                  ))}
-                </ul>
-                <p className="text-xs text-muted">
-                  Generated by {summary.model} from the ranked list below.
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-ink-2">
-                A plain-language overview of the top findings, written only from
-                their statistics.
+      <div className="space-y-4">
+        <Card
+          title="AI summary of validated findings"
+          action={
+            <Button
+              onClick={summarize}
+              disabled={busy || !findings?.some((f) => f.status === "validated")}
+            >
+              {busy ? "Summarizing…" : summary ? "Regenerate" : "Summarize"}
+            </Button>
+          }
+        >
+          {busy ? (
+            <div className="space-y-3" aria-busy="true">
+              <TextSkeleton lines={4} />
+              <LoadingLabel>Reading the validated findings…</LoadingLabel>
+            </div>
+          ) : summary ? (
+            <div className="space-y-2 text-sm">
+              <p className="text-ink">{summary.summary}</p>
+              <ul className="list-disc pl-5 text-xs text-ink-2">
+                {summary.caveats.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted">
+                Generated by {summary.model} from the validated findings. It does
+                not upgrade candidate results or constitute expert review.
               </p>
-            )}
-          </Card>
-          <Card title="Ranking">
-            {findings === null ? (
-              <ListSkeleton rows={4} />
-            ) : (
-              <FindingList findings={findings} />
-            )}
-          </Card>
-        </div>
-      )}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-2">
+              An optional plain-language overview written only from validated
+              statistics. Rejected, candidate and non-significant results stay in
+              the ledger below.
+            </p>
+          )}
+        </Card>
+
+        <Card title="Finding ledger">
+          <div className="mb-3 flex flex-wrap gap-1" aria-label="Filter findings by status">
+            {FILTERS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={filter === item.id}
+                onClick={() => setFilter(item.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                  filter === item.id
+                    ? "border-ink bg-ink text-bg"
+                    : "border-line bg-surface text-ink-2 hover:bg-surface-2"
+                }`}
+              >
+                {item.label} <span className="tabular-nums">{counts[item.id]}</span>
+              </button>
+            ))}
+          </div>
+          {findings === null ? (
+            <ListSkeleton rows={6} />
+          ) : visible && visible.length > 0 ? (
+            <FindingList findings={visible} reason />
+          ) : (
+            <p className="py-5 text-sm text-ink-2">
+              {findings.length === 0 ? (
+                <>
+                  No findings yet. <Link href="/relationships" className="text-accent underline">Run discovery</Link> first.
+                </>
+              ) : (
+                "No findings have this status."
+              )}
+            </p>
+          )}
+        </Card>
+      </div>
     </>
   );
+}
+
+export default function FindingsPage() {
+  const { dataset } = useWorkspace();
+  if (!dataset) return <NoDataset />;
+  return <FindingsForDataset key={dataset.dataset_id} dataset={dataset} />;
 }

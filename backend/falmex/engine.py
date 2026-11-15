@@ -206,7 +206,7 @@ def run_discovery(
         for x, y in analyzer.pairs(frame, schema):
             if cfg.outcomes and y not in cfg.outcomes:
                 continue
-            if cfg.conditions and x not in cfg.conditions:
+            if cfg.conditions and not set(condition_columns(x)).issubset(cfg.conditions):
                 continue
             result = analyzer.evaluate(train, x, y)
             if result is not None:

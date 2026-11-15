@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from falmex.analysis import get_analyzers
+from falmex.analysis import Evaluation, get_analyzers
 from falmex.analysis.correlation import RankCorrelation
 from falmex.analysis.groups import GroupDifference
 from falmex.validation import (
@@ -85,6 +85,21 @@ def test_holdout_rejects_non_replicating_effect():
     test = _signal(40, 2, noise=True)
     found = a.evaluate(train, "x", "y")
     assert HoldoutReplication().validate(a, found, "x", "y", train, test).passed is False
+
+
+def test_holdout_non_significance_can_be_inconclusive():
+    class WeakSameDirection(RankCorrelation):
+        def evaluate(self, frame, x, y):
+            return Evaluation(0.3, "spearman_rho", 0.2, 20, "positive")
+
+    found = Evaluation(0.8, "spearman_rho", 0.001, 100, "positive")
+    train = _signal(100, 1)
+    test = _signal(20, 2, noise=True)
+    res = HoldoutReplication().validate(
+        WeakSameDirection(), found, "x", "y", train, test
+    )
+    assert res.passed is None
+    assert res.metrics["retained_share"] == pytest.approx(0.375)
 
 
 def test_permutation_rejects_noise():

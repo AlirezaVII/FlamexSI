@@ -31,7 +31,17 @@ export interface Dataset {
   n_rows: number;
   columns: string[];
   source_ids: string[];
-  report: { tables: PipelineReport[] };
+  report: {
+    tables: PipelineReport[];
+    ingestion?: {
+      source_id: string;
+      filename: string;
+      sha256: string;
+      encoding?: string;
+      adapter?: string;
+      missing_markers?: string[];
+    }[];
+  };
 }
 
 export interface PipelineReport {
@@ -77,6 +87,230 @@ export interface DatasetDetail {
   dataset: Dataset;
   columns: ColumnStats[];
   sources: Source[];
+}
+
+export interface ReviewArtifact {
+  key: string;
+  filename: string;
+  media_type: string;
+  bytes: number;
+  sha256: string;
+}
+
+export interface ReviewedFinding {
+  review_id: number;
+  condition: string;
+  outcome: string;
+  analyzer: string;
+  n: number;
+  primary_effect: number;
+  primary_holdout_effect: number;
+  primary_holdout_p: number;
+  date_effect: number;
+  date_holdout_effect: number;
+  date_holdout_p: number;
+  q_value_primary: number;
+  review_decision: string;
+  scope_and_limitation: string;
+  formal_expert_approval: boolean;
+  methanol_rho?: number;
+  methanol_n?: number;
+  heptane_rho?: number;
+  heptane_n?: number;
+}
+
+export interface CompositionalModel {
+  model_id: string;
+  diluent: "CO2" | "He";
+  outcome: "droplet_burning_rate_constant" | "extinction_diameter_ratio";
+  scope: string;
+  role: string;
+  status: string;
+  n: number;
+  n_dates: number;
+  n_parameters: number;
+  design_rank: number;
+  small_cluster_warning: boolean;
+  beta_alternative: number;
+  cluster_se: number;
+  ci95_low: number;
+  ci95_high: number;
+  p_value: number;
+  effect_per_alternative_n2_doubling: number;
+  doubling_ci95_low: number;
+  doubling_ci95_high: number;
+  cluster_df: number;
+  bh_q_value: number;
+  prediction_n: number;
+  n_folds: number;
+  full_rmse: number;
+  baseline_rmse: number;
+  delta_rmse_full_minus_baseline: number;
+  interpretation: string;
+}
+
+export interface TimeSeriesFit {
+  series: "CO2" | "N2" | "He";
+  window: string;
+  role: "primary" | "sensitivity" | "near_extinction" | "descriptive_not_combustion";
+  window_start_fraction: number | null;
+  window_end_fraction: number | null;
+  published_k_mm2_s: number | null;
+  n: number;
+  burning_rate_constant_mm2_s: number;
+  rmse_mm2: number;
+  r_squared: number;
+  late_to_primary_k_ratio: number | null;
+  late_k_reduction_fraction: number | null;
+}
+
+export interface ScientificReview {
+  source: { filename: string; sha256: string; bytes: number };
+  ingestion: {
+    encoding: string;
+    adapter: string;
+    missing_markers: string[];
+    approximate_burn_time_test_ids: string[];
+    invalid_pressure_test_ids: string[];
+    derived: Record<string, string>;
+  };
+  pipeline: {
+    rows_in: number;
+    rows_out: number;
+    empty_rows_dropped: number;
+    duplicate_rows_dropped: number;
+    unit_conversions: {
+      column: string;
+      raw: string;
+      from: string;
+      to: string;
+      values: number;
+    }[];
+    warnings: string[];
+  };
+  investigation: {
+    accession: string;
+    title: string;
+    investigationAcronym: string;
+    doi: string;
+    version: number;
+    licenseIdentifier: string;
+    releaseDate: string;
+    flightProgram: string;
+    managingNasaCenter: string;
+    experimentHardware: string;
+  };
+  scope: {
+    review_type: string;
+    official_report: {
+      title: string;
+      document_id: string;
+      url: string;
+      documented_setting: string;
+      documented_series_size: number;
+    };
+    psi_table_audit: {
+      rows: number;
+      minimum_test_date: string;
+      maximum_test_date: string;
+      unique_test_dates: number;
+    };
+    numbering_evidence: { conclusion: string };
+    environment_conclusion: {
+      series_level_label: string;
+      basis: string;
+      limitation: string;
+      per_row_labels_added: boolean;
+    };
+    campaign_conclusion: { limitation: string };
+    partial_gravity_claim_allowed: boolean;
+  };
+  review: {
+    review_type: string;
+    formal_expert_approval: boolean;
+    independent_external_validation: boolean;
+    reviewed_findings: number;
+    recommended_candidate_insight_themes: string[];
+    findings: ReviewedFinding[];
+  };
+  replication: {
+    investigation: string;
+    acronym: string;
+    doi: string;
+    official_metadata_url: string;
+    raw_rows: number;
+    table_type: string;
+    replication_executable: boolean;
+    reason: string;
+    inferential_tests_performed: number;
+    protocol_lock: {
+      protocol_version: string;
+      protocol_sha256: string;
+      external_registry_preregistration: boolean;
+    };
+  };
+  uncertainty: {
+    analysis_type: string;
+    source: {
+      authors: string;
+      title: string;
+      doi: string;
+      url: string;
+      typical_95_expanded_diameter_mm: number;
+      typical_95_expanded_burning_rate_mm2_s: number;
+    };
+    scenario: {
+      simulations: number;
+      seed: number;
+      oxygen_pressure_protocol_and_systematic_errors_included: boolean;
+    };
+    limitations: string[];
+    residual_qc: {
+      n: number;
+      covered_by_expanded_scenario_share: number;
+      interpretation: string;
+    };
+  };
+  time_series: {
+    analysis_type: string;
+    raw_images_recovered: boolean;
+    raw_per_test_d_t_histories_recovered: boolean;
+    independent_replication: boolean;
+    data_assimilation_executed: boolean;
+    source: {
+      authors: string;
+      year: number;
+      doi: string;
+      figure: number;
+      published_downsampling: string;
+      pdf_sha256: string;
+    };
+    primary_fit: string;
+    candidate_row_mapping: {
+      status: string;
+      basis: string;
+      candidates: Record<string, number>;
+    };
+    limitations: string[];
+    fits: TimeSeriesFit[];
+  };
+  compositional: {
+    analysis_type: string;
+    protocol_version: string;
+    protocol_sha256: string;
+    protocol_verified: boolean;
+    external_registry_preregistration: boolean;
+    causal_effects_established: boolean;
+    full_protocol_control_established: boolean;
+    independent_campaign_validation: boolean;
+    primary_models: CompositionalModel[];
+    structural_zero_policy: string;
+    n2_only_policy: string;
+    limitations: string[];
+  };
+  artifacts: ReviewArtifact[];
+  finding_status_counts: Record<Status, number>;
+  finding_total: number;
 }
 
 export type Row = Record<string, string | number | boolean | null>;

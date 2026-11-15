@@ -1,0 +1,12 @@
+{
+  "schema": "falmex-bass-leave-one-test-out-v1",
+  "unit_of_independence": "video/test",
+  "tests": ["B1", "B2", "B3"],
+  "folds": [
+    {"holdout": "B1", "train": ["B2", "B3"]},
+    {"holdout": "B2", "train": ["B1", "B3"]},
+    {"holdout": "B3", "train": ["B1", "B2"]}
+  ],
+  "rule": "Every frame and annotation from the holdout video is excluded from threshold selection. No random frame-level split is used.",
+  "warning": "Three grouped folds provide proof-of-method evaluation, not independent external validation."
+}

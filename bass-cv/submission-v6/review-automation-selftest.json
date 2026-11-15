@@ -1,0 +1,34 @@
+{
+  "schema": "falmex-review-automation-selftest-v1",
+  "data": "synthetic temporary fixtures only; no real reviewer or model result",
+  "complete_case": {
+    "input_frames_per_reviewer": 24,
+    "processed_frames": 24,
+    "both_empty_frames": 21,
+    "positive_union_frames": 3,
+    "visibility_disagreements": 1,
+    "adjudication_frames": 2,
+    "adjudication_template_json_files": 2,
+    "expected_queue_ids": [
+      "002_B14_000256.png",
+      "003_B14_000535.png"
+    ],
+    "passed": true
+  },
+  "json_only_case": {
+    "input": "24 completed JSON files per reviewer without duplicate PNG files",
+    "frozen_source_images_used": true,
+    "processed_frames": 24,
+    "adjudication_frames": 2,
+    "passed": true
+  },
+  "incomplete_blank_case": {
+    "change": "one empty template had no_visible_flame=false",
+    "expected": "nonzero exit with explicit incomplete-template error",
+    "actual_exit_code": 1,
+    "passed": true
+  },
+  "real_reviewer_results_created": false,
+  "real_confirmation_files_modified": false,
+  "operational_readiness": false
+}

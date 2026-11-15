@@ -45,7 +45,13 @@ const SECTIONS = [
     href: "/findings",
     stage: 3,
     title: "Findings",
-    text: "Validated findings, ranked, each with its evidence, uncertainty, limitations and checks.",
+    text: "Every finding status, with its evidence, uncertainty, limitations and validation checks.",
+  },
+  {
+    href: "/review",
+    stage: 3,
+    title: "Scientific review",
+    text: "Trace the real FLEX source, compositional and time-series results, limitations, and verified artifacts.",
   },
   {
     href: "/insights",

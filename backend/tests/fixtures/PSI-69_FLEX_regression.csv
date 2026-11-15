@@ -1,0 +1,8 @@
+FLEX Test #,FLEX Identifier,Test Date,Test GMT,Fuel,Ambient pressure; mmHg,O initial ambient composition; mole fraction,N initial ambient composition; mole fraction,CO initial ambient composition; mole fraction,He initial ambient composition; mole fraction,Droplet initial diameter; mm,Visible flame extinction diameter; mm,Burning rate; mm,Burn time; s,Test end
+1,20CAL08,3/5/2009,17:22:03,Methanol,757.7,0.21,0.79,0.0,0.0,1.69,0.89,0.52,4.3,Disruption
+20,192F001,10/24/09,14:09:04,Methanol,539.5,0.34,0.66,0.0,0.0,3.4,1.56,0.53,17.4,Completion
+24,196F003,10/24/09,19:44:04,Heptane,542.8,0.34,0.66,0.0,0.0,–,,,,Disruption
+40,219R001,1/8/2010,5:02:52,Methanol,535.1,0.3,0.7,0.0,0.0,3.77,–,0.62,19.2,Disruption
+114,C11M201,9/6/2010,19:14:22,Methanol,0.0,0.2,0.45,0.35,0.0,3.23,1.68,0.42,18.9,Extinction
+223,H01M104,9/9/2011,18:27:14,Methanol,759.6,0.2,0.75,0.0,0.05,,,,~6,Extinction
+224,H01H102,9/13/2011,11:55:40,Heptane,755.3,0.2,0.75,0.0,0.05,2.25,,0.57,~9,Completion

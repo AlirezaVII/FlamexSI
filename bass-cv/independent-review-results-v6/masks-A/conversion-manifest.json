@@ -1,0 +1,223 @@
+{
+  "schema": "falmex-labelme-mask-conversion-v1",
+  "frames": 24,
+  "reviewer_identity_not_inferred": true,
+  "frames_detail": [
+    {
+      "json": "001_B14_000000.json",
+      "mask": "001_B14_000000.png",
+      "polygons": 4,
+      "foreground_area_px": 967,
+      "no_visible_flame": false,
+      "uncertain_boundary": true,
+      "mask_sha256": "c8ff4e233f50307890907f60d6cf723d4f0485e871bf2b1199da0c8881a4b926"
+    },
+    {
+      "json": "002_B14_000256.json",
+      "mask": "002_B14_000256.png",
+      "polygons": 4,
+      "foreground_area_px": 2016,
+      "no_visible_flame": false,
+      "uncertain_boundary": false,
+      "mask_sha256": "4b1e24eacf51dcfc29ddd38b420220f6785d11da7176330b6df91b71175fbf6b"
+    },
+    {
+      "json": "003_B14_000535.json",
+      "mask": "003_B14_000535.png",
+      "polygons": 4,
+      "foreground_area_px": 2396,
+      "no_visible_flame": false,
+      "uncertain_boundary": true,
+      "mask_sha256": "579037cbd01f2e058c116d874565bbd2440496a365e69bcdb03cd913a9d84628"
+    },
+    {
+      "json": "004_B14_000813.json",
+      "mask": "004_B14_000813.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "005_B14_001070.json",
+      "mask": "005_B14_001070.png",
+      "polygons": 1,
+      "foreground_area_px": 208,
+      "no_visible_flame": false,
+      "uncertain_boundary": false,
+      "mask_sha256": "0aa93d967efe68f84603a5c0f86399b33f38d9d577b3a67e5341b378260bf3d8"
+    },
+    {
+      "json": "006_B14_001326.json",
+      "mask": "006_B14_001326.png",
+      "polygons": 1,
+      "foreground_area_px": 196,
+      "no_visible_flame": false,
+      "uncertain_boundary": false,
+      "mask_sha256": "d9d85841dad725a8ad41df4922323739f81da2b955d4321f3b8f5896f8bca122"
+    },
+    {
+      "json": "007_B14_001605.json",
+      "mask": "007_B14_001605.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "008_B14_001883.json",
+      "mask": "008_B14_001883.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "009_B17_000000.json",
+      "mask": "009_B17_000000.png",
+      "polygons": 5,
+      "foreground_area_px": 1687,
+      "no_visible_flame": false,
+      "uncertain_boundary": true,
+      "mask_sha256": "48898fadbb2c7b3e93f114a68fce258c3943c77b1a8de192ab9ffcdd1283995e"
+    },
+    {
+      "json": "010_B17_000877.json",
+      "mask": "010_B17_000877.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "011_B17_001827.json",
+      "mask": "011_B17_001827.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "012_B17_002778.json",
+      "mask": "012_B17_002778.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "013_B17_003655.json",
+      "mask": "013_B17_003655.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "014_B17_004532.json",
+      "mask": "014_B17_004532.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "015_B17_005483.json",
+      "mask": "015_B17_005483.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "016_B17_006433.json",
+      "mask": "016_B17_006433.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "017_B18_000000.json",
+      "mask": "017_B18_000000.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "018_B18_000619.json",
+      "mask": "018_B18_000619.png",
+      "polygons": 4,
+      "foreground_area_px": 2994,
+      "no_visible_flame": false,
+      "uncertain_boundary": true,
+      "mask_sha256": "fc87f5285ad978c1cbe6971d06336abfa29fc9081ca5b4a4f812bd3dcda18814"
+    },
+    {
+      "json": "019_B18_001290.json",
+      "mask": "019_B18_001290.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "020_B18_001961.json",
+      "mask": "020_B18_001961.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "021_B18_002581.json",
+      "mask": "021_B18_002581.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "022_B18_003201.json",
+      "mask": "022_B18_003201.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "023_B18_003872.json",
+      "mask": "023_B18_003872.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "json": "024_B18_004543.json",
+      "mask": "024_B18_004543.png",
+      "polygons": 0,
+      "foreground_area_px": 0,
+      "no_visible_flame": true,
+      "uncertain_boundary": false,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    }
+  ]
+}

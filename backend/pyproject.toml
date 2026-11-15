@@ -31,13 +31,25 @@ dev = [
     "pytest-cov>=5",
     "httpx>=0.27",
     "ruff>=0.5",
+    "matplotlib>=3.8",  # reproducible review plots only
+    "pymupdf>=1.24",  # optional published-vector extraction
+    "statsmodels>=0.14",  # clustered compositional sensitivity models
+    "scikit-learn>=1.5",  # date-grouped prediction checks
 ]
 
 [tool.setuptools.packages.find]
 include = ["falmex*"]
 
 [tool.setuptools.package-data]
-falmex = ["config/*.yaml"]
+falmex = [
+    "config/*.yaml",
+    "review_artifacts/*.json",
+    "review_artifacts/compositional/*",
+    "review_artifacts/replication/*",
+    "review_artifacts/review/*",
+    "review_artifacts/time_series/*",
+    "review_artifacts/uncertainty/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,312 @@
+{
+  "schema": "falmex-v6-package-verification-v1",
+  "archive": {
+    "path": "/mnt/agents/output/Falmex-Vision-v6-کامل.zip",
+    "bytes": 482831977,
+    "entries": 4238,
+    "sha256": "cd957358eee42f5c0023c9b10114c65737ac2bb26a36b9127e48cdfbcb56bce3",
+    "crc_passed": true,
+    "destination_sha256_matches": true,
+    "excluded_paths_found": []
+  },
+  "extracted_payload_manifest": {
+    "files": 4237,
+    "hash_failures": []
+  },
+  "extracted_verifier": {
+    "schema": "falmex-vision-v6-delivery-verification-v1",
+    "checks": 55,
+    "passed": 55,
+    "failed": 0,
+    "results": [
+      {
+        "check": "four v6 Python entry points compile",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "protocol unchanged since pre-download freeze",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "development and confirmation disjoint",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "B13/B15/B16 promoted to development",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "fresh confirmation tests",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "source-integrity amendment predates selection and training",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "source amendment used no pixels or model outputs",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "original protocol retained after source amendment",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "24 candidate refinement disclosed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "132 development rows",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "development contains no reserved test",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "development manifest covers all rows",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "all development source and mask hashes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "all 15 development video hashes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "74 features and 24 candidates",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "guard v2 activates only on known development menu frame",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "original guard remains as failed comparator",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "15 folds, 24 candidates and binary fold masks",
+        "passed": true,
+        "detail": {
+          "prediction_masks": 3168
+        }
+      },
+      {
+        "check": "expected fold prediction count",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "24 candidates summarized",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "selected candidate in ranking",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "selection fallback explicit",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "v2 provenance disclosed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "FP ceiling matches frozen reference",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "final model hash",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "final code hash",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "final development manifest hash inputs exist",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "final bundle matches inference code",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "final candidate matches development selection",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "no confirmation in final training frames",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "three confirmation source records",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "B14/B18 integrity replacements used",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "confirmation video sizes hashes and container metadata",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "24 confirmation selections",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "selection hash frozen",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "selection freeze predates inference",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "model freeze postdates selection freeze",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "protocol hash in inference",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "96 frozen predictions",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "four model keys",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "all frozen prediction hashes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "all confirmation source hashes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "source-only non-expert annotation",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "24 rasterized reference masks",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "annotation frozen after inference",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "annotation freeze binds inference",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "all confirmation annotation hashes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "v6 independent review still awaits humans",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "48 blank independent reviewer templates",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "four models evaluated",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "operational readiness false",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "independent expert annotation false",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "three video clusters only",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "v6 paired comparisons present",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "check": "pixel-identical repeated v6 inference on all 24 frames",
+        "passed": true,
+        "detail": null
+      }
+    ]
+  },
+  "review_archive": {
+    "archive": "/mnt/agents/output/Falmex-بازبینی-مستقل-v6.zip",
+    "bytes": 30009265,
+    "entries": 152,
+    "sha256": "df2757c9ce8b4cf715fa468a35a588f5eed54d35633a74e0e4457c4762ad7a72",
+    "crc_passed": true
+  },
+  "review_forbidden_prediction_paths": [],
+  "text_files_with_temporary_credential_markers": [],
+  "earlier_delivery_hashes_rechecked": true,
+  "original_upload_sha256": "5aa716b9088a46f87f8df9d1d796a50aa0daf2d55e5d8b7252d94b7cd6bea5bb"
+}

@@ -1,0 +1,7 @@
+{
+  "protocol_version": "1.0",
+  "protocol_file": "protocol_v1.md",
+  "protocol_sha256": "d5d7fdd4fb384950f22d183fe4ece44d929a324e5aec08f0d192f718333c4174",
+  "external_registry_preregistration": false,
+  "inferential_tests_on_independent_outcomes_before_lock": 0
+}

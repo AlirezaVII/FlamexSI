@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { ProgressBar } from "@/components/progress-bar";
+import { PwaRegistration } from "@/components/pwa-registration";
 import { Splash } from "@/components/splash";
 import {
   sidebarInitScript,
@@ -35,9 +37,33 @@ export const metadata: Metadata = {
   title: "Falmex — Microgravity Combustion Findings",
   description:
     "Explore, compare and validate findings from NASA microgravity combustion experiments.",
+  applicationName: "Falmex",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/falmex-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/falmex-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/falmex-apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Falmex",
+    statusBarStyle: "black-translucent",
+  },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f5f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#12141f" },
+  ],
+};
+
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html
       lang="en"
@@ -55,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <WorkspaceProvider>
           <Splash />
           <ProgressBar />
+          <PwaRegistration />
           {children}
         </WorkspaceProvider>
       </body>

@@ -120,8 +120,20 @@ class HoldoutReplication(Validator):
                 f"(effect {discovered.effect_size:.2f} in discovery, {result.effect_size:.2f} "
                 "on unseen data).", metrics,
             )
+        # A non-significant holdout is not, by itself, evidence against the
+        # discovery: small holdouts can be underpowered. Operationally reject
+        # only when the effect also collapses to less than a quarter of its
+        # discovery magnitude; otherwise leave replication inconclusive.
+        if retained < 0.25:
+            return ValidationResult(
+                self.name, False,
+                "Effect is not significant and retains less than 25% of its discovery "
+                "magnitude on held-out data.", metrics,
+            )
         return ValidationResult(
-            self.name, False, "Same direction, but not significant on held-out data.", metrics
+            self.name, None,
+            "Same direction and at least 25% of the discovery magnitude, but not "
+            "significant on held-out data; replication is inconclusive.", metrics,
         )
 
 

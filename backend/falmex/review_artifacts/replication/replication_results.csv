@@ -1,0 +1,7 @@
+hypothesis,family,dataset,status,n,spearman_rho,p_value,q_value,reason
+H1,primary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.
+H2,primary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.
+H3A,primary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.
+H3B,primary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.
+S1,secondary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.
+S2,secondary,PSI-68,not_evaluable,0,,,,Measured outcome variables are absent from the official experimental table.

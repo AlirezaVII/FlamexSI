@@ -1,0 +1,58 @@
+{
+  "schema": "falmex-visible-flame-polygons-v1",
+  "image_width": 720,
+  "image_height": 480,
+  "target": "visibly luminous flame regions; exclude telemetry, dark gaps, ignition hardware, isolated sparks and background reflections where distinguishable",
+  "annotation_method": "manual visual polygons by the AI assistant from source frames only with gamma/CLAHE visibility aids; frozen prediction masks, prediction areas, overlays and scores were not viewed during annotation",
+  "review_status": "visually_reviewed_by_ai_assistant_not_independent_expert",
+  "source_only_annotation": true,
+  "prediction_files_read": false,
+  "model_outputs_viewed_during_annotation": false,
+  "annotation_created_after_inference_freeze": true,
+  "inference_freeze_sha256": "a58e99d7f5547aba45f1b1b75e3cab39cb925444469b814ab897dc33820e861c",
+  "v6_model_sha256": "00a0609dd119f7c14db31453587efe1b8d18353c70dd908c211494a90b88566f",
+  "ambiguity_note": "Boundaries are coarse visible-light estimates, not chemical or expert-adjudicated boundaries. B14 and B18 use second-view videos showing the experiment on a monitor; external red equipment and monitor text are excluded. B17 frame 2778 contains a faint gray smudge that was not annotated as a clearly luminous flame. Camera-information and no-sync screens are negative.",
+  "uncertain_boundary_frames": [
+    "B14_000000.png",
+    "B14_000256.png",
+    "B14_000535.png",
+    "B17_000000.png",
+    "B18_000619.png"
+  ],
+  "annotations": {
+    "B14_000000.png": [
+      [[9, 181], [20, 176], [31, 180], [38, 185], [47, 188], [51, 195], [61, 199], [54, 205], [42, 207], [32, 213], [22, 208], [14, 201], [8, 190]]
+    ],
+    "B14_000256.png": [
+      [[9, 182], [20, 177], [32, 180], [42, 185], [50, 191], [55, 198], [65, 202], [57, 208], [44, 210], [34, 214], [23, 211], [15, 204], [9, 195]]
+    ],
+    "B14_000535.png": [
+      [[10, 182], [20, 177], [30, 180], [38, 185], [46, 190], [49, 197], [59, 201], [52, 206], [41, 208], [31, 212], [22, 208], [15, 202], [9, 192]]
+    ],
+    "B14_000813.png": [],
+    "B14_001070.png": [],
+    "B14_001326.png": [],
+    "B14_001605.png": [],
+    "B14_001883.png": [],
+    "B17_000000.png": [
+      [[52, 276], [67, 274], [82, 279], [94, 282], [111, 284], [130, 289], [146, 293], [153, 300], [139, 306], [119, 310], [102, 318], [80, 323], [63, 315], [54, 303], [49, 289]]
+    ],
+    "B17_000877.png": [],
+    "B17_001827.png": [],
+    "B17_002778.png": [],
+    "B17_003655.png": [],
+    "B17_004532.png": [],
+    "B17_005483.png": [],
+    "B17_006433.png": [],
+    "B18_000000.png": [],
+    "B18_000619.png": [
+      [[0, 164], [12, 158], [24, 157], [35, 163], [46, 170], [53, 180], [57, 190], [62, 197], [51, 204], [40, 210], [26, 214], [13, 208], [4, 199], [0, 190]]
+    ],
+    "B18_001290.png": [],
+    "B18_001961.png": [],
+    "B18_002581.png": [],
+    "B18_003201.png": [],
+    "B18_003872.png": [],
+    "B18_004543.png": []
+  }
+}

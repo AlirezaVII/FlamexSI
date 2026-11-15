@@ -99,6 +99,14 @@ export default function SimulatorPage() {
   const envOnAxis = axis === "gravity" || envId === "custom";
 
   const datasetId = dataset?.dataset_id;
+  const missingColumns = dataset
+    ? ["oxygen", "extinction", axis].filter(
+        (column) => !dataset.columns.includes(column),
+      )
+    : [];
+  const unsupported = missingColumns.length
+    ? `This dataset has no ${missingColumns.join(", ")} column; a flammability map needs oxygen, the chosen axis and whether the flame went out. No substitute outcome or gravity values have been inferred.`
+    : null;
   const body = useMemo(
     () => ({
       axis,
@@ -112,7 +120,7 @@ export default function SimulatorPage() {
   // a result only counts for the request it answers, so a change shows the loader at once
   const key = `${datasetId}|${JSON.stringify(body)}`;
   useEffect(() => {
-    if (!datasetId) return;
+    if (!datasetId || unsupported) return;
     let live = true;
     api
       .flammability(datasetId, body)
@@ -121,10 +129,10 @@ export default function SimulatorPage() {
     return () => {
       live = false;
     };
-  }, [datasetId, body, key]);
+  }, [datasetId, body, key, unsupported]);
   const current = result?.key === key ? result : null;
   const map = current?.map ?? null;
-  const error = current?.error ?? null;
+  const error = unsupported ?? current?.error ?? null;
 
   useEffect(() => {
     api

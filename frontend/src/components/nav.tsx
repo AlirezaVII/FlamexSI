@@ -65,6 +65,12 @@ const STAGES: Stage[] = [
         ),
       },
       {
+        href: "/bass-review",
+        label: "BASS-II evidence",
+        hint: "Inspect frozen flame masks and reviewer agreement",
+        icon: icon("M3 5h18v14H3zM6 15l4-4 3 3 2-2 3 3"),
+      },
+      {
         href: "/footage",
         label: "Footage",
         hint: "Flame video to measurements",
@@ -116,9 +122,17 @@ const STAGES: Stage[] = [
       {
         href: "/findings",
         label: "Findings",
-        hint: "Validated, ranked, with evidence",
+        hint: "All statuses, with evidence",
         icon: icon("M4 20V10M10 20V4M16 20v-7M22 20H2"),
         badge: "findings",
+      },
+      {
+        href: "/review",
+        label: "Review",
+        hint: "FLEX evidence, limitations and artifacts",
+        icon: icon(
+          "M4 5h16v14H4zM8 9h8M8 13h5M14 16l2 2 4-5",
+        ),
       },
     ],
   },
@@ -467,11 +481,19 @@ function MobileNav({ badges }: { badges: Record<Badge, number> }) {
             style={{ viewTransitionName: "m-segment" }}
             className="px-4 pb-2.5"
           >
-            <div className="relative grid grid-cols-2 rounded-[0.7rem] bg-surface-2 p-0.5">
+            <div
+              className="relative grid rounded-[0.7rem] bg-surface-2 p-0.5"
+              style={{
+                gridTemplateColumns: `repeat(${stage.items.length}, minmax(0, 1fr))`,
+              }}
+            >
               <span
                 aria-hidden
-                className="absolute bottom-0.5 left-0.5 top-0.5 w-[calc(50%-0.125rem)] rounded-[0.6rem] bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                style={{ transform: `translateX(${Math.max(sub, 0) * 100}%)` }}
+                className="absolute bottom-0.5 left-0.5 top-0.5 rounded-[0.6rem] bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                style={{
+                  width: `calc((100% - 0.25rem) / ${stage.items.length})`,
+                  transform: `translateX(${Math.max(sub, 0) * 100}%)`,
+                }}
               />
               {stage.items.map((item, k) => {
                 const n = item.badge ? badges[item.badge] : 0;
@@ -480,7 +502,7 @@ function MobileNav({ badges }: { badges: Record<Badge, number> }) {
                     key={item.href}
                     href={item.href}
                     aria-current={k === sub ? "page" : undefined}
-                    className={`relative z-10 flex items-center justify-center gap-1.5 py-1.5 text-[13px] ${k === sub ? "font-semibold text-ink" : "text-ink-2"}`}
+                    className={`relative z-10 flex min-h-11 items-center justify-center gap-1.5 px-1 py-1.5 text-[13px] ${k === sub ? "font-semibold text-ink" : "text-ink-2"}`}
                   >
                     {item.label}
                     <Count n={n} />
@@ -543,7 +565,7 @@ function MobileNav({ badges }: { badges: Record<Badge, number> }) {
 /**
  * Desktop: a macOS-style sidebar organised as the five pipeline stages; collapses to an icon
  * rail (⌘\). Mobile: a top bar (logo, dataset, theme) and a five-stage tab bar; a stage with
- * two pages opens a small menu above the bar, so every page fits at any width.
+ * multiple pages opens a segmented menu above the bar, so every page fits at any width.
  */
 export function Nav() {
   const badges = useBadges();

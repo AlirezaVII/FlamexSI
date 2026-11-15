@@ -37,6 +37,9 @@ class MediaAsset:
 class IngestResult:
     tables: list[RawTable] = field(default_factory=list)
     assets: list[MediaAsset] = field(default_factory=list)
+    # Adapter decisions (encoding, value cleaning, derived fields) are persisted
+    # in the dataset report by the upload workflow.
+    metadata: dict = field(default_factory=dict)
 
 
 Adapter = Callable[[str, bytes], IngestResult]
@@ -68,8 +71,27 @@ def read_file(filename: str, content: bytes) -> IngestResult:
 
 @register("csv")
 def _read_csv(filename: str, content: bytes) -> IngestResult:
-    frame = pd.read_csv(io.BytesIO(content), sep=None, engine="python")
-    return IngestResult(tables=[RawTable(Path(filename).stem, frame)])
+    # PSI exports are not uniformly UTF-8. FLEX v5, for example, contains CP1252
+    # en-dashes as explicit missing-value markers. Try strict decodings in order;
+    # never silently replace unrecognised bytes.
+    last_error: UnicodeDecodeError | None = None
+    for encoding in ("utf-8-sig", "cp1252"):
+        try:
+            text = content.decode(encoding)
+            break
+        except UnicodeDecodeError as exc:
+            last_error = exc
+    else:  # pragma: no cover - the final exception is the useful diagnostic
+        raise last_error  # type: ignore[misc]
+
+    frame = pd.read_csv(io.StringIO(text), sep=None, engine="python")
+    metadata: dict = {"encoding": encoding}
+    from falmex.ingest.flex import is_flex_table, prepare_flex
+
+    if is_flex_table(frame):
+        frame, flex_metadata = prepare_flex(frame)
+        metadata.update(flex_metadata)
+    return IngestResult(tables=[RawTable(Path(filename).stem, frame)], metadata=metadata)
 
 
 @register("tsv", "txt")

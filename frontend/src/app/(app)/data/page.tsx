@@ -262,18 +262,42 @@ export default function DataPage() {
                   </ul>
                   {t.warnings.map((w) => (
                     <p key={w} className="mt-2 text-xs text-ink-2">
-                      ⚠ {w}
+                      Warning: {w}
                     </p>
                   ))}
                 </div>
               ))}
-              <ul className="mt-3 border-t border-line pt-3 text-xs text-muted">
-                {detail.sources.map((s) => (
-                  <li key={s.source_id}>
-                    Source: <span className="text-ink-2">{s.filename}</span> ·
-                    sha256 <code>{s.sha256.slice(0, 16)}…</code>
-                  </li>
-                ))}
+              <ul className="mt-3 divide-y divide-line border-t border-line text-xs text-muted">
+                {detail.sources.map((s) => {
+                  const ingestion = detail.dataset.report.ingestion?.find(
+                    (item) => item.source_id === s.source_id,
+                  );
+                  return (
+                    <li key={s.source_id} className="py-3">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        <span className="font-medium text-ink-2">{s.filename}</span>
+                        <span>{s.media_type}</span>
+                        <span>{s.size_bytes.toLocaleString()} bytes</span>
+                        <span>Ingested {new Date(s.ingested_at).toLocaleString()}</span>
+                      </div>
+                      {(ingestion?.encoding || ingestion?.adapter) && (
+                        <p className="mt-1 text-ink-2">
+                          {ingestion.encoding && `Encoding: ${ingestion.encoding}`}
+                          {ingestion.encoding && ingestion.adapter && " · "}
+                          {ingestion.adapter && `Adapter: ${ingestion.adapter}`}
+                        </p>
+                      )}
+                      {ingestion?.missing_markers && (
+                        <p className="mt-1">
+                          Missing markers retained as missing: {ingestion.missing_markers.join(" ")}
+                        </p>
+                      )}
+                      <code className="mt-1 block break-all leading-5">
+                        SHA-256 {s.sha256}
+                      </code>
+                    </li>
+                  );
+                })}
               </ul>
             </Card>
           </div>

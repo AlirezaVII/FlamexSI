@@ -74,6 +74,11 @@ def _split_unit(raw: str, schema: Schema) -> tuple[str | None, str | None]:
     m = re.search(r"[\(\[]\s*([^\)\]]+?)\s*[\)\]]", raw)
     if m:
         hint = m.group(1)
+    else:
+        # NASA PSI tables commonly use 'variable; unit' instead of brackets.
+        m = re.search(r";\s*([^;]+?)\s*$", raw)
+        if m:
+            hint = m.group(1)
     canonical = schema.resolve(raw)
     if canonical is None:
         # 'pressure_atm' -> pressure + atm, but only when the suffix really is a unit of that

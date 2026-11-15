@@ -1,0 +1,62 @@
+[
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_147_TEST_B1.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_147_TEST_B1.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B1",
+    "declared_bytes": 5803980.0,
+    "downloaded_bytes": 5803980,
+    "sha256": "e82f64268c51efeea73a3f11e690a2f6e504845e980fb60356a6ef1584d273cd",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_147_TEST_B1.mp4"
+  },
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_148_TEST_B3.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_148_TEST_B3.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B1",
+    "declared_bytes": 8005417.0,
+    "downloaded_bytes": 8005417,
+    "sha256": "421b7089bb60dfe14d5d784dec63ef7be7fd710006608daee21840b5dfc70034",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_148_TEST_B3.mp4"
+  },
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_155_TEST_B2.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_155_TEST_B2.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B2",
+    "declared_bytes": 7855717.0,
+    "downloaded_bytes": 7855717,
+    "sha256": "823cc5255eb939cddbcfe1a8d278ec81b9f96a42dcc5e1663af3b7f0b4509c43",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_155_TEST_B2.mp4"
+  },
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "file_name": "PSI-25_Experimental table_BASS-II.csv",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 1,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Experimental table/PSI-25_Experimental table_BASS-II.csv",
+    "subcategory": "",
+    "declared_bytes": 16590,
+    "downloaded_bytes": 16590,
+    "sha256": "71e792bf6b5fb5ea620c5dd70fbbac05515992e12aefcf5dff47312caa48c042",
+    "local_path": "raw/PSI-25_Experimental table_BASS-II.csv"
+  }
+]

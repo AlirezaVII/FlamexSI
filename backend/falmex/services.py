@@ -35,6 +35,12 @@ def ingest_upload(
     combined = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
     for r in reports:
         r["source_id"], r["filename"] = source.source_id, filename
+    ingestion = {
+        **result.metadata,
+        "source_id": source.source_id,
+        "filename": filename,
+        "sha256": source.sha256,
+    }
     if into is not None:
         if source.source_id in into.source_ids:
             raise ValueError(f"'{filename}' is already part of this dataset")
@@ -42,12 +48,15 @@ def ingest_upload(
         merged = pd.concat([existing, combined], ignore_index=True)
         dataset = store.replace_dataset(
             into.dataset_id, merged, source_ids=[*into.source_ids, source.source_id],
-            report={"tables": [*into.report.get("tables", []), *reports]},
+            report={
+                "tables": [*into.report.get("tables", []), *reports],
+                "ingestion": [*into.report.get("ingestion", []), ingestion],
+            },
         )
         return dataset, source, assets
     dataset = store.create_dataset(
         name or filename, combined, synthetic=synthetic, source_ids=[source.source_id],
-        report={"tables": reports},
+        report={"tables": reports, "ingestion": [ingestion]},
     )
     return dataset, source, assets
 

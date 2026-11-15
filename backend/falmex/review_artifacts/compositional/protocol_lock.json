@@ -1,0 +1,8 @@
+{
+  "protocol_version": "1.0",
+  "protocol_file": "protocol_v1.md",
+  "protocol_sha256": "461e11adf5d2146100ea6f719c8e86694f03da8f92c2d8bcb1af55183b83e70f",
+  "locked_on": "2026-11-08",
+  "external_registry_preregistration": false,
+  "inferential_compositional_models_fit_before_lock": 0
+}

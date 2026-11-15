@@ -16,7 +16,7 @@ export function statusReason(f: Finding): string {
   if (f.status === "not_significant") {
     return `No supported relationship with this analysis and data (q = ${fmt(f.q_value, 3)}); not evidence of no effect.`;
   }
-  return "";
+  return "Observed in discovery data and supported on unseen experiments and against random shuffles; still not causal or external replication.";
 }
 
 /** Ranked findings. Rank = score; hover the score to see what it is made of. */

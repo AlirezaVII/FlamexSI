@@ -1,0 +1,53 @@
+[
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "test_id": "B5",
+    "role": "reserved_confirmation_before_frame_inspection",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_156_TEST_B5.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_156_TEST_B5.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B5",
+    "declared_bytes": 11138074.0,
+    "downloaded_bytes": 11138074,
+    "sha256": "e346f3a3b7f30e4a4d95f07ae3a5ccc5b0a38e7222f30ae9d5ea9516cbd829a6",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_156_TEST_B5.mp4"
+  },
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "test_id": "B4",
+    "role": "reserved_confirmation_before_frame_inspection",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_159_TEST_B4.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_159_TEST_B4.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B4",
+    "declared_bytes": 12580563.0,
+    "downloaded_bytes": 12580563,
+    "sha256": "19b2ca092ddf9b374dab6ea3f1f3f16e19f0ea6d2f5d5ba2fa5ea4b40a214712",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_159_TEST_B4.mp4"
+  },
+  {
+    "accession": "PSI-25",
+    "investigation": "BASS-II",
+    "doi": "10.60555/4qc4-de67",
+    "license": "CC0-1.0",
+    "test_id": "B7",
+    "role": "reserved_confirmation_before_frame_inspection",
+    "file_name": "PSI-25_Raw Data_BASS_GMT50_SAMPLE_161_TEST_B7.mp4",
+    "download_api": "https://psi.nasa.gov/geode-py/ws/studies/PSI-25/download",
+    "download_api_version": 2,
+    "legacy_remote_path": "/Home/psi-data/PSI-25/Raw Data/PSI-25_Raw Data_BASS_GMT50_SAMPLE_161_TEST_B7.mp4",
+    "subcategory": "Reduced Gravity/ Bhattacharjee/B7",
+    "declared_bytes": 16692289.0,
+    "downloaded_bytes": 16692289,
+    "sha256": "1936796eed7454b0feb8d8705e642d7a82ff8a0295a6e611c9c6c2cf0f0fb6ef",
+    "local_path": "raw/PSI-25_Raw Data_BASS_GMT50_SAMPLE_161_TEST_B7.mp4"
+  }
+]

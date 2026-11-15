@@ -1,0 +1,54 @@
+{
+  "review_type": "source-grounded metadata audit; not a complete row-by-row crosswalk",
+  "official_report": {
+    "title": "Detailed Results from the Flame Extinguishment Experiment (FLEX) March 2009 to December 2011",
+    "document_id": "NASA/TP-2015-216046",
+    "url": "https://ntrs.nasa.gov/citations/20150023456",
+    "documented_setting": "MDCA inside CIR, Destiny module, International Space Station",
+    "documented_series_size": 284,
+    "documented_operations": "Periodically scheduled intervals, generally about 4-10 droplets"
+  },
+  "psi_table_audit": {
+    "rows": 274,
+    "minimum_test_date": "2009-03-05",
+    "maximum_test_date": "2011-12-08",
+    "unique_test_dates": 80,
+    "rows_per_test_date_min": 1,
+    "rows_per_test_date_max": 9,
+    "duplicate_identifier_rows": [
+      {
+        "experiment_id": 70,
+        "flex_identifier": "193F001",
+        "test_date": "3/23/2010",
+        "test_gmt": "7:25:43",
+        "material": "Heptane"
+      },
+      {
+        "experiment_id": 73,
+        "flex_identifier": "193F001",
+        "test_date": "3/23/2010",
+        "test_gmt": "7:25:43",
+        "material": "Heptane"
+      }
+    ]
+  },
+  "numbering_evidence": {
+    "psi_experiment_id": 274,
+    "flex_identifier": "H19H201",
+    "psi_test_date": "12/8/2011",
+    "nasa_report_test": "FLEX-280",
+    "conclusion": "PSI test numbers must not be assumed equal to report test numbers"
+  },
+  "environment_conclusion": {
+    "series_level_label": "ISS_microgravity_flight_series",
+    "basis": "Official report scope, matching date interval, and identifier/date cross-checks",
+    "limitation": "PSI has no per-row space/ground column and no complete 274-row crosswalk was produced",
+    "per_row_labels_added": false
+  },
+  "campaign_conclusion": {
+    "recommended_field": "operational_date_proxy=test_date",
+    "official_campaign_id_recovered": false,
+    "limitation": "A test date is real operations metadata, not a verified campaign identifier"
+  },
+  "partial_gravity_claim_allowed": false
+}

@@ -7,6 +7,7 @@ const backend = process.env.FALMEX_BACKEND_URL;
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: __dirname,
   devIndicators: false,
   async rewrites() {
     if (!backend) return [];

@@ -1,0 +1,84 @@
+{
+  "analysis_type": "secondary vector-figure proof-of-method",
+  "raw_images_recovered": false,
+  "raw_per_test_d_t_histories_recovered": false,
+  "independent_replication": false,
+  "data_assimilation_executed": false,
+  "source": {
+    "authors": "Dietrich et al.",
+    "year": 2014,
+    "doi": "10.1007/s12217-014-9372-2",
+    "accessible_pdf_url": "https://bpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/231/files/2018/09/2014-MST-Droplet-combustion-experiments-aboard-the-2je8ess-12toi72.pdf",
+    "pdf_sha256": "06d93043c0857dbb08b83e04f9b8f37cebfd304f685cc6de93c2f8bb517cda17",
+    "pdf_page_index_zero_based": 8,
+    "article_page": 73,
+    "figure": 6,
+    "published_downsampling": "Only one of every three experimental points is plotted"
+  },
+  "calibration": {
+    "x_time_0_pdf_pt": 266.37701416015625,
+    "x_time_2s_pdf_pt": 298.93682861328125,
+    "y_d2_0_pdf_pt": 522.759033203125,
+    "y_d2_8mm2_pdf_pt": 306.9310302734375,
+    "pdf_points_per_second": 16.2799072265625,
+    "pdf_points_per_mm2": 26.978500366210938,
+    "legend_exclusion": "Markers wider than 3 PDF points excluded"
+  },
+  "primary_fit": "OLS on central 80% of pre-extinction time (0.10 to 0.90)",
+  "series": [
+    {
+      "series": "CO2",
+      "n": 100,
+      "burning_rate_constant_mm2_s": 0.4474683490077164,
+      "published_k_mm2_s": 0.45,
+      "k_minus_published_mm2_s": -0.002531650992283585,
+      "k_relative_difference": -0.005625891093963498,
+      "rmse_mm2": 0.028837186095968866,
+      "r_squared": 0.9995335250915633,
+      "late_to_primary_k_ratio": 0.796331461577297,
+      "late_k_reduction_fraction": 0.20366853842270305
+    },
+    {
+      "series": "N2",
+      "n": 51,
+      "burning_rate_constant_mm2_s": 0.516986421664954,
+      "published_k_mm2_s": 0.52,
+      "k_minus_published_mm2_s": -0.0030135783350460077,
+      "k_relative_difference": -0.005795342952011562,
+      "rmse_mm2": 0.0471328015049207,
+      "r_squared": 0.9990477090724688,
+      "late_to_primary_k_ratio": 0.839552713215933,
+      "late_k_reduction_fraction": 0.16044728678406694
+    },
+    {
+      "series": "He",
+      "n": 60,
+      "burning_rate_constant_mm2_s": 0.7008573931566557,
+      "published_k_mm2_s": 0.7,
+      "k_minus_published_mm2_s": 0.0008573931566557835,
+      "k_relative_difference": 0.0012248473666511828,
+      "rmse_mm2": 0.01782759831955678,
+      "r_squared": 0.9997837734352788,
+      "late_to_primary_k_ratio": 0.9096586121535096,
+      "late_k_reduction_fraction": 0.09034138784649037
+    }
+  ],
+  "candidate_row_mapping": {
+    "status": "not_asserted_as_explicit_figure_identifiers",
+    "basis": "Composition, D0, published K and extinction time agree with unique candidate rows",
+    "candidates": {
+      "CO2": 110,
+      "N2": 203,
+      "He": 257
+    }
+  },
+  "limitations": [
+    "Only three methanol curves are available in this figure.",
+    "The figure is a published, downsampled secondary representation, not raw D(t).",
+    "Figure 6 does not print per-curve test identifiers.",
+    "The three environments are not fully matched in pressure, droplet size and protocol.",
+    "Window fits are descriptive; no independent-point OLS p-values are reported.",
+    "Post-extinction D² slopes are vaporization diagnostics, not hot-flame burning rates.",
+    "Three curves cannot support a general diluent effect or data assimilation validation."
+  ]
+}

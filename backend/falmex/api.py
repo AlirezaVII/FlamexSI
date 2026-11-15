@@ -12,7 +12,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from falmex import __version__, deep, flammability, questions, services, synthetic, trend, vision
+from falmex import (
+    __version__,
+    deep,
+    flammability,
+    questions,
+    scientific_review,
+    services,
+    synthetic,
+    trend,
+    vision,
+)
 from falmex.ai import (
     get_provider,
     interpret_finding,
@@ -347,6 +357,32 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         frame = store(request).load_frame(dataset_id)
         return {"dataset": ds, "columns": services.column_stats(frame, schema(request)),
                 "sources": store(request).get_sources(ds.source_ids)}
+
+    def review_or_404(request: Request, dataset_id: str) -> dict:
+        ds = dataset_or_404(request, dataset_id)
+        review = scientific_review.scientific_review_for_dataset(
+            ds,
+            store(request).get_sources(ds.source_ids),
+            services.load_findings(store(request), dataset_id),
+        )
+        if review is None:
+            raise HTTPException(404, "No verified scientific review bundle for this dataset")
+        return review
+
+    @app.get("/api/datasets/{dataset_id}/scientific-review")
+    def get_scientific_review(request: Request, dataset_id: str):
+        return review_or_404(request, dataset_id)
+
+    @app.get("/api/datasets/{dataset_id}/scientific-review/artifacts/{key}")
+    def get_scientific_review_artifact(request: Request, dataset_id: str, key: str):
+        review_or_404(request, dataset_id)
+        try:
+            path = scientific_review.artifact_path(key)
+        except (KeyError, FileNotFoundError) as exc:
+            raise HTTPException(404, "Unknown scientific review artifact") from exc
+        return FileResponse(
+            path, media_type=scientific_review.MEDIA_TYPES[path.suffix]
+        )
 
     @app.post("/api/datasets/{dataset_id}/query")
     def query(request: Request, dataset_id: str, body: QueryRequest):

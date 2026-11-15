@@ -1,0 +1,153 @@
+{
+  "schema": "falmex-confirmation-v6-rasterization-v1",
+  "polygons_sha256": "b95739b93f9ee5f9806b0ed62925fd4cc5629a66f2a1d5f94011aecb28ccf1e4",
+  "source_only_annotation": true,
+  "prediction_files_read": false,
+  "independent_expert_annotation": false,
+  "frames": [
+    {
+      "frame": "B14_000000.png",
+      "polygons": 1,
+      "area_px": 1161,
+      "mask_sha256": "eb73e756b0e9a86638c00bf6982c01c7273fe4fa0a1eb1dbbe211ee639b9bd61"
+    },
+    {
+      "frame": "B14_000256.png",
+      "polygons": 1,
+      "area_px": 1325,
+      "mask_sha256": "0f9398ad2b8c376817ba85d5bf676e273d759c8b82392575217fd4212afc017d"
+    },
+    {
+      "frame": "B14_000535.png",
+      "polygons": 1,
+      "area_px": 1070,
+      "mask_sha256": "b93d5cfa4f28ef95df561c92ed9da56b15305db6c36ba49ca6e49a57e652f511"
+    },
+    {
+      "frame": "B14_000813.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B14_001070.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B14_001326.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B14_001605.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B14_001883.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_000000.png",
+      "polygons": 1,
+      "area_px": 3125,
+      "mask_sha256": "b4555d2a86f77aebedc67766e41b58414dfebcc2d82f59d122624f5449eeb4ee"
+    },
+    {
+      "frame": "B17_000877.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_001827.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_002778.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_003655.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_004532.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_005483.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B17_006433.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_000000.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_000619.png",
+      "polygons": 1,
+      "area_px": 2537,
+      "mask_sha256": "f27c83bc6a94c89d6ceb605e9828a480e4f90bcefbd880274dd2529b074efdeb"
+    },
+    {
+      "frame": "B18_001290.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_001961.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_002581.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_003201.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_003872.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    },
+    {
+      "frame": "B18_004543.png",
+      "polygons": 0,
+      "area_px": 0,
+      "mask_sha256": "377f2ef40010887e54256d25c7f92fdfaec4b03ea7427494363a9cd02dc88188"
+    }
+  ]
+}

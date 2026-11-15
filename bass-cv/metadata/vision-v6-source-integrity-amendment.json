@@ -1,0 +1,45 @@
+{
+  "schema": "falmex-vision-v6-source-integrity-amendment-v1",
+  "created_before_confirmation_selection_freeze": true,
+  "created_before_final_model_training": true,
+  "confirmation_frame_pixels_inspected": false,
+  "model_outputs_inspected": false,
+  "original_protocol_file": "metadata/vision-v6-split.json",
+  "original_protocol_modified": false,
+  "reason": "Container-level source integrity validation failed before metadata-only frame selection. File size and SHA-256 alone were not accepted as evidence of a decodable video.",
+  "source_replacements": [
+    {
+      "test_id": "B14",
+      "original_file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_174_TESTB14.mp4",
+      "replacement_file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_174_TESTB14_2ND_VIEW.mp4",
+      "replacement_subcategory": "Reduced Gravity/ Bhattacharjee/B14",
+      "reason": "The authoritative 3,145,728-byte original has an incomplete 7,130,483-byte mdat declaration and no moov atom. The preregistered test identifier is retained, but the alternative second-view file from the same B14 source subcategory is used.",
+      "selection_basis": "NASA file metadata and MP4 container metadata only; no frame pixels inspected"
+    },
+    {
+      "test_id": "B18",
+      "original_file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_176_TESTB18.mp4",
+      "replacement_file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_176_TESTB18_2ND_VIEW.mp4",
+      "replacement_subcategory": "Reduced Gravity/ Bhattacharjee/B18",
+      "reason": "Two independent size-complete acquisitions reproduced SHA-256 d5834060d0bc479bf2080d60af6165fc918427de1999abcc2975729ea344a5cb but contained no ftyp or mdat signature and failed moov/container validation. The alternative second-view file from the same B18 source subcategory is used.",
+      "selection_basis": "NASA file metadata and byte/container signatures only; no frame pixels inspected"
+    }
+  ],
+  "clean_restarts": [
+    {
+      "test_id": "B18",
+      "file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_176_TESTB18.mp4",
+      "reason": "The size-complete resumed file had an invalid first atom although a moov atom existed. The affected file was preserved under rejected-downloads and a clean download was required.",
+      "partial_reuse_allowed": false
+    }
+  ],
+  "unchanged_valid_source": {
+    "test_id": "B17",
+    "file": "PSI-25_Raw Data_BASS_GMT183_SAMPLE_175_TESTB15.mp4",
+    "container_metadata_validated": true,
+    "width": 720,
+    "height": 480,
+    "frame_count": 7312
+  },
+  "scientific_effect": "No development data, annotation, model candidate, selection metric, threshold, or inference rule was changed. Confirmation remains B14/B17/B18; only the B14 and B18 source views changed before selection freeze because the original files failed container validation."
+}

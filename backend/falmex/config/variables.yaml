@@ -18,16 +18,18 @@ variables:
   experiment_id:
     role: id
     type: text
-    aliases: [experiment, exp_id, test_id, run_id, experiment_number]
+    aliases: [experiment, exp_id, test_id, run_id, experiment_number, flex_test]
 
   oxygen:
     role: condition
     type: numeric
     unit: percent_o2
     description: Ambient oxygen concentration (mole/volume fraction, %)
-    aliases: [o2, oxygen_concentration, oxygen_percent, o2_percent, xo2]
+    aliases: [o2, oxygen_concentration, oxygen_percent, o2_percent, xo2,
+              o_initial_ambient_composition_mole_fraction]
     units:
       fraction: {scale: 100.0}
+      mole fraction: {scale: 100.0}
 
   pressure:
     role: condition
@@ -40,6 +42,7 @@ variables:
       psi: {scale: 6.894757}
       bar: {scale: 100.0}
       Pa: {scale: 0.001}
+      mmHg: {scale: 0.133322368}
 
   flow_rate:
     role: condition
@@ -99,7 +102,7 @@ variables:
     type: numeric
     unit: s
     description: Burn duration
-    aliases: [burn_duration, burning_time]
+    aliases: [burn_duration, burning_time, burn_time_s]
 
   extinction:
     role: outcome
@@ -112,6 +115,113 @@ variables:
     type: boolean
     description: Whether ignition occurred
     aliases: [ignited, ignition_success]
+
+  # ---- NASA PSI-69 Flame Extinguishment Experiment (FLEX) ----
+  flex_identifier:
+    role: meta
+    type: text
+    description: NASA FLEX test identifier; distinct from the unique numeric test number
+
+  test_date:
+    role: meta
+    type: text
+    description: FLEX test date as reported by NASA
+
+  test_gmt:
+    role: meta
+    type: text
+    description: FLEX test time as reported by NASA
+
+  nitrogen_fraction:
+    role: condition
+    type: numeric
+    unit: mole_fraction
+    description: Initial ambient nitrogen mole fraction
+    aliases: [n_initial_ambient_composition_mole_fraction]
+
+  carbon_dioxide_fraction:
+    role: condition
+    type: numeric
+    unit: mole_fraction
+    description: Initial ambient carbon dioxide mole fraction (CO in the PSI export header)
+    aliases: [co_initial_ambient_composition_mole_fraction]
+
+  helium_fraction:
+    role: condition
+    type: numeric
+    unit: mole_fraction
+    description: Initial ambient helium mole fraction
+    aliases: [he_initial_ambient_composition_mole_fraction]
+
+  initial_droplet_diameter:
+    role: condition
+    type: numeric
+    unit: mm
+    description: Initial droplet diameter D0
+    aliases: [droplet_initial_diameter_mm]
+
+  visible_extinction_diameter:
+    role: outcome
+    type: numeric
+    unit: mm
+    description: Droplet diameter De at visible flame extinction
+    aliases: [visible_flame_extinction_diameter_mm]
+
+  droplet_burning_rate_constant:
+    role: outcome
+    type: numeric
+    unit: mm2_per_s
+    description: Average burning-rate constant K from a linear fit of D² versus time; not mm/s
+    aliases: [burning_rate_mm]
+
+  test_end:
+    role: meta
+    type: categorical
+    description: FLEX test endpoint; Extinction, Disruption and Completion remain distinct
+
+  burn_time_original:
+    role: meta
+    type: text
+    description: Original burn-time value, including any approximation marker
+
+  burn_time_approximate:
+    role: meta
+    type: boolean
+    description: Whether NASA marked burn time as approximate with a tilde
+
+  ambient_pressure_raw_mmhg:
+    role: meta
+    type: numeric
+    unit: mmHg
+    description: Original reported pressure, retained when the analysis pressure is invalidated
+
+  pressure_quality:
+    role: meta
+    type: categorical
+    description: Pressure validity flag; non-positive values are excluded only from pressure analyses
+
+  test_end_extinction_versus_completion:
+    role: outcome
+    type: boolean
+    description: True=Extinction, False=Completion, missing=Disruption; not a universal extinction label
+
+  extinction_diameter_ratio:
+    role: outcome
+    type: numeric
+    unit: dimensionless
+    description: Derived De/D0 when both diameters are available and D0 is positive
+
+  d2_law_residual_mm2:
+    role: meta
+    type: numeric
+    unit: mm2
+    description: Endpoint QC residual D0²-De²-K*tb; not an independent measurement
+
+  d2_law_normalized_residual:
+    role: meta
+    type: numeric
+    unit: dimensionless
+    description: Endpoint QC residual divided by D0²; quasi-steady assumptions may not hold
 
   # ---- measured from flame footage by falmex.vision (Footage page) ----
   flame_circularity:

@@ -1,0 +1,9 @@
+{
+  "schema": "falmex-lightweight-github-verification-v1",
+  "status": "passed",
+  "checks": 132,
+  "scope": "lightweight source/model/frozen-mask/review integrity; not full training reproduction",
+  "third_adjudication_completed": false,
+  "independent_expert_validation": false,
+  "operational_readiness": false
+}
