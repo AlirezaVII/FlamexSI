@@ -5,12 +5,11 @@ from collections import defaultdict
 from math import isfinite
 from statistics import mean, median
 
+from build_flex_decision_review import DATA, MODELS, TASKS, date, estimate
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-
-from build_flex_decision_review import DATA, MODELS, TASKS, date, estimate
 
 
 def observations(raw, xi, yi, ratio):
