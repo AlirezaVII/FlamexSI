@@ -7,6 +7,8 @@ engine finds real signal AND does not report what is not there:
   - oxygen  -> burning_rate (positive)          planted
   - oxygen, pressure -> extinction (negative)   planted
   - material -> flame_length                    planted
+  - oxygen × flow_rate -> burn_time             planted interaction: the oxygen–burn time
+                                                slope is steeper at higher flow
   - temperature -> anything                     pure noise (must NOT be validated)
   - lab_humidity -> anything                    pure noise, extra column outside the schema
   - sample_mass                                 a spurious variable: it only tracks oxygen and
@@ -24,6 +26,7 @@ PLANTED = {
     ("pressure", "extinction"),
     ("material", "flame_length"),
 }
+INTERACTIONS = {("oxygen × flow_rate", "burn_time")}
 NOISE_CONDITIONS = {"temperature", "lab_humidity"}
 SPURIOUS = {"sample_mass": "oxygen"}  # spurious variable -> the variable that explains it
 
@@ -48,7 +51,10 @@ def generate(n_experiments: int = 200, seed: int = 0) -> pd.DataFrame:
     )
     logit = -0.35 * (oxygen - 25) - 0.06 * (pressure - 70)
     extinction = rng.random(n) < 1 / (1 + np.exp(-logit))
-    burn_time = np.clip(60 - 1.2 * oxygen + rng.normal(0, 5, n), 1, None)
+    # centered product: the interaction adds no main effect of flow on burn time
+    burn_time = np.clip(
+        60 - 1.2 * oxygen - 0.06 * (oxygen - 27.5) * (flow - 10) + rng.normal(0, 5, n), 1, None
+    )
 
     return pd.DataFrame({
         "experiment_id": [f"SYN-{i:04d}" for i in range(n)],

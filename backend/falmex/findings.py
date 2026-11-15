@@ -74,6 +74,9 @@ class Split(BaseModel):
     groups_holdout: int | None = None
     # values found on both sides after splitting; all zero = no leakage between the parts
     shared_across_split: dict[str, int] = {}
+    # enough to rebuild exactly the same split (e.g. to show which points were unseen)
+    test_fraction: float | None = None
+    seed: int | None = None
 
 
 class Uncertainty(BaseModel):

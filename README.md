@@ -39,7 +39,10 @@ capabilities the team decides to build.
 | Schema | `backend/falmex/config/variables.yaml` | The only place that knows column names, aliases, units and roles. Adjust this for NASA's data, not the code. |
 | Pipeline | `backend/falmex/pipeline.py` | Maps columns, converts units, coerces types, drops empty/duplicate rows. Every step is reported. |
 | Storage | `backend/falmex/storage.py` | Raw files stored unchanged (content-addressed), Parquet datasets, DuckDB for metadata and queries. |
-| Analysis | `backend/falmex/analysis/` | Pluggable analyzers (`@register_analyzer`). Defaults: rank correlation, group differences. |
+| Analysis | `backend/falmex/analysis/` | Pluggable analyzers (`@register_analyzer`). Defaults: rank correlation, group differences, two-way interactions (`oxygen × flow_rate`, product term with both main effects) and curvature (quadratic term). Interaction and curvature are validated with Freedman–Lane permutations, so the null keeps the other effects. |
+| Chart data | `backend/falmex/trend.py` | Rebuilds a finding's exact discovery/unseen split and fits a LOWESS trend on the discovery points only, with a bootstrap band. |
+| Footage | `backend/falmex/vision.py` | OpenCV, frame by frame: circularity Ψ = 4πA/P² of the projected outline, equivalent radius and dR/dt, extinction radius, blue vs soot-like pixel shares (an uncalibrated chromatic proxy, not radiometry). Lengths in px unless calibrated. Results can be written into an experiment's rows as `flame_*` outcomes. |
+| Flammability map | `backend/falmex/flammability.py` | Logistic model of P(burn) by oxygen and gravity or flow (plus pressure if present), fitted only on loaded data, with bootstrap intervals and an extrapolation flag. Published limits (MOC, …) are entered with a citation and drawn next to the estimate, never mixed in. |
 | Validation | `backend/falmex/validation.py` | Experiment-level 70/30 split, holdout replication, permutation test, FDR correction. Pluggable. |
 | Findings | `backend/falmex/findings.py` | A finding = association + statistics + validation + uncertainty + evidence + limitations + checks. Insights are separate and human-made. Ranking is a weighted framework (strength, data, validation, stability on unseen data, not-chance, relevance, independence); weights are neutral by default. |
 | Question engine | `backend/falmex/questions.py` | Generates discovery goals from the columns a dataset actually has; nothing is hard-coded to extinction or oxygen. |
@@ -49,7 +52,7 @@ capabilities the team decides to build.
 | AI | `backend/falmex/ai/` | Gemini (default) or `mock`. The AI only explains computed findings, words search queries and suggests innovation directions. It never creates findings or references. |
 | API | `backend/falmex/api.py` | FastAPI. Interactive docs at `/docs`. |
 | Landing page | `frontend/src/app/(landing)/` | `/`: the story page. A scroll journey Earth → orbit → Moon → Mars with real planets rendered from NASA surface maps (`public/textures`, credits there); the hero Earth turns with the cursor and can be dragged. |
-| App | `frontend/src/app/(app)/` | `/overview`, Explore, Compare, Discover, Findings, Insights, Innovate, Data, and a finding detail page. |
+| App | `frontend/src/app/(app)/` | `/overview`, Explore, Compare, Discover, Findings, Insights, Simulate, Footage, Innovate, Data, and a finding detail page. |
 
 ### Finding statuses
 

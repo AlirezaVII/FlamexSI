@@ -86,6 +86,10 @@ def _analyzer_for(finding: Finding, min_samples: int) -> Analyzer:
 
 
 def suggest(finding: Finding, frame: pd.DataFrame, schema: Schema) -> list[ProbeSpec]:
+    if finding.condition not in frame:
+        # combined conditions (e.g. an interaction) are not single columns; the probes here
+        # re-test one condition against one outcome and do not apply to them
+        return []
     specs = []
     for probe in _REGISTRY.values():
         specs.extend(probe.suggest(finding, frame, schema))

@@ -3,7 +3,7 @@ import { Nav } from "@/components/nav";
 /** The app: explore, compare, discover, findings, insights, data. */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+    <div className="flex min-h-screen flex-col pb-16 lg:pb-0">
       <Nav />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         {children}

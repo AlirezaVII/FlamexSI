@@ -27,6 +27,7 @@ import { SAFETY_AREAS } from "@/lib/labels";
 import type {
   DeepSuggestion,
   Finding,
+  FindingChart,
   ProbeResult,
   Row,
   SafetyArea,
@@ -184,15 +185,8 @@ export default function FindingPage() {
                   : `median ${label(f.outcome)}`
               }
             />
-          ) : rows === null ? (
-            <ChartSkeleton
-              variant="scatter"
-              label="Loading experiment data for the chart…"
-            />
           ) : (
-            <div className="fade-in">
-              <ScatterChart rows={rows} x={f.condition} y={f.outcome} />
-            </div>
+            <FindingScatter finding={f} />
           )}
         </Card>
 
@@ -321,8 +315,9 @@ export default function FindingPage() {
               extra={
                 perm?.metrics.permutations !== undefined && (
                   <p className="mt-2 text-xs text-muted">
-                    The outcome was shuffled {perm.metrics.permutations} times
-                    to destroy any real link;{" "}
+                    {f.analyzer === "interaction" || f.analyzer === "curvature"
+                      ? `Residuals of the model without the tested term were shuffled ${perm.metrics.permutations} times (Freedman–Lane), keeping the other effects but destroying the tested one;`
+                      : `The outcome was shuffled ${perm.metrics.permutations} times to destroy any real link;`}{" "}
                     {perm.metrics.shuffles_as_strong ?? "—"} shuffles produced
                     an effect at least as strong (p ={" "}
                     {fmt(perm.metrics.permutation_p_value)}).
@@ -521,6 +516,111 @@ export default function FindingPage() {
 
       <PromoteCard finding={f} />
     </>
+  );
+}
+
+/** The finding's scatter chart, with an optional third variable for colour. */
+function FindingScatter({ finding }: { finding: Finding }) {
+  // undefined = let the server choose (an interaction's modifier); "none" = split only
+  const [colorBy, setColorBy] = useState<string | undefined>(undefined);
+  const [chart, setChart] = useState<FindingChart | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    api
+      .findingChart(finding.finding_id, colorBy)
+      .then((c) => {
+        if (!live) return;
+        setChart(c);
+        if (colorBy === undefined) setColorBy(c.color_by ?? "none");
+      })
+      .catch((e) => live && setError(e.message));
+    return () => {
+      live = false;
+    };
+  }, [finding.finding_id, colorBy]);
+
+  if (error) return <ErrorNote message={error} />;
+  if (!chart)
+    return (
+      <ChartSkeleton
+        variant="scatter"
+        label="Loading experiment data for the chart…"
+      />
+    );
+  return (
+    <div className="fade-in">
+      <label className="mb-3 flex items-center gap-2 text-xs text-muted">
+        Colour by
+        <select
+          value={colorBy}
+          onChange={(e) => {
+            setChart(null);
+            setColorBy(e.target.value);
+          }}
+          className="rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink"
+        >
+          <option value="none">Discovery vs unseen data</option>
+          {chart.color_options.map((c) => (
+            <option key={c} value={c}>
+              {label(c)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <ScatterChart chart={chart} />
+      {finding.analyzer === "interaction" && (
+        <InteractionSlopes finding={finding} />
+      )}
+      {chart.trend && (
+        <p className="mt-2 text-xs text-muted">{chart.trend.method}</p>
+      )}
+    </div>
+  );
+}
+
+/** An interaction in the data's own units: the slope at a low and a high modifier level. */
+function InteractionSlopes({ finding }: { finding: Finding }) {
+  const d = finding.details as {
+    focus?: string;
+    modifier?: string;
+    modifier_low?: number;
+    modifier_high?: number;
+    slope_at_low?: number;
+    slope_at_high?: number;
+  };
+  if (d.slope_at_low === undefined || d.slope_at_high === undefined)
+    return null;
+  const y = label(finding.outcome);
+  return (
+    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      {(
+        [
+          ["low", d.modifier_low, d.slope_at_low],
+          ["high", d.modifier_high, d.slope_at_high],
+        ] as const
+      ).map(([lvl, m, slope]) => (
+        <div
+          key={lvl}
+          className="rounded-lg border border-line bg-surface-2 px-3 py-2"
+        >
+          <p className="text-xs text-muted">
+            At {lvl} {label(d.modifier ?? "")} ({fmt(m, 3)},{" "}
+            {lvl === "low" ? "10th" : "90th"} percentile)
+          </p>
+          <p className="text-sm text-ink">
+            {y} changes by{" "}
+            <strong className="tabular-nums">{fmt(slope, 3)}</strong> per unit
+            of {label(d.focus ?? "")}
+          </p>
+        </div>
+      ))}
+      <p className="text-xs text-muted sm:col-span-2">
+        Slopes from the fitted interaction model on the discovery data. The
+        difference between them is the interaction.
+      </p>
+    </div>
   );
 }
 

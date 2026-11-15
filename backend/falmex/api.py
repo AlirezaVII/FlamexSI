@@ -1,6 +1,7 @@
 """HTTP API. Run: uvicorn falmex.api:app --reload"""
 
 import io
+import re
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -8,9 +9,10 @@ from functools import lru_cache
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from falmex import __version__, deep, questions, services, synthetic
+from falmex import __version__, deep, flammability, questions, services, synthetic, trend, vision
 from falmex.ai import (
     get_provider,
     interpret_finding,
@@ -110,6 +112,48 @@ class InnovationUpdate(BaseModel):
     decision_note: str | None = None
 
 
+class AnalyzeMediaRequest(BaseModel):
+    fps: float | None = Field(None, gt=0, le=1_000_000)  # overrides the file's frame rate
+    mm_per_px: float | None = Field(None, gt=0)  # calibration; lengths stay in px without it
+
+
+class AttachMediaRequest(BaseModel):
+    dataset_id: str
+    experiment_id: str
+
+
+class FlammabilityRequest(BaseModel):
+    axis: str = "gravity"
+    material: str | None = None
+    pressure: float | None = Field(None, gt=0)
+    at_x: float | None = None  # e.g. the gravity of the chosen environment
+    at_oxygen: float | None = Field(None, gt=0, le=100)
+
+
+class ReferenceLimitRequest(BaseModel):
+    material: str = Field(min_length=1)
+    kind: str = Field("MOC", min_length=2)
+    oxygen_percent: float = Field(gt=0, le=100)
+    pressure_kpa: float | None = Field(None, gt=0)
+    gravity_g: float | None = Field(None, ge=0)
+    flow_cm_s: float | None = Field(None, ge=0)
+    source: str = Field(min_length=5)
+    url: str = ""
+    note: str = ""
+    entered_by: str = Field(min_length=2)
+
+
+# columns added to an experiment from its analyzed footage; lengths only when calibrated
+FOOTAGE_COLUMNS = {
+    "flame_circularity": ("circularity_median", False),
+    "flame_blue_fraction": ("blue_fraction_median", False),
+    "flame_soot_blue_ratio": ("soot_to_blue_ratio", False),
+    "flame_growth_rate": ("growth_rate", True),
+    "flame_extinction_radius": ("extinction_radius", True),
+}
+FRAME_NAME = re.compile(r"^frame_\d{4}\.jpg$")
+
+
 class SyntheticRequest(BaseModel):
     n_experiments: int = Field(200, ge=10, le=100_000)
     seed: int = 0
@@ -127,7 +171,8 @@ def _cached_showcase(min_samples: int, seed: int) -> dict:
         config=DiscoveryConfig(outcomes=["burn_time"], min_samples=min_samples, seed=seed,
                                extra={"extra_conditions": ["sample_mass"]}),
     )
-    f = next(x for x in findings if x.condition == "sample_mass")
+    f = next(x for x in findings
+             if x.condition == "sample_mass" and x.analyzer == "rank_correlation")
     holdout = next(v for v in f.validations if v.method == "holdout_replication").metrics
     perm = next(v for v in f.validations if v.method == "permutation_test").metrics
     checks = {p.params["control"]: p.metrics for p in f.deep if p.probe == "third_variable"}
@@ -391,6 +436,18 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     def get_finding(request: Request, finding_id: str):
         return finding_or_404(request, finding_id)
 
+    @app.get("/api/findings/{finding_id}/chart")
+    def finding_chart(request: Request, finding_id: str, color_by: str | None = None):
+        """Points labelled discovery / unseen, optionally coloured by a third variable, plus
+        a LOWESS trend fitted on the discovery points only."""
+        finding = finding_or_404(request, finding_id)
+        frame = store(request).load_frame(finding.dataset_id)
+        try:
+            return trend.chart_data(finding, frame, schema(request).id_column, color_by,
+                                    settings.test_fraction, settings.random_seed)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
     @app.post("/api/findings/{finding_id}/interpret")
     def interpret(request: Request, finding_id: str, force: bool = False):
         finding = finding_or_404(request, finding_id)
@@ -534,6 +591,136 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         innovation = Innovation(**{**raw, **changes, "updated_at": datetime.now(UTC)})
         store(request).save_innovation(innovation.model_dump(mode="json"))
         return innovation
+
+    # ---- flame footage: computer-vision metrics ---------------------------------------
+    def media_or_404(request: Request, source_id: str):
+        found = [s for s in store(request).get_sources([source_id]) if s.media_type == "media"]
+        if not found:
+            raise HTTPException(404, f"Footage '{source_id}' not found")
+        return found[0]
+
+    @app.get("/api/media")
+    def list_media(request: Request):
+        done = store(request).analyzed_media()
+        return [{"source": m, "analyzed": m.source_id in done,
+                 "kind": "video" if m.filename.lower().endswith(tuple(vision.VIDEO_EXT))
+                 else "image"} for m in store(request).list_media()]
+
+    @app.post("/api/media/synthetic", status_code=201)
+    def synthetic_media(request: Request):
+        """SYNTHETIC test footage with known ground truth (not NASA)."""
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "synthetic_flame_test.avi"
+            vision.synthetic_clip(path)
+            source = store(request).save_raw(path.name, path.read_bytes(), "media",
+                                             synthetic=True)
+        return {"source": source}
+
+    @app.post("/api/media/{source_id}/analyze")
+    def analyze_media(request: Request, source_id: str, body: AnalyzeMediaRequest | None = None):
+        body = body or AnalyzeMediaRequest()
+        source = media_or_404(request, source_id)
+        try:
+            result = vision.analyze(
+                store(request).raw_path(source), store(request).media_dir(source_id),
+                vision.Calibration(fps=body.fps, mm_per_px=body.mm_per_px),
+            )
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        result.update(source=source.model_dump(mode="json"),
+                      synthetic=bool(source.synthetic), analyzed_at=datetime.now(UTC))
+        store(request).save_media_analysis(source_id, result)
+        return result
+
+    @app.get("/api/media/{source_id}/analysis")
+    def media_analysis(request: Request, source_id: str):
+        media_or_404(request, source_id)
+        result = store(request).get_media_analysis(source_id)
+        if result is None:
+            raise HTTPException(404, "This footage has not been analyzed yet")
+        return result
+
+    @app.get("/api/media/{source_id}/frames/{name}")
+    def media_frame(request: Request, source_id: str, name: str):
+        if not FRAME_NAME.match(name):
+            raise HTTPException(404, "Unknown frame")
+        path = store(request).media_dir(source_id) / name
+        if not path.is_file():
+            raise HTTPException(404, "Unknown frame")
+        return FileResponse(path, media_type="image/jpeg")
+
+    @app.post("/api/media/{source_id}/attach")
+    def attach_media(request: Request, source_id: str, body: AttachMediaRequest):
+        """Write the footage's summary metrics into one experiment's rows."""
+        source = media_or_404(request, source_id)
+        result = store(request).get_media_analysis(source_id)
+        if result is None:
+            raise HTTPException(409, "Analyze the footage first")
+        ds = dataset_or_404(request, body.dataset_id)
+        if bool(source.synthetic) != ds.synthetic:
+            raise HTTPException(409, "Synthetic footage and real data are never mixed.")
+        frame = store(request).load_frame(ds.dataset_id)
+        id_col = schema(request).id_column
+        rows = frame[id_col].astype(str) == body.experiment_id
+        if not rows.any():
+            raise HTTPException(404, f"Experiment '{body.experiment_id}' not found")
+        summary, calibrated = result["summary"], result.get("mm_per_px") is not None
+        written, skipped = {}, []
+        for col, (key, is_length) in FOOTAGE_COLUMNS.items():
+            value = summary.get(key)
+            if value is None or (is_length and not calibrated):
+                skipped.append(col)
+                continue
+            if col not in frame:
+                frame[col] = float("nan")
+            frame.loc[rows, col] = value
+            written[col] = value
+        report = {**ds.report, "footage": [
+            *[f for f in ds.report.get("footage", []) if f.get("source_id") != source_id],
+            {"source_id": source_id, "filename": source.filename,
+             "experiment_id": body.experiment_id, "columns": sorted(written)},
+        ]}
+        store(request).replace_dataset(ds.dataset_id, frame, source_ids=ds.source_ids,
+                                       report=report)
+        return {"written": written, "skipped": skipped,
+                "note": None if calibrated else "Length metrics need a mm-per-pixel "
+                "calibration and were not written."}
+
+    # ---- flammability map (from loaded data) + cited reference limits -------------------
+    @app.post("/api/datasets/{dataset_id}/flammability")
+    def flammability_map(request: Request, dataset_id: str, body: FlammabilityRequest):
+        ds = dataset_or_404(request, dataset_id)
+        frame = store(request).load_frame(dataset_id)
+        try:
+            result = flammability.flammability_map(
+                frame, axis=body.axis, material=body.material, pressure=body.pressure,
+                at_x=body.at_x, at_oxygen=body.at_oxygen, seed=settings.random_seed)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        materials = (sorted(frame[flammability.MATERIAL].dropna().astype(str).unique())
+                     if flammability.MATERIAL in frame else [])
+        return {**result, "synthetic": ds.synthetic, "dataset": ds.name,
+                "materials": materials,
+                "axes": [a for a in flammability.AXES if a in frame]}
+
+    @app.get("/api/reference-limits")
+    def reference_limits(request: Request):
+        return store(request).list_reference_limits()
+
+    @app.post("/api/reference-limits", status_code=201)
+    def add_reference_limit(request: Request, body: ReferenceLimitRequest):
+        item = flammability.ReferenceLimit(limit_id=uuid.uuid4().hex[:12],
+                                           created_at=datetime.now(UTC), **body.model_dump())
+        store(request).save_reference_limit(item.model_dump(mode="json"))
+        return item
+
+    @app.delete("/api/reference-limits/{limit_id}", status_code=204)
+    def delete_reference_limit(request: Request, limit_id: str):
+        if not store(request).delete_reference_limit(limit_id):
+            raise HTTPException(404, f"Reference limit '{limit_id}' not found")
 
     @app.get("/api/datasets/{dataset_id}/summary")
     def summary(request: Request, dataset_id: str):

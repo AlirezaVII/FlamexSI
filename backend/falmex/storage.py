@@ -34,6 +34,7 @@ class SourceRecord(BaseModel):
     size_bytes: int
     media_type: str
     ingested_at: datetime
+    synthetic: bool | None = False
 
 
 class DatasetRecord(BaseModel):
@@ -88,6 +89,11 @@ class Store:
                 created_at TIMESTAMPTZ, payload JSON);
             CREATE TABLE IF NOT EXISTS innovations (
                 innovation_id VARCHAR PRIMARY KEY, created_at TIMESTAMPTZ, payload JSON);
+            CREATE TABLE IF NOT EXISTS media_analyses (
+                source_id VARCHAR PRIMARY KEY, created_at TIMESTAMPTZ, payload JSON);
+            CREATE TABLE IF NOT EXISTS reference_limits (
+                limit_id VARCHAR PRIMARY KEY, created_at TIMESTAMPTZ, payload JSON);
+            ALTER TABLE sources ADD COLUMN IF NOT EXISTS synthetic BOOLEAN DEFAULT FALSE;
             """
         )
 
@@ -102,7 +108,8 @@ class Store:
             self._con.execute(sql, params or [])
 
     # ---- sources -----------------------------------------------------------
-    def save_raw(self, filename: str, content: bytes, media_type: str = "table") -> SourceRecord:
+    def save_raw(self, filename: str, content: bytes, media_type: str = "table",
+                 synthetic: bool = False) -> SourceRecord:
         sha = hashlib.sha256(content).hexdigest()
         source_id = sha[:16]
         existing = self._fetch("SELECT * FROM sources WHERE source_id = ?", [source_id])
@@ -113,12 +120,13 @@ class Store:
             path.write_bytes(content)
         rec = SourceRecord(
             source_id=source_id, filename=filename, sha256=sha, size_bytes=len(content),
-            media_type=media_type, ingested_at=_now(),
+            media_type=media_type, ingested_at=_now(), synthetic=synthetic,
         )
         self._exec(
-            "INSERT INTO sources VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO sources (source_id, filename, sha256, size_bytes, media_type, "
+            "ingested_at, synthetic) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [rec.source_id, rec.filename, rec.sha256, rec.size_bytes, rec.media_type,
-             rec.ingested_at],
+             rec.ingested_at, rec.synthetic],
         )
         return rec
 
@@ -128,6 +136,46 @@ class Store:
         marks = ",".join("?" * len(source_ids))
         rows = self._fetch(f"SELECT * FROM sources WHERE source_id IN ({marks})", source_ids)
         return [SourceRecord(**r) for r in rows]
+
+    def raw_path(self, source: SourceRecord) -> Path:
+        return self.raw_dir / f"{source.sha256}{Path(source.filename).suffix.lower()}"
+
+    def list_media(self) -> list[SourceRecord]:
+        rows = self._fetch(
+            "SELECT * FROM sources WHERE media_type = 'media' ORDER BY ingested_at DESC"
+        )
+        return [SourceRecord(**r) for r in rows]
+
+    def media_dir(self, source_id: str) -> Path:
+        return self.data_dir / "media" / source_id
+
+    def save_media_analysis(self, source_id: str, analysis: dict) -> None:
+        self._exec("DELETE FROM media_analyses WHERE source_id = ?", [source_id])
+        self._exec("INSERT INTO media_analyses VALUES (?, ?, ?)",
+                   [source_id, _now(), json.dumps(analysis, default=str)])
+
+    def get_media_analysis(self, source_id: str) -> dict | None:
+        rows = self._fetch("SELECT payload FROM media_analyses WHERE source_id = ?",
+                           [source_id])
+        return json.loads(rows[0]["payload"]) if rows else None
+
+    def analyzed_media(self) -> set[str]:
+        return {r["source_id"] for r in self._fetch("SELECT source_id FROM media_analyses")}
+
+    # ---- reference limits (cited values entered by the team) --------------------------
+    def save_reference_limit(self, item: dict) -> None:
+        self._exec("INSERT INTO reference_limits VALUES (?, ?, ?)",
+                   [item["limit_id"], item["created_at"], json.dumps(item, default=str)])
+
+    def list_reference_limits(self) -> list[dict]:
+        rows = self._fetch("SELECT payload FROM reference_limits ORDER BY created_at")
+        return [json.loads(r["payload"]) for r in rows]
+
+    def delete_reference_limit(self, limit_id: str) -> bool:
+        found = self._fetch("SELECT limit_id FROM reference_limits WHERE limit_id = ?",
+                            [limit_id])
+        self._exec("DELETE FROM reference_limits WHERE limit_id = ?", [limit_id])
+        return bool(found)
 
     # ---- datasets ----------------------------------------------------------
     def create_dataset(

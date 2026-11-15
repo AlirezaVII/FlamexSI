@@ -112,3 +112,31 @@ variables:
     type: boolean
     description: Whether ignition occurred
     aliases: [ignited, ignition_success]
+
+  # ---- measured from flame footage by falmex.vision (Footage page) ----
+  flame_circularity:
+    role: outcome
+    type: numeric
+    description: Circularity 4πA/P² of the projected flame outline (1 = circle), median over flame frames. A proxy for sphericity.
+
+  flame_growth_rate:
+    role: outcome
+    type: numeric
+    unit: mm_per_s
+    description: Growth rate dR/dt of the equivalent flame radius, from calibrated footage
+
+  flame_extinction_radius:
+    role: outcome
+    type: numeric
+    unit: mm
+    description: Equivalent flame radius at the last frame before the flame went out (calibrated footage)
+
+  flame_blue_fraction:
+    role: outcome
+    type: numeric
+    description: Share of saturated flame pixels with a blue hue (uncalibrated camera; chromatic proxy)
+
+  flame_soot_blue_ratio:
+    role: outcome
+    type: numeric
+    description: Yellow-orange-red (soot-like) to blue flame pixels (uncalibrated camera; chromatic proxy)

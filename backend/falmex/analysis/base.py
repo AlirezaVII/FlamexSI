@@ -13,9 +13,19 @@ decorate it with @register_analyzer, done.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 
 from falmex.schema import Schema
+
+# A condition can be a combination of columns (e.g. a two-way interaction), named
+# "oxygen × flow_rate". Everything that needs the underlying columns goes through
+# `condition_columns`, so single-column conditions keep working unchanged.
+COMBINE = " × "
+
+
+def condition_columns(condition: str) -> list[str]:
+    return condition.split(COMBINE)
 
 
 @dataclass
@@ -32,6 +42,8 @@ class Analyzer(ABC):
     name: str = "base"
     description: str = ""
     signed: bool = True  # does the effect have a direction that must replicate?
+    # what one permutation shuffles, in words (see `permute`)
+    permutation_of: str = "random shuffles of the outcome"
 
     def __init__(self, min_samples: int = 8):
         self.min_samples = min_samples
@@ -43,6 +55,17 @@ class Analyzer(ABC):
     @abstractmethod
     def evaluate(self, frame: pd.DataFrame, x: str, y: str) -> Evaluation | None:
         """Test one pair. Return None when there is not enough usable data."""
+
+    def permute(self, data: pd.DataFrame, x: str, y: str,
+                rng: np.random.Generator) -> pd.DataFrame:
+        """One draw under the null hypothesis, for the permutation test.
+
+        Default: shuffle the outcome, which destroys any link between condition and
+        outcome. Analyzers testing an effect *beyond* other terms override this.
+        """
+        out = data.copy()
+        out[y] = rng.permutation(out[y].to_numpy())
+        return out
 
 
 _REGISTRY: dict[str, type[Analyzer]] = {}

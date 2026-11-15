@@ -151,6 +151,8 @@ export interface Finding {
     groups_discovery?: number | null;
     groups_holdout?: number | null;
     shared_across_split?: Record<string, number>;
+    test_fraction?: number | null;
+    seed?: number | null;
   } | null;
   validations: Validation[];
   uncertainty: {
@@ -380,4 +382,143 @@ export interface Showcase {
   score: number;
   rank: number;
   of: number;
+}
+
+export type ChartValue = string | number | boolean | null;
+
+export interface FindingChart {
+  x: string;
+  y: string;
+  color_by: string | null;
+  color_kind: "numeric" | "categorical" | null;
+  points: {
+    id: string;
+    x: number;
+    y: ChartValue;
+    split: "discovery" | "holdout";
+    color: ChartValue;
+  }[];
+  trend: {
+    method: string;
+    x: number[];
+    y: (number | null)[];
+    low: (number | null)[];
+    high: (number | null)[];
+  } | null;
+  discovery_points: number;
+  holdout_points: number;
+  color_options: string[];
+}
+
+export interface FootageFrame {
+  index: number;
+  time_s: number | null;
+  present: boolean;
+  image?: string;
+  radius_px?: number;
+  circularity?: number | null;
+  aspect_ratio?: number | null;
+  centroid?: [number, number] | null;
+  bbox?: [number, number, number, number];
+  contour?: [number, number][];
+  blue_fraction?: number | null;
+  soot_fraction?: number | null;
+  saturated_fraction?: number | null;
+  soot_to_blue?: number | null;
+  heat_blue?: number[][];
+  heat_soot?: number[][];
+}
+
+export interface FootageSummary {
+  length_unit: "px" | "mm";
+  flame_frames: number;
+  frames: number;
+  note?: string;
+  circularity_median?: number | null;
+  aspect_ratio_median?: number | null;
+  blue_fraction_median?: number | null;
+  soot_fraction_median?: number | null;
+  saturated_fraction_median?: number | null;
+  soot_to_blue_ratio?: number | null;
+  max_radius?: number;
+  extinguished_in_clip?: boolean;
+  extinction_radius?: number;
+  extinction_time_s?: number | null;
+  growth_rate?: number;
+  growth_rate_unit?: string;
+  growth_fit_r2?: number | null;
+  growth_frames?: number;
+}
+
+export interface FootageAnalysis {
+  frame_size: [number, number];
+  overlay_scale: number;
+  frames_total: number;
+  frames_analyzed: number;
+  fps: number | null;
+  fps_source: "override" | "file" | null;
+  mm_per_px: number | null;
+  summary: FootageSummary;
+  frames: FootageFrame[];
+  method: string;
+  synthetic: boolean;
+  source: Source & { synthetic?: boolean | null };
+  analyzed_at: string;
+}
+
+export interface MediaItem {
+  source: Source & { synthetic?: boolean | null };
+  analyzed: boolean;
+  kind: "video" | "image";
+}
+
+export interface FlammabilityMap {
+  axis: "gravity" | "flow_rate";
+  material: string | null;
+  n: number;
+  n_burned: number;
+  predictors: string[];
+  pressure_used: number | null;
+  ranges: Record<string, [number, number]>;
+  coefficients: Record<
+    string,
+    { per_sd: number; se: number; z: number | null }
+  >;
+  grid: {
+    x: number[];
+    oxygen: number[];
+    p_burn: number[][];
+    in_data: boolean[][];
+  };
+  boundary: { x: number; oxygen: number | null }[];
+  point: {
+    x: number;
+    oxygen_limit_50: number | null;
+    oxygen_limit_ci: [number, number] | null;
+    oxygen: number | null;
+    p_burn: number | null;
+    p_burn_ci: [number, number] | null;
+    extrapolation: string[];
+  } | null;
+  points: { x: number; oxygen: number; burned: boolean }[];
+  method: string;
+  synthetic: boolean;
+  dataset: string;
+  materials: string[];
+  axes: string[];
+}
+
+export interface ReferenceLimit {
+  limit_id: string;
+  created_at: string;
+  material: string;
+  kind: string;
+  oxygen_percent: number;
+  pressure_kpa: number | null;
+  gravity_g: number | null;
+  flow_cm_s: number | null;
+  source: string;
+  url: string;
+  note: string;
+  entered_by: string;
 }

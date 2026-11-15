@@ -7,7 +7,12 @@ import type {
   DiscoverResult,
   Filter,
   Finding,
+  FindingChart,
+  FlammabilityMap,
+  FootageAnalysis,
   Goals,
+  MediaItem,
+  ReferenceLimit,
   Innovation,
   InnovationKind,
   InnovationStage,
@@ -224,6 +229,60 @@ export const api = {
     request<Finding>(`/api/findings/${id}/interpret?force=${force}`, {
       method: "POST",
     }),
+  findingChart: (id: string, colorBy?: string) =>
+    request<FindingChart>(
+      `/api/findings/${id}/chart${colorBy ? `?color_by=${encodeURIComponent(colorBy)}` : ""}`,
+    ),
+
+  media: () => request<MediaItem[]>("/api/media"),
+  syntheticMedia: () =>
+    request<{ source: Source }>("/api/media/synthetic", { method: "POST" }),
+  uploadMedia: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<{ dataset: Dataset | null; source: Source }>(
+      "/api/datasets",
+      { method: "POST", body: form },
+    );
+  },
+  analyzeMedia: (
+    id: string,
+    body: { fps?: number | null; mm_per_px?: number | null },
+  ) => request<FootageAnalysis>(`/api/media/${id}/analyze`, json(body)),
+  mediaAnalysis: (id: string) =>
+    request<FootageAnalysis>(`/api/media/${id}/analysis`),
+  mediaFrameUrl: (id: string, name: string) =>
+    `${API_URL}/api/media/${id}/frames/${name}`,
+  attachMedia: (id: string, dataset_id: string, experiment_id: string) =>
+    request<{
+      written: Record<string, number>;
+      skipped: string[];
+      note: string | null;
+    }>(`/api/media/${id}/attach`, json({ dataset_id, experiment_id })),
+
+  flammability: (
+    id: string,
+    body: {
+      axis: string;
+      material?: string | null;
+      pressure?: number | null;
+      at_x?: number | null;
+      at_oxygen?: number | null;
+    },
+  ) => request<FlammabilityMap>(`/api/datasets/${id}/flammability`, json(body)),
+  referenceLimits: () => request<ReferenceLimit[]>("/api/reference-limits"),
+  addReferenceLimit: (body: Omit<ReferenceLimit, "limit_id" | "created_at">) =>
+    request<ReferenceLimit>("/api/reference-limits", json(body)),
+  deleteReferenceLimit: (id: string) =>
+    progress.track(
+      fetch(`${API_URL}/api/reference-limits/${id}`, { method: "DELETE" }).then(
+        (r) => {
+          if (!r.ok && r.status !== 404)
+            throw new ApiError(r.status, r.statusText);
+        },
+      ),
+    ),
+
   summary: (id: string) =>
     request<{
       summary: string;

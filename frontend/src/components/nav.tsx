@@ -53,6 +53,16 @@ const LINKS = [
     ),
   },
   {
+    href: "/simulator",
+    label: "Simulate",
+    icon: icon("M4 20V4M4 20h16M7 16c3-1 4-7 7-8s4 2 6 1"),
+  },
+  {
+    href: "/footage",
+    label: "Footage",
+    icon: icon("M4 6h16v12H4zM8 6v12M16 6v12M4 10h4M4 14h4M16 10h4M16 14h4"),
+  },
+  {
     href: "/innovation",
     label: "Innovate",
     icon: icon(
@@ -145,7 +155,7 @@ export function Nav() {
       <nav className="sticky top-0 z-30 border-b border-line bg-surface/90 shadow-bar backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Logo />
-          <div className="hidden gap-1 text-sm md:flex">
+          <div className="hidden gap-0.5 text-sm lg:flex">
             {LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -164,9 +174,9 @@ export function Nav() {
 
       <nav
         aria-label="Sections"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
-        <ul className="grid grid-cols-7">
+        <ul className="grid auto-cols-[minmax(3.75rem,1fr)] grid-flow-col overflow-x-auto">
           {LINKS.map((l) => {
             const active = isActive(l.href);
             return (

@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from falmex import deep
-from falmex.analysis import Analyzer, Evaluation, get_analyzers
+from falmex.analysis import Analyzer, Evaluation, condition_columns, get_analyzers
 from falmex.findings import (
     STATUS_EXPLANATION,
     Evidence,
@@ -63,6 +63,8 @@ class DiscoveryConfig:
 
 def _headline(condition: str, outcome: str, direction: str, details: dict) -> str:
     """One neutral sentence. Says what was observed, never what causes what."""
+    if "headline" in details:  # analyzers with their own wording (interaction, curvature)
+        return details["headline"]
     c, o = condition.replace("_", " "), outcome.replace("_", " ")
     if direction == "positive":
         return f"Higher {c} is associated with higher {o}"
@@ -76,7 +78,7 @@ def _headline(condition: str, outcome: str, direction: str, details: dict) -> st
 def _bootstrap(analyzer: Analyzer, found: Evaluation, data: pd.DataFrame, x: str, y: str,
                alpha: float, seed: int) -> Uncertainty | None:
     rng = np.random.default_rng(seed)
-    pair = data[[x, y]].dropna().reset_index(drop=True)
+    pair = data[[*condition_columns(x), y]].dropna().reset_index(drop=True)
     effects, kept = [], 0
     for _ in range(BOOTSTRAP_RESAMPLES):
         ev = analyzer.evaluate(pair.iloc[rng.integers(0, len(pair), len(pair))], x, y)
@@ -106,6 +108,20 @@ def _limitations(f: Finding, frame: pd.DataFrame) -> list[str]:
                        "behaviour outside this range is unknown.")
         out.append("Rank correlation detects monotonic patterns; a non-monotonic relationship "
                    "(e.g. rising then falling) could be missed or understated.")
+    elif f.analyzer == "interaction":
+        for col, (lo, hi) in f.details.get("x_ranges", {}).items():
+            out.append(f"Only observed for {col.replace('_', ' ')} between {lo:.3g} and "
+                       f"{hi:.3g}; behaviour outside this range is unknown.")
+        out.append("Tests one form of interplay (a product term in a linear model, with both "
+                   "main effects included); other forms could be missed. Correlated conditions "
+                   "make an interaction harder to separate from curvature.")
+    elif f.analyzer == "curvature":
+        lo, hi = f.details.get("x_range", [None, None])
+        if lo is not None:
+            out.append(f"Only observed for {x.replace('_', ' ')} between {lo:.3g} and {hi:.3g}; "
+                       "the curve says nothing about behaviour outside this range.")
+        out.append("A quadratic term detects a bend; saturation or a few extreme points can also "
+                   "produce one. Check the chart and its smoothed trend line.")
     else:
         out.append("Shows that groups differ overall, not which specific groups differ; groups "
                    "with fewer than 2 experiments were left out.")
@@ -136,7 +152,7 @@ def _status(significant: bool, validations: list[Validation]) -> Status:
 
 def _evidence(frame: pd.DataFrame, x: str, y: str, id_col: str | None,
               sources: dict[str, SourceRef]) -> Evidence:
-    used = frame.dropna(subset=[x, y])
+    used = frame.dropna(subset=[*condition_columns(x), y])
     ids = sorted(map(str, used[id_col].dropna().unique())) if id_col in used else []
     src_ids = used[SOURCE_COL].dropna().unique() if SOURCE_COL in used else []
     return Evidence(
@@ -181,6 +197,8 @@ def run_discovery(
         groups_discovery=int(train[group_col].nunique()) if group_col in train else None,
         groups_holdout=int(test[group_col].nunique()) if group_col in test else None,
         shared_across_split=shared,
+        test_fraction=cfg.test_fraction,
+        seed=cfg.seed,
     )
 
     tested = []

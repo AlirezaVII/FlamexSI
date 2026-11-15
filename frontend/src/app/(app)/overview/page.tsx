@@ -35,6 +35,16 @@ const SECTIONS = [
     text: "Findings a researcher reviewed and interpreted. Created by people, never automatically.",
   },
   {
+    href: "/simulator",
+    title: "Simulate",
+    text: "Flammability map by oxygen and gravity or flow, for ISS, lunar and Mars scenarios. Estimated only from loaded experiments.",
+  },
+  {
+    href: "/footage",
+    title: "Footage",
+    text: "Flame video to numbers: circularity, growth rate, extinction radius, blue vs soot-like colour, with an overlay player.",
+  },
+  {
     href: "/innovation",
     title: "Innovate",
     text: "Beyond the challenge: what new capability an insight makes possible. AI suggests, the team decides.",

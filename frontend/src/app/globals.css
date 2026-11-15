@@ -12,6 +12,11 @@
   --accent: #d9531e;
   --accent-ink: #ffffff;
   --series-1: #2a78d6;
+  /* categorical slots 2-5 (validated together with series-1) */
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
   --grid: #e8e7e3;
   --good: #0ca30c;
   --warning: #fab219;
@@ -39,6 +44,10 @@
     --accent: #e8703e;
     --accent-ink: #111110;
     --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
     --grid: #2b2a27;
     --card-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.045), 0 1px 2px rgb(0 0 0 / 0.4),
@@ -62,6 +71,10 @@
   --accent: #e8703e;
   --accent-ink: #111110;
   --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
   --grid: #2b2a27;
   --card-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.045), 0 1px 2px rgb(0 0 0 / 0.4),

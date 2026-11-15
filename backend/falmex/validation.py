@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from falmex.analysis.base import Analyzer, Evaluation
+from falmex.analysis.base import Analyzer, Evaluation, condition_columns
 
 
 @dataclass
@@ -134,12 +134,13 @@ class PermutationTest(Validator):
 
     def validate(self, analyzer, discovered, x, y, train, test) -> ValidationResult:
         rng = np.random.default_rng(self.seed)
-        data = train[[x, y]].dropna().reset_index(drop=True)
+        data = train[[*condition_columns(x), y]].dropna().reset_index(drop=True)
         observed = abs(discovered.effect_size)
         hits = valid = 0
         for _ in range(self.n_permutations):
-            shuffled = data.copy()
-            shuffled[y] = rng.permutation(shuffled[y].to_numpy())
+            # each analyzer defines its null: a shuffled outcome by default, shuffled
+            # residuals for effects tested beyond other terms (interaction, curvature)
+            shuffled = analyzer.permute(data, x, y, rng)
             res = analyzer.evaluate(shuffled, x, y)
             if res is None:
                 continue
@@ -153,7 +154,7 @@ class PermutationTest(Validator):
         if p < self.alpha:
             return ValidationResult(
                 self.name, True,
-                f"Stronger than {valid - hits} of {valid} random shuffles of the outcome.", metrics
+                f"Stronger than {valid - hits} of {valid} {analyzer.permutation_of}.", metrics
             )
         return ValidationResult(
             self.name, False, "Random shuffles often produce an effect this strong.", metrics

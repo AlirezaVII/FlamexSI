@@ -1,4 +1,12 @@
-from falmex.analysis import correlation, groups  # noqa: F401  (register built-ins)
-from falmex.analysis.base import Analyzer, Evaluation, get_analyzers, register_analyzer
+from falmex.analysis import correlation, curvature, groups, interaction  # noqa: F401
+from falmex.analysis.base import (
+    COMBINE,
+    Analyzer,
+    Evaluation,
+    condition_columns,
+    get_analyzers,
+    register_analyzer,
+)
 
-__all__ = ["Analyzer", "Evaluation", "get_analyzers", "register_analyzer"]
+__all__ = ["COMBINE", "Analyzer", "Evaluation", "condition_columns", "get_analyzers",
+           "register_analyzer"]
