@@ -1,6 +1,15 @@
-/* Landing page: a fixed dark space scene (like the splash), independent of the app theme. */
+/* Landing page: a space scene with real 3D planets. Dark by default; a light "daylight
+   observatory" version follows the app theme (explicit choice, else the system setting). */
 html:has(.landing) {
   background: #05070e;
+}
+:root[data-theme="light"]:has(.landing) {
+  background: #eef2f9;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):has(.landing) {
+    background: #eef2f9;
+  }
 }
 
 .landing {
@@ -9,13 +18,31 @@ html:has(.landing) {
   --l-ink: #eef2ff;
   --l-ink2: #a9b4d6;
   --l-muted: #6f7ba3;
-  --l-accent: #e8703e;
+  --l-accent: #7d8bff;
+  --l-accent-ink: #0b0d24;
   --l-blue: #4d9bff;
   --l-good: #3fcf7a;
   --l-bad: #ff6b6b;
+  --l-hl: #8fc0ff;
+  --l-card: linear-gradient(180deg, #111831ee, #0c1122ee);
+  --l-card-shadow: inset 0 1px 0 #ffffff0d, 0 20px 50px -25px #000;
+  --l-glass: rgba(6, 9, 20, 0.62);
+  --l-pill: #0a1022b0;
+  --l-pill-on: #e8eeff;
+  --l-pill-on-ink: #0b0b0b;
+  --l-ghost: #2a3560;
+  --l-ghost-hover: #4a5a8f;
+  --l-inset: #0a1020;
+  --l-track: #151d38;
+  --l-ficon: #1a1430;
+  --l-dashed: #3a4570;
+  --l-foot: #e8d9cf;
+  --l-foot-line: #ffffff22;
+  --l-foot-shadow: 0 1px 6px #000;
+  --l-sky: radial-gradient(1200px 800px at 80% 10%, #0d1630 0%, transparent 60%), #05070e;
   position: relative;
   min-height: 100vh;
-  background: var(--l-bg);
+  background: var(--l-sky);
   color: var(--l-ink);
   color-scheme: dark;
   overflow-x: clip;
@@ -70,7 +97,7 @@ html:has(.landing) {
     border-color 0.3s;
 }
 .landing .topbar.scrolled {
-  background: rgba(6, 9, 20, 0.62);
+  background: var(--l-glass);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom-color: var(--l-line);
@@ -78,7 +105,7 @@ html:has(.landing) {
 .landing .navrow {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 22px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px 40px;
@@ -96,6 +123,11 @@ html:has(.landing) {
 .landing .nl {
   color: var(--l-ink2);
   font-size: 14px;
+  white-space: nowrap;
+}
+.landing .open-app,
+.landing .brand {
+  white-space: nowrap;
 }
 .landing .nl:hover {
   color: var(--l-ink);
@@ -107,7 +139,7 @@ html:has(.landing) {
   padding: 6px 8px 6px 14px;
   border: 1px solid var(--l-line);
   border-radius: 999px;
-  background: #0a1022b0;
+  background: var(--l-pill);
 }
 .landing .journey ol {
   display: flex;
@@ -124,8 +156,8 @@ html:has(.landing) {
   transition: all 0.3s;
 }
 .landing .journey li.on {
-  color: #0b0b0b;
-  background: #e8eeff;
+  color: var(--l-pill-on-ink);
+  background: var(--l-pill-on);
   font-weight: 600;
 }
 .landing .journey .g {
@@ -144,7 +176,7 @@ html:has(.landing) {
 }
 .landing .journey .g b {
   font-size: 14px;
-  color: #8fc0ff;
+  color: var(--l-hl);
   font-weight: 500;
   min-width: 58px;
   text-align: right;
@@ -175,19 +207,19 @@ html:has(.landing) {
 }
 .landing .btn.primary {
   background: var(--l-accent);
-  color: #120804;
-  box-shadow: 0 10px 30px -10px #e8703eaa;
+  color: var(--l-accent-ink);
+  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--l-accent) 70%, transparent);
 }
 .landing .btn.primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 34px -10px #e8703ecc;
+  box-shadow: 0 14px 34px -10px color-mix(in srgb, var(--l-accent) 85%, transparent);
 }
 .landing .btn.ghost {
-  border: 1px solid #2a3560;
+  border: 1px solid var(--l-ghost);
   color: var(--l-ink);
 }
 .landing .btn.ghost:hover {
-  border-color: #4a5a8f;
+  border-color: var(--l-ghost-hover);
 }
 .landing .eyebrow {
   font-size: 12px;
@@ -196,13 +228,11 @@ html:has(.landing) {
   color: var(--l-accent);
 }
 .landing .card {
-  background: linear-gradient(180deg, #111831ee, #0c1122ee);
+  background: var(--l-card);
   border: 1px solid var(--l-line);
   border-radius: 18px;
   padding: 26px;
-  box-shadow:
-    inset 0 1px 0 #ffffff0d,
-    0 20px 50px -25px #000;
+  box-shadow: var(--l-card-shadow);
 }
 .landing .card h3 {
   font-size: 26px;
@@ -316,7 +346,7 @@ html:has(.landing) {
 }
 .landing .step.human {
   border-style: dashed;
-  border-color: #3a4570;
+  border-color: var(--l-dashed);
   background: transparent;
 }
 .landing .arrow {
@@ -365,7 +395,7 @@ html:has(.landing) {
   margin-top: 20px;
 }
 .landing .check {
-  background: #0a1020;
+  background: var(--l-inset);
   border: 1px solid var(--l-line);
   border-radius: 12px;
   padding: 12px;
@@ -400,7 +430,7 @@ html:has(.landing) {
 .landing .track {
   height: 12px;
   border-radius: 99px;
-  background: #151d38;
+  background: var(--l-track);
   overflow: hidden;
 }
 .landing .fill {
@@ -424,7 +454,7 @@ html:has(.landing) {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: #1a1430;
+  background: var(--l-ficon);
   margin-bottom: 16px;
 }
 .landing .final {
@@ -439,14 +469,14 @@ html:has(.landing) {
   z-index: 1;
   max-width: 1120px;
   margin: 0 auto;
-  border-top: 1px solid #ffffff22;
+  border-top: 1px solid var(--l-foot-line);
   padding: 26px 0;
-  color: #e8d9cf;
+  color: var(--l-foot);
   font-size: 12px;
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  text-shadow: 0 1px 6px #000;
+  text-shadow: var(--l-foot-shadow);
 }
 
 /* scroll reveal (driven from JS so it follows the scroll exactly) */
@@ -531,5 +561,413 @@ html:has(.landing) {
   .landing footer {
     flex-direction: column;
     padding: 20px;
+  }
+}
+
+/* ---- light theme: a bright "daylight observatory" ---- */
+:root[data-theme="light"] .landing {
+  --l-bg: #eef2f9;
+  --l-line: #d5ddec;
+  --l-ink: #0d1530;
+  --l-ink2: #3d4a6e;
+  --l-muted: #6a7596;
+  --l-accent: #4353ff;
+  --l-accent-ink: #ffffff;
+  --l-good: #13985a;
+  --l-hl: #2459c9;
+  --l-card: linear-gradient(180deg, #ffffffee, #f7f9fdee);
+  --l-card-shadow: inset 0 1px 0 #ffffff, 0 20px 50px -30px #1b2a5a55;
+  --l-glass: rgba(246, 248, 253, 0.9);
+  --l-pill: #ffffffcc;
+  --l-pill-on: #0d1530;
+  --l-pill-on-ink: #ffffff;
+  --l-ghost: #c3cde2;
+  --l-ghost-hover: #8b9ac0;
+  --l-inset: #f1f4fa;
+  --l-track: #e3e9f4;
+  --l-ficon: #eef0fb;
+  --l-dashed: #b8c3dc;
+  --l-foot: #3d4a6e;
+  --l-foot-line: #0d153022;
+  --l-foot-shadow: none;
+  --l-sky:
+    radial-gradient(1100px 700px at 85% 0%, #ffffff 0%, transparent 60%),
+    radial-gradient(900px 900px at 0% 100%, #dfe7f6 0%, transparent 60%), #eef2f9;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .landing {
+    --l-bg: #eef2f9;
+    --l-line: #d5ddec;
+    --l-ink: #0d1530;
+    --l-ink2: #3d4a6e;
+    --l-muted: #6a7596;
+    --l-accent: #4353ff;
+    --l-accent-ink: #ffffff;
+    --l-good: #13985a;
+    --l-hl: #2459c9;
+    --l-card: linear-gradient(180deg, #ffffffee, #f7f9fdee);
+    --l-card-shadow: inset 0 1px 0 #ffffff, 0 20px 50px -30px #1b2a5a55;
+    --l-glass: rgba(246, 248, 253, 0.9);
+    --l-pill: #ffffffcc;
+    --l-pill-on: #0d1530;
+    --l-pill-on-ink: #ffffff;
+    --l-ghost: #c3cde2;
+    --l-ghost-hover: #8b9ac0;
+    --l-inset: #f1f4fa;
+    --l-track: #e3e9f4;
+    --l-ficon: #eef0fb;
+    --l-dashed: #b8c3dc;
+    --l-foot: #3d4a6e;
+    --l-foot-line: #0d153022;
+    --l-foot-shadow: none;
+    --l-sky:
+      radial-gradient(1100px 700px at 85% 0%, #ffffff 0%, transparent 60%),
+      radial-gradient(900px 900px at 0% 100%, #dfe7f6 0%, transparent 60%), #eef2f9;
+    color-scheme: light;
+  }
+  :root:not([data-theme="dark"]) .landing .sky {
+    opacity: 0.18;
+    filter: invert(1);
+  }
+  :root:not([data-theme="dark"]) .landing .verdict {
+    background: #fdecee;
+    border-color: #f3c2c8;
+    color: #7a1622;
+  }
+  :root:not([data-theme="dark"]) .landing .synth {
+    background: #fff4e0;
+    border-color: #f1d3a0;
+    color: #8a5300;
+  }
+}
+:root[data-theme="light"] .landing .sky {
+  opacity: 0.18;
+  filter: invert(1);
+}
+:root[data-theme="light"] .landing .verdict {
+  background: #fdecee;
+  border-color: #f3c2c8;
+  color: #7a1622;
+}
+:root[data-theme="light"] .landing .synth {
+  background: #fff4e0;
+  border-color: #f1d3a0;
+  color: #8a5300;
+}
+.landing .hl {
+  color: var(--l-hl);
+}
+.landing .theme {
+  display: inline-flex;
+}
+.landing .theme button {
+  border-color: var(--l-line);
+  color: var(--l-ink2);
+  border-radius: 999px;
+  background: var(--l-pill);
+}
+.landing .theme button:hover {
+  color: var(--l-ink);
+}
+
+/* ---- weightless: in the "Orbit" stretch of the journey, cards drift gently ---- */
+@keyframes l-drift {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  33% {
+    translate: 3px -7px;
+    rotate: -0.35deg;
+  }
+  66% {
+    translate: -3px -3px;
+    rotate: 0.3deg;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing.zero-g .card,
+  .landing.zero-g .member {
+    animation: l-drift 7s ease-in-out infinite;
+  }
+  .landing.zero-g .card:nth-child(2n),
+  .landing.zero-g .member:nth-child(2n) {
+    animation-duration: 8.5s;
+    animation-delay: -2s;
+  }
+  .landing.zero-g .card:nth-child(3n) {
+    animation-duration: 9.5s;
+    animation-delay: -4s;
+  }
+}
+
+/* ---- fire in freefall ---- */
+.landing .freefall {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 56px;
+  align-items: center;
+}
+.landing .freefall .sub + .sub {
+  margin-top: 14px;
+}
+.landing .fine {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--l-muted);
+  max-width: 560px;
+  line-height: 1.55;
+}
+.landing .flamelab {
+  display: grid;
+  gap: 14px;
+}
+.landing .chamber {
+  position: relative;
+  aspect-ratio: 4 / 3.4;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #020308;
+  border: 1px solid #1d2645;
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--l-line) 60%, transparent),
+    0 40px 80px -40px #000;
+}
+.landing .chamber canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.landing .hud {
+  position: absolute;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #9fb3e6;
+  text-shadow: 0 0 6px #000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.landing .hud.tl {
+  top: 14px;
+  left: 16px;
+}
+.landing .hud.tr {
+  top: 14px;
+  right: 16px;
+  color: #ffd38a;
+  font-size: 13px;
+}
+.landing .hud.bl {
+  bottom: 14px;
+  left: 16px;
+}
+.landing .hud.br {
+  bottom: 14px;
+  right: 16px;
+}
+.landing .rec {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: #ff4d4d;
+  box-shadow: 0 0 8px #ff4d4d;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing .rec {
+    animation: l-blink 1.6s steps(2, start) infinite;
+  }
+}
+@keyframes l-blink {
+  to {
+    visibility: hidden;
+  }
+}
+.landing .controls {
+  display: grid;
+  gap: 12px;
+}
+.landing .seg,
+.landing .presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.landing .seg button,
+.landing .presets button {
+  border: 1px solid var(--l-line);
+  background: var(--l-pill);
+  color: var(--l-ink2);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.landing .seg button[aria-pressed="true"],
+.landing .presets button[aria-pressed="true"] {
+  background: var(--l-pill-on);
+  color: var(--l-pill-on-ink);
+  border-color: transparent;
+}
+.landing .presets small {
+  opacity: 0.6;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  margin-left: 4px;
+}
+.landing .slider {
+  display: grid;
+  grid-template-columns: auto 1fr 64px;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--l-ink2);
+}
+.landing .slider input {
+  accent-color: var(--l-accent);
+  width: 100%;
+}
+.landing .slider b {
+  text-align: right;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--l-ink);
+  font-weight: 500;
+}
+.landing .follow {
+  font-size: 12px;
+  color: var(--l-muted);
+  margin: 0;
+}
+.landing .link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--l-hl);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+/* ---- team ---- */
+.landing .crew {
+  list-style: none;
+  padding: 0;
+  margin: 48px 0 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+.landing .member {
+  text-align: center;
+  padding: 26px 14px 22px;
+  border-radius: 20px;
+  border: 1px solid var(--l-line);
+  background: var(--l-card);
+  box-shadow: var(--l-card-shadow);
+}
+.landing .member h3 {
+  font-size: 21px;
+  margin: 18px 0 4px;
+  line-height: 1.15;
+}
+.landing .handle {
+  font-size: 13px;
+  color: var(--l-muted);
+  margin: 0;
+}
+.landing .owner {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--l-accent);
+  border: 1px solid color-mix(in srgb, var(--l-accent) 45%, transparent);
+}
+.landing .patch {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  margin: 0 auto;
+}
+.landing .patch img,
+.landing .patch .mono {
+  position: absolute;
+  inset: 14px;
+  width: calc(100% - 28px);
+  height: calc(100% - 28px);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 3px var(--l-bg),
+    0 0 0 4px var(--l-line),
+    0 18px 40px -18px #000;
+}
+.landing .patch .mono {
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 32% 28%, #ffffff55, transparent 42%),
+    radial-gradient(circle at 70% 80%, #8f6bff, transparent 60%),
+    linear-gradient(135deg, #2b4fb8, #0e1a44);
+}
+.landing .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--l-hl) 55%, transparent);
+}
+.landing .ring i {
+  position: absolute;
+  top: -4px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--l-accent);
+  box-shadow: 0 0 10px var(--l-accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing .ring {
+    animation: l-orbit var(--orbit, 16s) linear infinite;
+  }
+}
+@keyframes l-orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (max-width: 1100px) {
+  .landing .crew {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .landing .freefall {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .landing .crew {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .landing .patch {
+    width: 120px;
+    height: 120px;
+  }
+  .landing .member h3 {
+    font-size: 18px;
   }
 }

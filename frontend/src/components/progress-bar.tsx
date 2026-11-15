@@ -9,7 +9,7 @@ const TRICKLE = 250;
 const NAV_TIMEOUT = 10000; // safety net if a navigation never settles
 
 /**
- * Thin orange bar at the top of the viewport (NProgress-style). Runs while any API
+ * Thin accent-coloured bar at the top of the viewport (NProgress-style). Runs while any API
  * request or page navigation is in flight. Drives the DOM directly: no re-renders.
  */
 export function ProgressBar() {

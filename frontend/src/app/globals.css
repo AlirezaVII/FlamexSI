@@ -9,7 +9,7 @@
   --ink: #0b0b0b;
   --ink-2: #52514e;
   --muted: #7a7973;
-  --accent: #d9531e;
+  --accent: #4353ff;
   --accent-ink: #ffffff;
   --series-1: #2a78d6;
   /* categorical slots 2-5 (validated together with series-1) */
@@ -27,7 +27,7 @@
     0 14px 32px -12px rgb(24 22 18 / 0.1);
   --card-shadow-hover:
     0 2px 4px rgb(24 22 18 / 0.05), 0 8px 18px -4px rgb(24 22 18 / 0.09),
-    0 24px 48px -16px rgb(217 83 30 / 0.18);
+    0 24px 48px -16px rgb(67 83 255 / 0.18);
   --bar-shadow:
     0 1px 0 rgb(24 22 18 / 0.03), 0 6px 16px -10px rgb(24 22 18 / 0.18);
 }
@@ -42,8 +42,8 @@
     --ink: #ffffff;
     --ink-2: #c3c2b7;
     --muted: #8f8e86;
-    --accent: #e8703e;
-    --accent-ink: #111110;
+    --accent: #7d8bff;
+    --accent-ink: #0b0d24;
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -56,7 +56,7 @@
     --card-shadow-hover:
       inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.45),
       0 10px 24px -6px rgb(0 0 0 / 0.55),
-      0 24px 50px -16px rgb(232 112 62 / 0.25);
+      0 24px 50px -16px rgb(125 139 255 / 0.25);
     --bar-shadow:
       0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
   }
@@ -71,8 +71,8 @@
   --ink: #ffffff;
   --ink-2: #c3c2b7;
   --muted: #8f8e86;
-  --accent: #e8703e;
-  --accent-ink: #111110;
+  --accent: #7d8bff;
+  --accent-ink: #0b0d24;
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
@@ -84,7 +84,7 @@
     0 6px 14px -4px rgb(0 0 0 / 0.45), 0 18px 40px -14px rgb(0 0 0 / 0.7);
   --card-shadow-hover:
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.45),
-    0 10px 24px -6px rgb(0 0 0 / 0.55), 0 24px 50px -16px rgb(232 112 62 / 0.25);
+    0 10px 24px -6px rgb(0 0 0 / 0.55), 0 24px 50px -16px rgb(125 139 255 / 0.25);
   --bar-shadow:
     0 1px 0 rgb(255 255 255 / 0.03), 0 8px 20px -10px rgb(0 0 0 / 0.8);
 }

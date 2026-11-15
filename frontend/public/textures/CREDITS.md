@@ -9,3 +9,10 @@
 
 NASA imagery is generally not subject to copyright in the United States. Use of these images
 does not imply NASA endorsement.
+
+## Added for the WebGL planets
+
+- earth-night.jpg, earth-clouds.jpg, earth-normal.jpg, earth-specular.jpg — Solar System Scope
+  (https://www.solarsystemscope.com/textures/), based on NASA imagery, licensed CC BY 4.0.
+- moon-height.jpg — NASA Scientific Visualization Studio, CGI Moon Kit, LOLA elevation
+  (https://svs.gsfc.nasa.gov/4720)

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FlameLab } from "@/components/landing/flame-lab";
 import { LandingFX } from "@/components/landing/landing-fx";
+import { Team } from "@/components/landing/team";
 import { TrustCard } from "@/components/landing/trust-card";
 import { BrandLogo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Falmex — Findings you can verify",
@@ -83,14 +86,14 @@ export default function Landing() {
           <Link href="/" className="brand serif">
             <BrandLogo size={34} variant="glow" /> Falmex
           </Link>
-          <a className="nl" href="#how">
-            How it works
-          </a>
           <a className="nl" href="#trust">
             Why trust it
           </a>
-          <a className="nl" href="#status">
-            Status
+          <a className="nl" href="#freefall">
+            Fire in freefall
+          </a>
+          <a className="nl" href="#team">
+            Team
           </a>
           <span style={{ flex: 1 }} />
           <div
@@ -109,6 +112,9 @@ export default function Landing() {
               <b data-gravity>1.00 g</b>
             </span>
           </div>
+          <span className="theme">
+            <ThemeToggle />
+          </span>
           <Link
             className="btn ghost open-app"
             href="/overview"
@@ -130,7 +136,7 @@ export default function Landing() {
               <h1 className="serif">
                 Decades of microgravity flame experiments.
                 <br />
-                <span style={{ color: "#8fc0ff" }}>
+                <span className="hl">
                   Findings you can verify.
                 </span>
               </h1>
@@ -161,6 +167,39 @@ export default function Landing() {
             </div>
           </div>
         </div>
+
+        <section className="wrap block" id="freefall">
+          <div className="freefall">
+            <div>
+              <div className="eyebrow">Fire in freefall</div>
+              <h2 className="serif" data-reveal>
+                Take gravity away,
+                <br />
+                and fire changes shape.
+              </h2>
+              <p className="sub">
+                On Earth, hot gas rises and drags fresh air in behind it: the
+                flame stretches up, flickers and glows yellow with soot. In
+                orbit nothing rises. Oxygen reaches the flame only by slow
+                diffusion, so it closes into a dim, steady, bluish sphere —
+                harder to see, and behaving by different rules.
+              </p>
+              <p className="sub">
+                That is why fire safety for crews cannot simply copy what we
+                know on the ground, and why NASA has burned candles, droplets
+                and fabrics in microgravity for decades. Falmex turns those
+                experiments into findings you can check.
+              </p>
+              <p className="fine">
+                Drag the gravity slider, or keep scrolling: the chamber follows
+                the journey from Earth to orbit, the Moon and Mars. An
+                illustration of the well-known effect, not a combustion
+                simulation.
+              </p>
+            </div>
+            <FlameLab />
+          </div>
+        </section>
 
         <section className="wrap block">
           <div className="eyebrow" data-reveal>
@@ -347,7 +386,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="card" data-reveal>
-              <div className="ficon" style={{ color: "#8fc0ff", fontSize: 20 }}>
+              <div className="ficon" style={{ color: "var(--l-hl)", fontSize: 20 }}>
                 ?
               </div>
               <h3 className="serif">Questions from the data</h3>
@@ -371,6 +410,8 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        <Team />
 
         <div className="final">
           <div className="wrap">

@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  along,
-  DESKTOP_PATH,
-  makePlanet,
-  MOBILE_PATH,
-  type Planet,
-  PLANETS,
-  STAGES,
-} from "./planets";
+import { along, DESKTOP_PATH, MOBILE_PATH, PLANETS, STAGES } from "./planets";
+import { createSpace, type PlanetPose } from "./space";
 
 type Key = keyof typeof PLANETS;
+
+/** Light page? Explicit choice wins, otherwise the system setting. */
+function isLight() {
+  const t = document.documentElement.dataset.theme;
+  if (t === "light" || t === "dark") return t === "light";
+  return !window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
@@ -26,7 +26,7 @@ export function LandingFX() {
     const canvas = canvasRef.current;
     const root = canvas?.closest(".landing");
     if (!canvas || !root) return;
-    const g = canvas.getContext("2d")!;
+    const space = createSpace(canvas, () => render());
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -49,37 +49,16 @@ export function LandingFX() {
       el.dataset.lag = String(siblings.indexOf(el) * 60);
     });
 
-    // ---- planets --------------------------------------------------------------------
-    const planets: Partial<
-      Record<Key, { img: HTMLImageElement; lo: Planet; hi: Planet | null }>
-    > = {};
-    let disposed = false;
-    for (const key of Object.keys(PLANETS) as Key[]) {
-      const img = new Image();
-      img.decoding = "async";
-      img.onload = () => {
-        if (disposed) return;
-        planets[key] = {
-          img,
-          lo: makePlanet(img, PLANETS[key], 560),
-          hi: null,
-        };
-        render();
-        // Mars is drawn very large near the end: build its sharp version in an idle moment
-        // now, so scrolling or a glide never stalls on it
-        if (key === "mars") {
-          const idle =
-            window.requestIdleCallback ??
-            ((cb: () => void) => window.setTimeout(cb, 400));
-          idle(() => {
-            const pk = planets.mars;
-            if (!disposed && pk && !pk.hi)
-              pk.hi = makePlanet(img, PLANETS.mars, 1200);
-          });
-        }
-      };
-      img.src = PLANETS[key].src;
-    }
+    // ---- theme: the WebGL halos adapt to a light or dark page ---------------------------
+    const syncTheme = () => space?.setTheme(isLight());
+    syncTheme();
+    const themeWatch = new MutationObserver(syncTheme);
+    themeWatch.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", syncTheme);
 
     // ---- Earth rotation from the cursor ------------------------------------------------
     let yaw = 0; // turns added by dragging / idle spin
@@ -127,13 +106,10 @@ export function LandingFX() {
     }
 
     // ---- frame ---------------------------------------------------------------------------
+    let lastG = "";
     function render() {
       const W = window.innerWidth;
       const H = window.innerHeight;
-      if (canvas!.width !== W || canvas!.height !== H) {
-        canvas!.width = W;
-        canvas!.height = H;
-      }
       const max = Math.max(1, document.documentElement.scrollHeight - H);
       const y = window.scrollY;
       const p = clamp(y / max);
@@ -148,6 +124,15 @@ export function LandingFX() {
       for (const s of STAGES) if (p >= s[0]) stage = s;
       stages.forEach((li, i) => li.classList.toggle("on", i === stage[1]));
       if (gval) gval.textContent = `${stage[2]} g`;
+      // tell the rest of the page the current reference gravity (the flame demo follows
+      // it, and cards drift weightlessly in orbit)
+      if (stage[2] !== lastG) {
+        lastG = stage[2];
+        root!.classList.toggle("zero-g", stage[2] === "0.00");
+        root!.dispatchEvent(
+          new CustomEvent("falmex:gravity", { detail: parseFloat(stage[2]) }),
+        );
+      }
 
       // parallax: star layers and hero copy
       layers.forEach((l) => {
@@ -197,47 +182,26 @@ export function LandingFX() {
         set("oxygen", (F * (1 - drop) + O * drop) * fill);
       }
 
-      // planets, farthest (smallest) first
-      g.clearRect(0, 0, W, H);
-      const order = (Object.keys(paths) as Key[])
-        .map((k) => [k, along(paths[k], p)] as const)
-        .sort((a, b) => a[1][3] - b[1][3]);
-      for (const [k, [, xv, yv, rv, spin]] of order) {
-        const pk = planets[k];
+      // planets (real 3D spheres in WebGL)
+      const poses = {} as Record<Key, PlanetPose>;
+      for (const k of Object.keys(paths) as Key[]) {
+        const [, xv, yv, rv, spin] = along(paths[k], p);
         const r = rv * scale;
         if (k === "earth") earthR = r;
-        if (!pk) continue;
-        const x = xv * W;
-        const yy = yv * H;
-        if (yy - r > H + 40 || yy + r < -40 || x - r > W + 40 || x + r < -40)
-          continue;
-        let pl = pk.lo;
-        if (r > 330) {
-          pk.hi ??= makePlanet(pk.img, PLANETS[k], 1200);
-          pl = pk.hi;
-        }
-        const atmo = PLANETS[k].atmo;
-        if (atmo) {
-          const gr = g.createRadialGradient(x, yy, r * 0.92, x, yy, r * 1.16);
-          gr.addColorStop(0, `${atmo}cc`);
-          gr.addColorStop(0.35, `${atmo}55`);
-          gr.addColorStop(1, `${atmo}00`);
-          g.fillStyle = gr;
-          g.beginPath();
-          g.arc(x, yy, r * 1.16, 0, Math.PI * 2);
-          g.fill();
-        }
-        const extra = k === "earth" ? yaw + hover : 0;
-        pl.draw(spin + PLANETS[k].spin0 + extra);
-        g.drawImage(pl.canvas, x - r, yy - r, 2 * r, 2 * r);
+        poses[k] = {
+          x: xv * W,
+          y: yv * H,
+          r,
+          spin: spin + (k === "earth" ? yaw + hover : 0),
+        };
       }
+      space?.render(poses, performance.now());
     }
 
-    // ---- animation loop: only while the hero Earth is on screen and moving -------------
+    // ---- animation loop: planets turn and clouds drift while the tab is visible -----------
     let raf = 0;
     let running = false;
     function tick() {
-      const heroVisible = window.scrollY < window.innerHeight * 1.1;
       if (!dragging) {
         yaw += vel;
         vel *= 0.9;
@@ -245,7 +209,7 @@ export function LandingFX() {
       }
       hover += (hoverTarget - hover) * 0.06;
       render();
-      if (heroVisible && !document.hidden) {
+      if (!document.hidden && !reduce) {
         raf = requestAnimationFrame(tick);
       } else {
         running = false;
@@ -257,8 +221,8 @@ export function LandingFX() {
       raf = requestAnimationFrame(tick);
     }
     const onScroll = () => {
-      if (window.scrollY < window.innerHeight * 1.1) wake();
-      else render();
+      if (running) return; // the loop renders the new position on its next frame
+      render();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
@@ -350,8 +314,10 @@ export function LandingFX() {
     wake();
 
     return () => {
-      disposed = true;
       cancelAnimationFrame(raf);
+      themeWatch.disconnect();
+      media.removeEventListener("change", syncTheme);
+      space?.dispose();
       window.removeEventListener("pointermove", onMove);
       grab?.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);

@@ -1,0 +1,67 @@
+{
+  "reference": {
+    "A": {
+      "brightness_LOVO": {
+        "micro_iou": 0.14606465860990123,
+        "thresholds": {
+          "B14": 255,
+          "B17": 255,
+          "B18": 235
+        }
+      },
+      "otsu_per_frame": {
+        "micro_iou": 0.004532217206343158
+      },
+      "brightness_fit_on_test_UPPER_BOUND": {
+        "micro_iou": 0.1701278605749654,
+        "threshold": 255
+      },
+      "model_v3": {
+        "micro_iou": 0.04471869328493648
+      },
+      "model_v4": {
+        "micro_iou": 0.008711833747439989
+      },
+      "model_v5": {
+        "micro_iou": 0.01980089585911575
+      },
+      "model_v6": {
+        "micro_iou": 0.027094664969332254
+      }
+    },
+    "B": {
+      "brightness_LOVO": {
+        "micro_iou": 0.06539797343263275,
+        "thresholds": {
+          "B14": 230,
+          "B17": 235,
+          "B18": 225
+        }
+      },
+      "otsu_per_frame": {
+        "micro_iou": 0.00697056037114276
+      },
+      "brightness_fit_on_test_UPPER_BOUND": {
+        "micro_iou": 0.06862500719038214,
+        "threshold": 230
+      },
+      "model_v3": {
+        "micro_iou": 0.08590159456414109
+      },
+      "model_v4": {
+        "micro_iou": 0.007493052403589658
+      },
+      "model_v5": {
+        "micro_iou": 0.02147724811303464
+      },
+      "model_v6": {
+        "micro_iou": 0.03365424175100798
+      }
+    }
+  },
+  "notes": [
+    "Leave-one-video-out threshold: tuned on two videos, scored on the third.",
+    "Agreement with a reviewer is not correctness; A and B disagree substantially."
+  ],
+  "human_A_vs_B_micro_iou": 0.25733735630750815
+}

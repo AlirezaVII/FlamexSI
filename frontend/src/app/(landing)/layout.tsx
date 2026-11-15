@@ -1,6 +1,6 @@
 import "./landing.css";
 
-/** Public landing page: always dark, its own sticky navbar, no app chrome. */
+/** Public landing page: own sticky navbar, no app chrome; follows the light/dark theme. */
 export default function LandingLayout({
   children,
 }: {
