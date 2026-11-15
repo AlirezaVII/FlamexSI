@@ -30,7 +30,11 @@ const CREW: Member[] = [
     handle: "mahtfa",
     photo: "/team/mohammad-ali-hatefi.jpg",
   },
-  { name: "Haniyeh Z. Budaqi", photo: "/team/haniyeh-budaqi.jpg" },
+  {
+    name: "Haniyeh Z. Budaqi",
+    handle: "haniyehzbudaqi",
+    photo: "/team/haniyeh-budaqi.jpg",
+  },
   {
     name: "Fariba Shahrouei",
     handle: "faribashahrouei1",
