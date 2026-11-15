@@ -1,3 +1,10 @@
 node_modules/
 out/
 public/clips/*-frames/
+public/rec/*-frames/
+# media stays on the machine that renders the video, never in git
+public/rec/
+public/rec2k/
+public/voice/*.wav
+*.mp4
+*.wav

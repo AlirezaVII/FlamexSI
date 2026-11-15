@@ -27,10 +27,11 @@ Team NovaForge's statement.
 - The **FlamexSI logo** and the **NovaForge team logo** are AI-generated. On the site every
   FlamexSI logo carries a visible **AI** mark; in slides and video they are labelled
   "AI-generated".
-- The **30-second demo video**: narration voice (Google Gemini TTS) and background music
-  (Google Lyria) are AI-generated; the video carries a visible "AI-generated" watermark and
-  says so in its file metadata. All screen recordings show the real site running on NASA
-  data.
+- The **30-second demo video** (source in `video/`, made with Remotion): the narration voice
+  is AI-generated with **Google Gemini TTS**; the music is synthesized in code
+  (`video/scripts/music.py`), not AI-generated. The video shows a visible
+  "AI-generated narration and logo" label throughout, and says so in its file metadata.
+  Every screen in it is a recording of the real flamexsi.com running on NASA data.
 - Team photos, NASA planet maps and background photos (Unsplash) are not AI-generated.
 
 ## Data

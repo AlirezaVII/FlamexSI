@@ -16,8 +16,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
-const { fontFamily: SERIF } = loadSerif();
-const { fontFamily: SANS } = loadSans();
+const { fontFamily: SERIF } = loadSerif("normal", { weights: ["500"], subsets: ["latin"] });
+const { fontFamily: SANS } = loadSans("normal", { weights: ["400", "500", "600", "700"], subsets: ["latin"] });
 
 /* FlamexSI demo, 29.5 s, following the NASA Space Apps script:
  *   0:00 team · 0:02 challenge · 0:05 title · 0:10 how it works (NASA data) · 0:20 future
