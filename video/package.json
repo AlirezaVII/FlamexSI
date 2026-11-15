@@ -1,0 +1,21 @@
+{
+  "name": "flamexsi-video",
+  "private": true,
+  "description": "FlamexSI 30-second NASA Space Apps demo, made with Remotion",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render FlamexSI out/flamexsi-demo.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.543",
+    "@remotion/google-fonts": "^4.0.543",
+    "@remotion/media": "^4.0.543",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.543"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
