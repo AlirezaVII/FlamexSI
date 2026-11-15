@@ -29,7 +29,6 @@ There are two deployments, and both must show the same commit:
 - Tests: `cd backend && .venv/bin/ruff check . && .venv/bin/pytest`;
   `cd frontend && npm run lint && npm run typecheck && npm run build`.
 - Port 8000 on the dev Mac is taken by Docker; run the local API on another port.
-- `docs/TEAM_GUIDE.fa.md` explains the architecture to the team (in Persian).
 
 ## Rule: full-screen canvases and the landing-page 3D (learned the hard way, 2026-11-12)
 
@@ -46,7 +45,7 @@ width/height**. A canvas is a replaced element, so it showed at its pixel size �
   and a page with `deviceScaleFactor: 2`.
 - three.js (r163+) needs **WebGL2**. `createSpace()` probes WebGL2 first and falls back to
   the 2D canvas planets (`planets2d.ts`); keep that fallback working.
-- Slow links (the team is in Iran: ~2–3 s per request) are normal. Keep the first paint
+- Slow links (~2–3 s per request) are normal. Keep the first paint
   independent of JavaScript and textures: the hero carries an inlined pre-rendered Earth
   (`earth-disc.webp` as a data URI) that crossfades into the live globe; tiny `*-lo.webp`
   maps load first and the sharp maps stream in after. Never hide the planets until *all*

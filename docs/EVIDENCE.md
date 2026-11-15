@@ -10,7 +10,7 @@ The GitHub update is an incremental source/documentation bundle. It is not a who
 
 ## Complete BASS-II evidence
 
-- File: `Falmex-Vision-v6-کامل.zip`
+- File: `FlamexSI-Vision-v6-full.zip`
 - Size: 482,831,977 bytes
 - SHA-256: `cd957358eee42f5c0023c9b10114c65737ac2bb26a36b9127e48cdfbcb56bce3`
 - Verification: ZIP CRC passed; fresh-extraction delivery verifier passed 55/55 checks; repeated v6 confirmation inference was pixel-identical.
@@ -18,15 +18,15 @@ The GitHub update is an incremental source/documentation bundle. It is not a who
 
 ## Blinded review and adjudication
 
-- Two-reviewer distribution package: `Falmex-بازبینی-مستقل-v6.zip`
+- Two-reviewer distribution package: `FlamexSI-independent-review-v6.zip`
 - SHA-256: `df2757c9ce8b4cf715fa468a35a588f5eed54d35633a74e0e4457c4762ad7a72`
-- Third-adjudicator package: `Falmex-داور-سوم-v6.zip`
+- Third-adjudicator package: `FlamexSI-third-adjudicator-v6.zip`
 - SHA-256: `12eaad39ea6b8984cadf70aa62bff46057c5ddc045530b49e48e590fe68c6aab`
 - The team supplied a qualitative review decision. Dual-reference reporting is complete. The separate A and B masks are retained; no third pixel reference was produced.
 
 ## Competition draft
 
-- File: `Falmex-مسابقه-پیش‌نهایی-v6.zip`
+- File: `FlamexSI-competition-prefinal-v6.zip`
 - SHA-256: `114db84b3c5c0e575f5c8d3f1ce482b4e8c036afef4e3c794a5ecf19cdd27224`
 - Status: dual-reference analysis complete, pending team and portal fields. This package is a draft, not evidence of submission, expert approval, or operational readiness.
 

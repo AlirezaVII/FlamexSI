@@ -90,10 +90,6 @@ This bundle is **awaiting actual independent human reviewers**. AI-generated mas
 8. Convert the completed LabelMe JSON files to binary masks with `python scripts/labelme_to_masks.py --reviewer <completed-reviewer-folder> --output <mask-directory>`. The converter requires an explicit `no_visible_flame` flag for empty frames and records uncertainty flags.
 9. A third qualified adjudicator should resolve disagreements while remaining blinded to model identity and scores.
 
-## راهنمای کوتاه فارسی
-
-هدف فقط «ناحیهٔ شعلهٔ مرئی و دارای درخشش» است، نه مرز شیمیایی یا دمایی. دو داور مستقل و بدون دیدن mask دیگری یا خروجی مدل، چندضلعی‌ها را ثبت کنند. فریم بدون شعله باید mask کاملاً صفر داشته باشد. مرز مبهم را با flag مشخص کنید و حدس علمی دربارهٔ ناحیهٔ واکنش یا خاموشی ثبت نکنید. اختلاف‌ها توسط داور سوم و بدون دانستن نام و نتیجهٔ مدل‌ها حل شود.
-
 ## Agreement analysis
 
 From the project root:

@@ -4,5 +4,11 @@
   "protocol_sha256": "461e11adf5d2146100ea6f719c8e86694f03da8f92c2d8bcb1af55183b83e70f",
   "locked_on": "2026-11-08",
   "external_registry_preregistration": false,
-  "inferential_compositional_models_fit_before_lock": 0
+  "inferential_compositional_models_fit_before_lock": 0,
+  "english_translation": {
+    "file": "protocol_v1.md",
+    "sha256": "1708eef4bbd47752bb23ef0902107f950685ac1e46a4d863737c806cbe9f0a26",
+    "translated_on": "2026-11-14",
+    "note": "The file now holds an English translation of the locked protocol; rules, numbers and hashes are unchanged. The locked original is in git history (commit 493ad54)."
+  }
 }

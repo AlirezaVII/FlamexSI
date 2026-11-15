@@ -11,8 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT.parent
-ARCHIVE = OUTPUT / "Falmex-Vision-v6-کامل.zip"
-REVIEW_ARCHIVE = OUTPUT / "Falmex-بازبینی-مستقل-v6.zip"
+ARCHIVE = OUTPUT / "FlamexSI-Vision-v6-full.zip"
+REVIEW_ARCHIVE = OUTPUT / "FlamexSI-independent-review-v6.zip"
 
 
 def sha256(path: Path):
@@ -54,7 +54,7 @@ def main():
         "development-v6/source-manifest.json",
         "confirmation-v5/annotations/polygons.json",
         "confirmation-v5/annotations/rasterization-manifest.json",
-        "Falmex-Vision-v6-گزارش.md",
+        "FlamexSI-Vision-v6-report.md",
     ):
         path = ROOT / relative
         if not path.exists():
@@ -71,7 +71,7 @@ def main():
         for relative in (f"vision-{version}/model-freeze.json", f"vision-{version}/MODEL_CARD.md"):
             files.add(ROOT / relative)
         add_tree(files, ROOT / f"vision-{version}/models")
-    for relative in ("vision-v5/گزارش-فارسی.md", "Falmex-Vision-v4-گزارش.md", "Falmex-Vision-v3-گزارش.md"):
+    for relative in ("vision-v5/report.md", "FlamexSI-Vision-v4-report.md", "FlamexSI-Vision-v3-report.md"):
         files.add(ROOT / relative)
 
     confirmation_sources = json.loads((ROOT / "metadata/v6-confirmation-manifest.json").read_text())
@@ -169,8 +169,8 @@ def main():
         "review_entries": review_entries, "review_sha256": sha256(REVIEW_ARCHIVE),
         "review_crc_passed": True,
     }
-    (OUTPUT / "Falmex-Vision-v6-کامل.sha256").write_text(result["sha256"] + "  " + ARCHIVE.name + "\n", encoding="utf-8")
-    (OUTPUT / "Falmex-بازبینی-مستقل-v6.sha256").write_text(result["review_sha256"] + "  " + REVIEW_ARCHIVE.name + "\n", encoding="utf-8")
+    (OUTPUT / "FlamexSI-Vision-v6-full.sha256").write_text(result["sha256"] + "  " + ARCHIVE.name + "\n", encoding="utf-8")
+    (OUTPUT / "FlamexSI-independent-review-v6.sha256").write_text(result["review_sha256"] + "  " + REVIEW_ARCHIVE.name + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 

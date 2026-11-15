@@ -1,7 +1,7 @@
 {
   "schema": "falmex-v6-package-verification-v1",
   "archive": {
-    "path": "/mnt/agents/output/Falmex-Vision-v6-کامل.zip",
+    "path": "/mnt/agents/output/FlamexSI-Vision-v6-full.zip",
     "bytes": 482831977,
     "entries": 4238,
     "sha256": "cd957358eee42f5c0023c9b10114c65737ac2bb26a36b9127e48cdfbcb56bce3",
@@ -299,7 +299,7 @@
     ]
   },
   "review_archive": {
-    "archive": "/mnt/agents/output/Falmex-بازبینی-مستقل-v6.zip",
+    "archive": "/mnt/agents/output/FlamexSI-independent-review-v6.zip",
     "bytes": 30009265,
     "entries": 152,
     "sha256": "df2757c9ce8b4cf715fa468a35a588f5eed54d35633a74e0e4457c4762ad7a72",

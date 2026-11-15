@@ -2,7 +2,7 @@
 
 Reads the result files the site already shows (frontend/src/lib/...) and writes
 backend/falmex/knowledge/pack.json. Each card: id, title, page (where the site shows it),
-keywords (English and Persian, used to pick cards for a question) and facts (compact JSON
+keywords (used to pick cards for a question) and facts (compact JSON
 the model may quote). Live FLEX findings are added at request time from the database.
 Usage: python backend/scripts/build_knowledge.py
 """
@@ -32,8 +32,7 @@ def build() -> list[dict]:
         "page": "/investigations",
         "keywords": ["investigation", "experiment", "psi", "catalog", "acme", "bass", "flex",
                      "saffire", "same", "cfi", "slice", "spice", "which", "compare", "list",
-                     "pillar", "prevention", "detection", "suppression", "آزمایش", "پروژه",
-                     "مقایسه", "کدام", "پیشگیری", "تشخیص", "اطفا", "خاموش"],
+                     "pillar", "prevention", "detection", "suppression"],
         "facts": [{"id": c["id"], "name": c["acronym"], "title": c["title"],
                    "fuel": c.get("fuel"), "pillars": c.get("pillars"),
                    "oxygen": c.get("oxygen_range"), "platform": c.get("platform"),
@@ -46,7 +45,7 @@ def build() -> list[dict]:
         "id": "transition", "title": "FLEX: oxygen level where droplet flames start to go out",
         "page": "/flight-evidence#transition",
         "keywords": ["extinction", "boundary", "transition", "oxygen", "go out", "limit",
-                     "flammability", "خاموش", "اکسیژن", "مرز", "حد"],
+                     "flammability"],
         "facts": {"method": short(t.get("method"), 700), "fuels": t.get("fuels")},
     })
     n = load("flight/next_experiments.json")
@@ -54,7 +53,7 @@ def build() -> list[dict]:
         "id": "next", "title": "Which FLEX-type experiment should come next",
         "page": "/flight-evidence#next",
         "keywords": ["next", "experiment", "gap", "moon", "mars", "habitat", "rover", "plan",
-                     "future", "test", "آزمایش بعدی", "ماه", "مریخ", "پایگاه", "آینده"],
+                     "future", "test"],
         "facts": {"method": short(n.get("method"), 500),
                   "moon_base_tests_flown": n.get("moon_base_tests"),
                   "top_suggestions": n.get("suggestions", [])[:6]},
@@ -64,7 +63,7 @@ def build() -> list[dict]:
         "id": "smoke", "title": "SAME and SAME-R: smoke particles and the ISS smoke detector",
         "page": "/flight-evidence#smoke",
         "keywords": ["smoke", "detector", "detection", "particle", "aerosol", "kapton",
-                     "teflon", "same", "alarm", "دود", "دتکتور", "ذرات", "تشخیص", "هشدار"],
+                     "teflon", "same", "alarm"],
         "facts": {k: sm[k] for k in ("source", "method", "tests", "fuel_tests",
                                      "full_scale_share", "flights", "materials")},
     })
@@ -73,8 +72,7 @@ def build() -> list[dict]:
         "id": "saffire", "title": "Saffire-III: a real fire inside the Cygnus spacecraft",
         "page": "/flight-evidence#saffire",
         "keywords": ["saffire", "cygnus", "cabin", "spacecraft fire", "large fire", "spread",
-                     "radiometer", "pressure", "temperature", "real fire", "کابین",
-                     "فضاپیما", "آتش واقعی", "گسترش"],
+                     "radiometer", "pressure", "temperature", "real fire"],
         "facts": {k: sf[k] for k in ("source", "method", "samples", "ignited_in_file")},
     })
     f2 = load("flight/flex2.json")
@@ -82,7 +80,7 @@ def build() -> list[dict]:
         "id": "flex2", "title": "FLEX-2: every raw test log summarised",
         "page": "/flight-evidence#flex2",
         "keywords": ["flex-2", "flex2", "raw", "log", "ignition", "igniter", "failed",
-                     "flame time", "fiber", "لاگ", "احتراق", "جرقه"],
+                     "flame time", "fiber"],
         "facts": {k: v for k, v in f2.items() if k != "per_month"},
     })
     br = load("bass-review.json")
@@ -90,8 +88,7 @@ def build() -> list[dict]:
         "id": "vision", "title": "BASS-II video: where is the flame? (computer vision)",
         "page": "/bass-review",
         "keywords": ["image", "video", "camera", "frame", "vision", "opencv", "mask", "pixel",
-                     "iou", "bass", "detect", "model", "segmentation", "تصویر", "ویدیو",
-                     "دوربین", "فریم", "بینایی", "پیکسل", "مدل"],
+                     "iou", "bass", "detect", "model", "segmentation"],
         "facts": {"frames": len(br["frames"]),
                   "human_A_vs_B_pixel_IoU": 0.257,
                   "scores": [r for r in br["summary"] if r["model"] in ("OpenCV", "v6")],
@@ -104,14 +101,14 @@ def build() -> list[dict]:
         "id": "trust", "title": "How a FLEX finding is tested (top finding, all checks)",
         "page": "/findings",
         "keywords": ["trust", "valid", "replicat", "shuffle", "third variable", "confound",
-                     "reliable", "proof", "تأیید", "معتبر", "اعتماد", "شانسی"],
+                     "reliable", "proof"],
         "facts": {k: v for k, v in show.items() if k not in ("finding_id",)},
     })
     cards.append({
         "id": "limits", "title": "What FlamexSI cannot claim",
         "page": "/#status",
         "keywords": ["limit", "cannot", "partial gravity", "moon", "mars", "lunar", "expert",
-                     "causal", "محدود", "نمی‌تواند", "گرانش", "ماه", "مریخ"],
+                     "causal"],
         "facts": [
             "No partial-gravity (Moon, Mars) combustion data exists in PSI yet; microgravity "
             "and 1 g results only bound those cases.",

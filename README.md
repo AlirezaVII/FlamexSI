@@ -29,7 +29,7 @@ Implemented analysis paths include preregistered replication, time-series, compo
 
 The reserved confirmation uses B14/B17/B18, with eight frames per video. Predictions were frozen before source-only coarse annotation and metric inspection. On the original coarse reference, **v6 has zero true-positive pixels on all 24 confirmation frames** (TP=0, FP=60,537, FN=9,218). This is a failed confirmation, not a successful deployment result. Development scores are model-selection estimates, not untouched confirmation.
 
-Two supplied reviewer annotation sets have been processed without altering either submission. They disagree on visibility in 17 of 24 frames; positive-union Macro IoU is 0.110778 and Micro IoU is 0.257337. The team adopted separate A and B scores for this release. B covers more pixels in all 24 frames. Six frames contain A-only pixels. In the reviewed example, the shared region covers the brighter emission and B extends into the halo and isolated luminous spots. Their physical origin is unresolved. No third pixel mask was drawn. The frozen v6 predictions have pooled IoU 0.0271 against A and 0.0337 against B. [Read the review decision (فارسی)](docs/DUAL_REFERENCE_FA.md). Reviewer agreement is not correctness, and reviewer identity, expertise, and independence are not established by the uploaded files. No independent-expert-validation or operational-readiness claim is made.
+Two supplied reviewer annotation sets have been processed without altering either submission. They disagree on visibility in 17 of 24 frames; positive-union Macro IoU is 0.110778 and Micro IoU is 0.257337. The team adopted separate A and B scores for this release. B covers more pixels in all 24 frames. Six frames contain A-only pixels. In the reviewed example, the shared region covers the brighter emission and B extends into the halo and isolated luminous spots. Their physical origin is unresolved. No third pixel mask was drawn. The frozen v6 predictions have pooled IoU 0.0271 against A and 0.0337 against B. Reviewer agreement is not correctness, and reviewer identity, expertise, and independence are not established by the uploaded files. No independent-expert-validation or operational-readiness claim is made.
 
 The segmentation target is only the visibly luminous region. It is not a chemical flame boundary, temperature field, reaction zone, extinction-time label, suppression-effectiveness measure, or safety instruction.
 
@@ -38,7 +38,7 @@ The segmentation target is only the visibly luminous region. It is not a chemica
 - `backend/` — FLEX ingestion, analysis, API, scientific review, and tests.
 - `frontend/` — Next.js application for data, findings, simulator, and review views.
 - `bass-cv/` — BASS-II code, compact models, frozen predictions, metrics, review results, and submission drafts.
-- `docs/` — Persian application guide, evidence boundaries, and final handoff status.
+- `docs/` — evidence boundaries and delivery notes.
 
 Large raw videos, training caches, fold predictions, error-overlay collections, and download recovery files are intentionally excluded from GitHub. The lightweight BASS-II tree is sufficient to inspect the code and verify the included model/source/frozen-mask hashes; it is **not** sufficient to reproduce full training or video inference by itself.
 
@@ -95,4 +95,4 @@ JSON-only input is supported. The command writes a new reference freeze, provena
 
 The complete evidence archive contains raw confirmation videos, development assets, caches, large historical models, overlays, and the full 55-check delivery verifier. The GitHub update is deliberately smaller. The competition draft remains ready for team and portal details using the adopted dual-reference analysis; it is not a submitted entry or a claim of expert approval.
 
-See `bass-cv/README.md`, `bass-cv/vision-v6/MODEL_CARD.md`, and `docs/FINAL_HANDOFF_FA.md` for exact limitations and remaining work.
+See `bass-cv/README.md`, `bass-cv/vision-v6/MODEL_CARD.md` for exact limitations and remaining work.

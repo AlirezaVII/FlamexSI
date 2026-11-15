@@ -1,32 +1,42 @@
-# پروتکل داخلی تحلیل compositional گاز در FLEX — نسخهٔ ۱٫۰
+# Internal protocol for the compositional gas analysis of FLEX — version 1.0
 
-تاریخ قفل: ۲۰۲۶-۱۱-۰۸  
-وضعیت: پروتکل داخلی پیش از برازش مدلهای استنباطی؛ ثبت خارجی preregistration نیست.
+Lock date: 2026-11-08
+Status: internal protocol written before any inferential model was fitted; not an external
+preregistration.
 
-## ۱. پرسش و مرز ادعا
+## 1. Question and claim boundary
 
-هدف، توصیف رابطهٔ ترکیب سه‌جزئی گاز با نرخ متوسط سوختن و نسبت قطر خاموشی است، با کنترل متغیرهای مشاهده‌شده. هدف، اثبات اثر علیّت مستقل He یا CO₂، مقایسهٔ مستقیم He با CO₂، یا پیش‌بینی Lunar-g/Mars-g نیست.
+The aim is to describe how the three-part gas composition relates to the mean burning rate and
+to the extinction diameter ratio, controlling for observed variables. The aim is not to prove an
+independent causal effect of He or CO₂, to compare He with CO₂ directly, or to predict
+lunar-g or Mars-g behaviour.
 
-متغیرهای tether/free-float، translation، جزئیات deployment و برخی جنبههای پروتکل در جدول ساختاریافتهٔ PSI-69 موجود نیستند. بنابراین «کنترل کامل پروتکل» و تنظیم علیّت تمام مخدوشگرها ادعا نمی‌شود.
+Tether/free-float, translation, deployment details and some protocol aspects are not in the
+structured PSI-69 table. "Full protocol control" and causal adjustment for all confounders are
+therefore not claimed.
 
-## ۲. زیرمجموعهها و صفرهای ساختاری
+## 2. Subsets and structural zeros
 
-- **CO₂:** ردیفهایی با He = 0 و CO₂ > 0.
-- **He:** ردیفهایی با CO₂ = 0 و He > 0.
-- **N₂-only:** ردیفهایی با He = CO₂ = 0؛ فقط توصیفی و خارج از log-ratio اصلی.
-- هیچ ردیفی با He و CO₂ هم‌زمان مثبت در دادهٔ فعلی وجود ندارد.
-- هیچ pseudocount، zero imputation یا ILR چهارجزئی سراسری در تحلیل اصلی استفاده نمی‌شود.
-- دو زیرمجموعهٔ CO₂ و He جدا برازش می‌شوند؛ تفاوت ضرایب آنها آزمون مستقیم تفاوت He–CO₂ نیست.
+- **CO₂:** rows with He = 0 and CO₂ > 0.
+- **He:** rows with CO₂ = 0 and He > 0.
+- **N₂-only:** rows with He = CO₂ = 0; descriptive only, outside the main log-ratio analysis.
+- No row in the current data has He and CO₂ both positive.
+- No pseudocount, zero imputation or global four-part ILR is used in the main analysis.
+- The CO₂ and He subsets are fitted separately; the difference between their coefficients is
+  not a direct test of He versus CO₂.
 
-## ۳. closure و balanceها
+## 3. Closure and balances
 
-برای هر زیرمجموعه، سه جزء \(O_2,N_2,X\)، که در آن \(X\in\{CO_2,He\}\)، درون همان ردیف بسته می‌شوند:
+For each subset the three parts \(O_2, N_2, X\), with \(X\in\{CO_2,He\}\), are closed within the
+same row:
 
 \[
 c_j=\frac{x_j}{x_{O_2}+x_{N_2}+x_X}.
 \]
 
-اکسیژن PSI-69 که برحسب درصد استاندارد شده است، پیش از closure به کسر تبدیل می‌شود. closure خطای گردکردن مجموع کسرها را حذف می‌کند؛ مجموعهای خام مشاهده‌شده ۰٫۹۸ تا ۱٫۰۱ هستند و به‌جای دورریختن ردیف، ثبت و گزارش می‌شوند.
+PSI-69 oxygen, standardised as a percentage, is converted to a fraction before closure. Closure
+removes rounding error in the sum of the fractions; the observed raw sums are 0.98 to 1.01 and
+are recorded and reported instead of dropping rows.
 
 \[
 b_O=\sqrt{\frac{2}{3}}\log\frac{c_{O_2}}{\sqrt{c_{N_2}c_X}},
@@ -34,20 +44,26 @@ b_O=\sqrt{\frac{2}{3}}\log\frac{c_{O_2}}{\sqrt{c_{N_2}c_X}},
 b_X=\frac{1}{\sqrt{2}}\log\frac{c_X}{c_{N_2}}.
 \]
 
-این دو balance برای هر سه‌جزئی مثبت، یک پایهٔ orthonormal ILR می‌سازند. هدف اصلی \(\beta_X\) است: تغییر outcome به‌ازای یک واحد تغییر \(b_X\)، با ثابت‌نگه‌داشتن \(b_O\) و covariateهای مشاهده‌شده. برای خوانایی، اثر پیش‌بینی‌شدهٔ دوبرابرشدن نسبت \(X/N_2\) نیز به‌صورت \(\beta_X\log(2)/\sqrt{2}\) گزارش می‌شود؛ این یک تبدیل توصیفی ضریب است، نه مداخلهٔ علیّت.
+For any positive three-part composition these two balances form an orthonormal ILR basis. The
+main target is \(\beta_X\): the change in the outcome per unit change of \(b_X\), holding \(b_O\)
+and the observed covariates fixed. For readability, the predicted effect of doubling the
+\(X/N_2\) ratio is also reported as \(\beta_X\log(2)/\sqrt{2}\); this is a descriptive
+transformation of the coefficient, not a causal intervention.
 
-## ۴. outcomeها و دادهٔ کامل
+## 4. Outcomes and complete data
 
-دو outcome جداگانه‌اند:
+There are two separate outcomes:
 
-1. \(K\) برحسب \(\mathrm{mm^2/s}\)؛
+1. \(K\) in \(\mathrm{mm^2/s}\);
 2. \(R_D=D_e/D_0\).
 
-برای هر مدل فقط complete caseهای outcome و همهٔ covariateهای لازم استفاده می‌شوند. هیچ outcome یا covariate گمشده‌ای impute نمی‌شود. تعداد ردیف و تاریخهای یکتا پیش از برازش گزارش می‌شود.
+Each model uses only complete cases for the outcome and all required covariates. No missing
+outcome or covariate is imputed. The number of rows and of unique dates is reported before
+fitting.
 
-## ۵. مدل اصلی
+## 5. Main model
 
-چهار مدل اصلی: دو diluent × دو outcome.
+Four main models: two diluents × two outcomes.
 
 \[
 y_i=\alpha+\beta_O b_{O,i}+\beta_X b_{X,i}
@@ -55,34 +71,56 @@ y_i=\alpha+\beta_O b_{O,i}+\beta_X b_{X,i}
 +\gamma I(\mathrm{Heptane}_i)+\varepsilon_i.
 \]
 
-Methanol مرجع سوخت است. برازش OLS است؛ فشار خطی و برحسب ۱۰۰ kPa، و لگاریتم \(D_0\) طبیعی است. interaction در مدل اصلی نیست. ضریب diluent تنها با قرارگرفتن هم‌زمان دو balance تفسیر می‌شود و برچسب «اثر مستقل کسر He/CO₂» نمی‌گیرد.
+Methanol is the reference fuel. The fit is OLS; pressure is linear in units of 100 kPa, and the
+logarithm of \(D_0\) is natural. There is no interaction in the main model. The diluent
+coefficient is interpreted only with both balances in the model together and is not labelled an
+"independent effect of the He/CO₂ fraction".
 
-شرط اجرای مدل اصلی: حداقل ۳۰ ردیف، ۱۰ تاریخ یکتا، ماتریس full-rank و حداقل سه ردیف به‌ازای هر ستون طراحی. در غیراینصورت وضعیت `not_evaluable` ثبت می‌شود.
+Condition for running a main model: at least 30 rows, 10 unique dates, a full-rank matrix and at
+least three rows per design column. Otherwise the status `not_evaluable` is recorded.
 
-## ۶. عدم‌قطعیت و multiplicity
+## 6. Uncertainty and multiplicity
 
-- خطاهای استاندارد cluster-robust CR1 بر اساس `test_date` و آمارهٔ t با \(G-1\) درجهٔ آزادی گزارش می‌شود.
-- بازهٔ ۹۵٪ ضریب و مقدار p برای \(\beta_X\) exploratory است، به‌ویژه هنگامی که \(G<20\).
-- Benjamini–Hochberg فقط روی چهار p-value اصلی مربوط به \(\beta_X\) اعمال می‌شود؛ سایر ضرایب و sensitivityها در خانوادهٔ تأییدی جدید قرار نمی‌گیرند.
-- leave-one-date-out برای \(\beta_X\) انجام می‌شود و دامنه و سهم حفظ علامت گزارش می‌شود.
-- خوشه‌بندی تاریخ، کنترل تمام تفاوتهای پروتکل یا campaign نیست.
+- Cluster-robust CR1 standard errors by `test_date`, with a t statistic on \(G-1\) degrees of
+  freedom, are reported.
+- The 95% interval and p-value for \(\beta_X\) are exploratory, especially when \(G<20\).
+- Benjamini–Hochberg is applied only to the four main p-values for \(\beta_X\); other
+  coefficients and sensitivity analyses are not part of a new confirmatory family.
+- Leave-one-date-out is run for \(\beta_X\), and its range and the share keeping the sign are
+  reported.
+- Clustering by date does not control every protocol or campaign difference.
 
-## ۷. sensitivityهای ازپیش‌تعیین‌شده
+## 7. Pre-specified sensitivity analyses
 
-1. همان مدل جدا درون Methanol و Heptane، بدون ستون سوخت؛
-2. افزودن `test_end` به‌صورت categorical به مدل اصلی، فقط به‌عنوان sensitivity پروتکل/انتخاب انتهای آزمون؛
-3. حذف متوالی هر تاریخ برای پایداری علامت و دامنهٔ \(\beta_X\).
+1. The same model within Methanol and within Heptane separately, without the fuel column;
+2. adding `test_end` as a categorical term to the main model, only as a sensitivity check of
+   protocol / end-of-test selection;
+3. removing each date in turn, for the stability of the sign and range of \(\beta_X\).
 
-برای مدلهای درون‌سوخت حداقل ۱۵ ردیف، پنج تاریخ و ماتریس full-rank لازم است. نتایج sensitivity آزمون تأییدی جدید یا انتخاب مدل بر اساس بهترین p-value نیستند. `test_end` به‌دلیل ارتباط با تعریف outcome و مسیر انتهای آزمون، کنترل اصلی خودکار نیست.
+Within-fuel models require at least 15 rows, five dates and a full-rank matrix. Sensitivity
+results are not new confirmatory tests and are not used to choose a model by the best p-value.
+Because `test_end` is tied to the outcome definition and to how a test ends, it is not an
+automatic main control.
 
-## ۸. بررسی پیش‌بینی گروه‌بندی‌شده
+## 8. Grouped prediction check
 
-برای هر مدل اصلی، GroupKFold پنج‌تایی بر اساس `test_date` انجام می‌شود؛ اگر تاریخها کمتر از پنج باشند، تعداد fold برابر تعداد تاریخهاست. مدل کامل با مدل پایهٔ فقط شامل \(\log D_0\)، فشار و سوخت مقایسه می‌شود. RMSE و MAE تجمیعی out-of-fold، اختلاف RMSE و نسبت RMSE گزارش می‌شوند. کاهش خطا، اعتبارسنجی campaign مستقل یا اثبات علیّت نیست. foldهایی با آموزش rank-deficient به‌جای جایگزینی outcome مصنوعی، با وضعیت نامعتبر علامت می‌خورند.
+For each main model, five-fold GroupKFold by `test_date` is run; with fewer than five dates the
+number of folds equals the number of dates. The full model is compared with a baseline model
+containing only \(\log D_0\), pressure and fuel. Pooled out-of-fold RMSE and MAE, the RMSE
+difference and the RMSE ratio are reported. A lower error is not validation on an independent
+campaign and not proof of causality. Folds with rank-deficient training data are marked invalid
+instead of substituting an artificial outcome.
 
-## ۹. خروجی و تصمیم تفسیر
+## 9. Output and interpretation decision
 
-خروجی شامل ردیفهای closure/balance، ضرایب، خوشهها، sensitivity، پیش‌بینیهای out-of-fold و نمودارهای بازبینی است. نتیجه فقط «رابطهٔ compositional تنظیم‌شده با covariateهای مشاهده‌شده» نامیده می‌شود. هیچ p-value یا نمودار زیبا به‌تنهایی Finding تأییدشده، اثر مکانیستیک، validation مستقل یا توصیهٔ ایمنی operational ایجاد نمی‌کند.
+The output contains the closure/balance rows, coefficients, clusters, sensitivity results,
+out-of-fold predictions and review plots. The result is called only an "adjusted compositional
+association with the observed covariates". No p-value or attractive plot on its own creates a
+validated finding, a mechanistic effect, independent validation or an operational safety
+recommendation.
 
-## ۱۰. ارتباط با time-series و data assimilation
+## 10. Relation to time series and data assimilation
 
-این تحلیل روی summaryهای PSI-69 است و از سه منحنی Figure 6 به‌عنوان دادهٔ مستقل استفاده نمی‌کند. data assimilation سبک Xi تا دسترسی به تاریخچههای کامل و غنی‌تر \(D(t)\)، همراه مدل دینامیک و uncertainty قابل‌دفاع، به‌تعویق می‌ماند.
+This analysis uses the PSI-69 summaries and does not use the three Figure 6 curves as independent
+data. Xi-style data assimilation is postponed until complete, richer \(D(t)\) histories are
+available, together with a dynamic model and defensible uncertainty.

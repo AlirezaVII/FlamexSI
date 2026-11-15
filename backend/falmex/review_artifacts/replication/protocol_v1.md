@@ -1,86 +1,115 @@
-# طرح ازپیش‌مشخص replication برای یافتههای FlamexSI / NASA FLEX
+# Pre-specified replication plan for the FlamexSI / NASA FLEX findings
 
-نسخه: 1.0  
-تاریخ تثبیت: ۲۰۲۶-۱۱-۰۸  
-وضعیت ثبت: **طرح داخلی نسخه‌بندی‌شده و hash‌شده؛ ثبت رسمی در registry بیرونی نیست.**
+Version: 1.0
+Fixed on: 2026-11-08
+Registration status: **internal, versioned and hashed plan; not registered in an external
+registry.**
 
-## ۱. منشأ و مرز تثبیت
+## 1. Origin and boundary of the plan
 
-این طرح پس از بازبینی PSI-69 و پیش از هر آزمون inferential روی investigation مستقل نوشته شده است. از PSI-68 فقط metadata، نام ستونها و محتوای ماتریس طراحی برای تعیین امکان replication بررسی شد؛ هیچ outcome عددی در فایل موجود نبود و هیچ آزمون ارتباطی روی آن انجام نشد.
+This plan was written after the PSI-69 review and before any inferential test on an independent
+investigation. From PSI-68 only the metadata, column names and the design-matrix content were
+examined to decide whether replication is possible; the file held no numerical outcome and no
+association test was run on it.
 
-مبنای یافتههای discovery:
+Basis of the discovery findings:
 
-- `primary_experiment_split/findings.json`  
+- `primary_experiment_split/findings.json`
   SHA-256: `a3cc0b84c698d60f21c7adfc40052c3a52b9e6fc71499c1baa44f058579b6a21`
-- `primary_test_date_split/findings.json`  
+- `primary_test_date_split/findings.json`
   SHA-256: `9524ac2224d39c6f1907da48f4aad8df36caa62ffab7d7df48cec865fbb9dcdd`
-- `standardized_flex.csv`  
+- `standardized_flex.csv`
   SHA-256: `df837f49aaab5c52bddadaffe6b48f4c82d9bd6d400c54a950d3cd6227e82897`
 
-## ۲. شرایط دادهٔ مستقل
+## 2. Conditions for independent data
 
-یک dataset فقط در صورت داشتن همهٔ شرایط زیر وارد replication می‌شود:
+A dataset enters the replication only if it meets all of the following:
 
-1. رکوردهای آن با ۲۷۴ آزمون PSI-69 تکراری نباشند؛ تطبیق با شناسه، تاریخ، سوخت و شرایط انجام شود، نه فقط شمارهٔ آزمون.
-2. اندازه‌گیریهای واقعی و عددی \(D_0\)، \(D_e\)، \(K\) و شرایط محیطی موجود باشند. ماتریس طراحی، مقدار هدف یا بازهٔ برنامه‌ریزی‌شده outcome محسوب نمی‌شود.
-3. تعریف \(K\) ثابت نرخ سوختن با واحد \(\mathrm{mm^2/s}\) و تعریف \(D_e\) قطر visible flame extinction باشد.
-4. سوخت، اکسیژن، فشار و منشأ space/ground مستند باشند؛ دادهٔ زمینی و فضایی بی‌صدا مخلوط نشود.
-5. دادهٔ جمع‌آوری‌شده برای آزمون اصلی، از نظر investigation یا campaign عملیاتی از discovery مستقل باشد.
+1. Its records do not duplicate the 274 PSI-69 tests; matching uses identifier, date, fuel and
+   conditions, not only the test number.
+2. Real numerical measurements of \(D_0\), \(D_e\), \(K\) and the ambient conditions exist. A
+   design matrix, a target value or a planned outcome range does not count as an outcome.
+3. \(K\) is defined as the burning-rate constant in \(\mathrm{mm^2/s}\) and \(D_e\) as the
+   visible-flame extinction diameter.
+4. Fuel, oxygen, pressure and space/ground origin are documented; ground and space data are
+   never mixed silently.
+5. The data collected for the main test are independent of the discovery data by investigation
+   or operational campaign.
 
-عدم وجود یک متغیر برای یک فرضیه فقط همان فرضیه را `not_evaluable` می‌کند؛ جایگزینی proxy پس از دیدن داده مجاز نیست.
+A missing variable for one hypothesis makes only that hypothesis `not_evaluable`; substituting a
+proxy after seeing the data is not allowed.
 
-## ۳. فرضیههای تثبیت‌شده
+## 3. Fixed hypotheses
 
-### خانوادهٔ اصلی؛ چهار آزمون
+### Main family; four tests
 
-| شناسه | فرضیهٔ جهت‌دار از PSI-69 | جمعیت اصلی |
+| ID | Directional hypothesis from PSI-69 | Main population |
 | --- | --- | --- |
-| H1 | کسر اکسیژن بیشتر با \(K\) بیشتر همراه است؛ \(\rho>0\) | همهٔ سوختهای قابل استفاده |
-| H2 | \(D_0\) بزرگ‌تر با \(D_e\) بزرگ‌تر همراه است؛ \(\rho>0\) | همهٔ سوختهای قابل استفاده |
-| H3A | اکسیژن بیشتر با \(D_e\) کمتر همراه است؛ \(\rho<0\) | ردیفهای دارای \(D_e\) |
-| H3B | اکسیژن بیشتر با \(D_e/D_0\) کمتر همراه است؛ \(\rho<0\) | ردیفهای دارای \(D_0>0\) و \(D_e\) |
+| H1 | Higher oxygen fraction goes with higher \(K\); \(\rho>0\) | All usable fuels |
+| H2 | Larger \(D_0\) goes with larger \(D_e\); \(\rho>0\) | All usable fuels |
+| H3A | Higher oxygen goes with smaller \(D_e\); \(\rho<0\) | Rows with \(D_e\) |
+| H3B | Higher oxygen goes with smaller \(D_e/D_0\); \(\rho<0\) | Rows with \(D_0>0\) and \(D_e\) |
 
-H3A و H3B از نظر فیزیکی و ریاضی مرتبط‌اند و حتی در صورت موفقیت هر دو، دو کشف مستقل گزارش نمی‌شوند.
+H3A and H3B are physically and mathematically related; even if both succeed they are not
+reported as two independent discoveries.
 
-### خانوادهٔ ثانویهٔ محدود به سوخت؛ دو آزمون
+### Secondary, fuel-limited family; two tests
 
-| شناسه | فرضیه | جمعیت |
+| ID | Hypothesis | Population |
 | --- | --- | --- |
-| S1 | \(D_0\) بزرگ‌تر با \(D_e/D_0\) بیشتر همراه است؛ \(\rho>0\) | فقط Heptane |
-| S2 | \(D_0\) بزرگ‌تر با زمان سوختن بیشتر همراه است؛ \(\rho>0\) | فقط Methanol |
+| S1 | Larger \(D_0\) goes with larger \(D_e/D_0\); \(\rho>0\) | Heptane only |
+| S2 | Larger \(D_0\) goes with longer burn time; \(\rho>0\) | Methanol only |
 
-روابط کلی اکسیژن با زمان سوختن و سوخت با زمان سوختن در این replication تاییدیه نیستند و فقط در صورت وجود داده، exploratory گزارش می‌شوند.
+The overall oxygen–burn time and fuel–burn time relationships are not confirmatory in this
+replication and are reported as exploratory only if data exist.
 
-## ۴. روش اجرا
+## 4. Procedure
 
-1. آمارهٔ اصلی Spearman \(\rho\) و p-value دوطرفه است. جهت از پیش تعیین شده، اما p دوطرفه محاسبه می‌شود.
-2. حداقل ۲۰ ردیف کامل برای هر آزمون اصلی و ۱۵ ردیف برای آزمون محدود به سوخت لازم است. نمونهٔ کوچک‌تر `not_evaluable` است و p گزارش نمی‌شود.
-3. missingها به‌صورت pairwise حذف می‌شوند؛ imputation انجام نمی‌شود.
-4. اصلاح Benjamini–Hochberg جداگانه داخل خانوادهٔ چهار آزمون اصلی و خانوادهٔ دو آزمون ثانویه اعمال می‌شود؛ سطح \(\alpha=0.05\).
-5. کل dataset مستقل برای آزمون استفاده می‌شود؛ holdout تصادفی تازه لازم نیست، زیرا خود dataset replication است.
-6. تحلیل داخل سوخت برای H1 و H2 sensitivity ازپیش‌مشخص است. اگر یک سوخت حداقل ۱۵ ردیف داشته باشد، \(\rho\) و p توصیفی آن گزارش می‌شود.
-7. partial Spearman با کنترل سوخت، فشار و \(D_0\) فقط sensitivity است و معیار موفقیت اصلی نیست؛ متغیرهای کنترل پس از دیدن نتیجه تغییر نمی‌کنند.
-8. هیچ LLM در انتخاب ردیف، محاسبهٔ آماره یا تعیین موفقیت نقش ندارد.
+1. The main statistic is Spearman \(\rho\) with a two-sided p-value. The direction is fixed in
+   advance, but p is computed two-sided.
+2. At least 20 complete rows per main test and 15 rows per fuel-limited test are required. A
+   smaller sample is `not_evaluable` and no p is reported.
+3. Missing values are removed pairwise; there is no imputation.
+4. Benjamini–Hochberg correction is applied separately within the family of four main tests and
+   the family of two secondary tests; \(\alpha=0.05\).
+5. The whole independent dataset is used for testing; no new random holdout is needed, because
+   the dataset itself is the replication.
+6. Within-fuel analysis for H1 and H2 is a pre-specified sensitivity check. If a fuel has at
+   least 15 rows, its descriptive \(\rho\) and p are reported.
+7. Partial Spearman controlling fuel, pressure and \(D_0\) is a sensitivity check only and not
+   the main success criterion; control variables are not changed after seeing the result.
+8. No LLM takes part in selecting rows, computing statistics or deciding success.
 
-## ۵. قواعد تصمیم ازپیش‌مشخص
+## 5. Pre-specified decision rules
 
-- `replicated`: جهت مشاهده‌شده با جهت طرح یکسان و q<0.05 در خانوادهٔ مربوط است.
-- `not_replicated`: جهت مخالف است یا q≥0.05. این برچسب اثبات نبودن اثر نیست.
-- `not_evaluable`: داده یا تعریف متغیر سازگار نیست یا تعداد نمونه کافی نیست.
-- برای H1 و H2 اگر آزمون کلی replicated شود اما جهت داخل یک سوخت قابل ارزیابی مخالف باشد، نتیجه `fuel_dependent` گزارش و Insight عمومی محدود می‌شود.
-- اگر یک سوخت به‌دلیل تعداد نمونه not_evaluable شود، نتیجهٔ کلی می‌تواند replicated باشد، اما باید `partial_fuel_coverage` همراه آن نوشته شود.
-- تغییر فرضیه، جهت، خانواده، حداقل نمونه یا معیار موفقیت پس از دیدن p-value یک deviation است و نتیجه دیگر confirmatory محسوب نمی‌شود.
+- `replicated`: the observed direction matches the planned direction and q<0.05 in its family.
+- `not_replicated`: the direction is opposite or q≥0.05. This label is not proof of no effect.
+- `not_evaluable`: the data or variable definitions are incompatible, or the sample is too small.
+- For H1 and H2, if the overall test replicates but the direction within an evaluable fuel is
+  opposite, the result is reported as `fuel_dependent` and the general insight is limited.
+- If a fuel is not evaluable because of sample size, the overall result can still be replicated,
+  but `partial_fuel_coverage` must be stated with it.
+- Changing a hypothesis, direction, family, minimum sample or success criterion after seeing a
+  p-value is a deviation, and the result is no longer confirmatory.
 
-## ۶. عدم‌قطعیت و گزارش
+## 6. Uncertainty and reporting
 
-عدم‌قطعیت اندازه‌گیری اگر per-row موجود باشد وارد sensitivity می‌شود. مقدار typical ادبیات جای uncertainty واقعی هر ردیف را نمی‌گیرد. بازه‌های سناریویی uncertainty معیار تصمیم replication نیستند و به‌عنوان confidence interval رسمی گزارش نمی‌شوند.
+Measurement uncertainty enters a sensitivity check if it is available per row. A typical value
+from the literature does not replace real per-row uncertainty. Scenario uncertainty ranges are
+not a replication decision criterion and are not reported as formal confidence intervals.
 
-همهٔ نتایج، از جمله rejected، not_evaluable و missingness، در `replication_results.csv` و خلاصهٔ فارسی ثبت خواهند شد.
+All results, including rejected, not evaluable and missingness, will be recorded in
+`replication_results.csv` and in the written summary.
 
-## ۷. وضعیت FLEX-2 در تاریخ تثبیت طرح
+## 7. Status of FLEX-2 on the date the plan was fixed
 
-فایل رسمی `PSI-68_Experimental table_Flex2.csv` با SHA-256 زیر فقط هشت ردیف ماتریس طراحی دارد:
+The official file `PSI-68_Experimental table_Flex2.csv`, with the SHA-256 below, holds only eight
+rows of a design matrix:
 
 `cc57ad1bd9977aa13e7ac6c3aa618303012686e232b36c052c6a9f1a74e5f528`
 
-ستونها شامل نوع سوخت، بازهٔ قطر اولیه، ترکیب گازی، چند مقدار برنامه‌ریزی‌شدهٔ اکسیژن و فشار، دما و سرعت جریان است. \(K\)، \(D_e\)، زمان سوختن، شناسهٔ آزمون انجام‌شده و تاریخ آزمون وجود ندارد. بنابراین هر شش فرضیه برای این فایل `not_evaluable` است؛ این تصمیم پیش از هر تحلیل ارتباطی و صرفاً بر اساس نبود outcome است.
+Its columns are fuel type, initial-diameter range, gas composition, several planned oxygen and
+pressure values, temperature and flow speed. There is no \(K\), \(D_e\), burn time, identifier of
+a test actually run, or test date. All six hypotheses are therefore `not_evaluable` for this
+file; this decision was made before any association analysis and only because outcomes are
+absent.

@@ -54,8 +54,7 @@ FOLLOWUPS = {
 }
 FINDING_WORDS = ["finding", "oxygen", "burning rate", "burn time", "pressure", "helium",
                  "co2", "carbon dioxide", "nitrogen", "diameter", "relationship", "associat",
-                 "correlat", "droplet", "flex", "یافته", "رابطه", "سوختن", "قطره", "فشار",
-                 "هلیوم", "اکسیژن"]
+                 "correlat", "droplet", "flex"]
 
 
 class Turn(BaseModel):
@@ -159,7 +158,7 @@ def pick(question: str, history: list[Turn], cards: list[dict]) -> list[dict]:
 SYSTEM = """You are Ask FlamexSI, the research assistant of FlamexSI, a NASA Space Apps 2026
 project that analyses NASA microgravity combustion data for spacecraft fire safety.
 Rules:
-- Answer in the language of the latest question (Persian if it is in Persian).
+- Answer in the language of the latest question.
 - Use ONLY the EVIDENCE cards. Every number you state must appear in a card. Cite the card
   right after the claim as [S1], [S2] (the card numbers given). Never cite a card you did not
   use and never invent a card number.

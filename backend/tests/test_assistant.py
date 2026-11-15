@@ -35,8 +35,9 @@ def test_stream_has_real_stages_in_order(client):
     assert done["cited"] == [1] and done["invalid"] == [] and done["followups"]
 
 
-def test_persian_question_finds_the_right_cards(client):
-    ev = _events(_ask(client, question="دتکتور دود ایستگاه فضایی چقدر دیر هشدار می‌دهد؟"))
+def test_a_smoke_question_finds_the_smoke_card(client):
+    q = "How late did the station's smoke detector notice the fire?"
+    ev = _events(_ask(client, question=q))
     ids = [s["id"] for s in next(e for e in ev if e["type"] == "sources")["sources"]]
     assert "smoke" in ids
 
@@ -93,7 +94,7 @@ def test_rate_limit_per_client(client):
 
 
 def test_a_new_topic_beats_the_previous_question(client):
-    ev = _events(_ask(client, question="دتکتور دود ایستگاه فضایی چقدر دیر متوجه آتش شد؟",
+    ev = _events(_ask(client, question="How late did the station's smoke detector notice the fire?",
                       history=[{"question": "Does more oxygen make droplets burn faster in FLEX?",
                                 "answer": "Yes [S1]."}]))
     ids = [s["id"] for s in next(e for e in ev if e["type"] == "sources")["sources"]]

@@ -41,9 +41,9 @@ const TOPICS: { title: string; mode: Parameters<typeof Orb>[0]["mode"]; qs: stri
   { title: "Can I trust it?", mode: "shaping", qs: [
     "How does FlamexSI decide a finding is real?",
     "Which investigations are about fire suppression?"] },
-  { title: "In Persian", mode: "weaving", qs: [
-    "دتکتور دود ایستگاه فضایی چقدر دیر متوجه آتش شد؟",
-    "اکسیژن بیشتر چه اثری روی سوختن قطره‌ها دارد؟"] },
+  { title: "Suppression", mode: "weaving", qs: [
+    "What does helium or CO₂ in the atmosphere do to droplet burning?",
+    "Which FLEX tests ended because the flame went out?"] },
 ];
 
 export default function Assistant() {
@@ -250,7 +250,7 @@ export default function Assistant() {
                 ask(input);
               }
             }}
-            placeholder="Ask about the NASA flight data… (English or Persian)"
+            placeholder="Ask about the NASA flight data…"
             aria-label="Your question"
             className="max-h-44 min-h-[2.5rem] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-ink outline-none placeholder:text-muted"
           />

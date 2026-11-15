@@ -18,7 +18,7 @@ GARBAGE_BODIES = [
     json.dumps([{"nested": [[[[[]]]]]}]),
 ]
 HOSTILE = ["", " ", "\u0000", "../../etc/passwd", "<script>alert(1)</script>", "' OR 1=1 --",
-           "شعله در ریزگرانش", "🔥" * 50, "a" * 5000, "%00", "NaN", "-1e309"]
+           "Flamme in Schwerelosigkeit", "🔥" * 50, "a" * 5000, "%00", "NaN", "-1e309"]
 
 
 def _ok_json_error(res):
@@ -74,7 +74,7 @@ UNKNOWN_ID_GETS = [
 
 
 @pytest.mark.parametrize("path", UNKNOWN_ID_GETS)
-@pytest.mark.parametrize("ident", ["nope", "..", "%2e%2e", "a" * 300, "ﺵ", "0"])
+@pytest.mark.parametrize("ident", ["nope", "..", "%2e%2e", "a" * 300, "é", "0"])
 def test_unknown_ids_are_404_not_500(client, path, ident):
     res = client.get(path.format(x=ident))
     _ok_json_error(res)
@@ -103,10 +103,10 @@ def test_unknown_ids_on_writes(client):
 @pytest.mark.parametrize("name,content,expect", [
     ("empty.csv", b"", 422),
     ("header_only.csv", b"oxygen,pressure\n", None),
-    ("bom.csv", "﻿Test ID,O2,Pressure (atm)\nE1,21,1\nE2,30,0.5\n".encode(), 201),
+    ("bom.csv", "\ufeffTest ID,O2,Pressure (atm)\nE1,21,1\nE2,30,0.5\n".encode(), 201),
     ("semi.csv", b"Test ID;O2;Pressure (atm)\nE1;21;1\nE2;30;0.5\n", 201),
     ("tabs.tsv", b"Test ID\tO2\tPressure (atm)\nE1\t21\t1\n", 201),
-    ("persian.csv", "شناسه,اکسیژن\nE1,21\nE2,30\n".encode(), None),
+    ("unicode.csv", "Identifiant,Oxygène\nE1,21\nE2,30\n".encode(), None),
     ("dupcols.csv", b"O2,O2,O2\n21,22,23\n", None),
     ("ragged.csv", b"a,b,c\n1,2\n3,4,5,6\n", None),
     ("latin1.csv", "Test ID,Matériau,O2\nE1,Nomex®,21\n".encode("cp1252"), 201),
@@ -303,7 +303,7 @@ def test_synthetic_findings_never_become_insights(client):
     ({"safety_areas": ["not_an_area"]}, 422),
     ({"references": ["not a list item", 5]}, 422),
     ({"statement": "<script>alert(1)</script> is not a statement"}, 201),
-    ({"statement": "اکسیژن بیشتر سرعت سوختن را بالا می‌برد."}, 201),
+    ({"statement": "Plus d'oxygène augmente la vitesse de combustion."}, 201),
     ({"related_finding_ids": ["nope"]}, None),
 ])
 def test_insight_validation(client, finding, patch, status):
