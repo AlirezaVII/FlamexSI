@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ListSkeleton } from "@/components/loading";
 import { Card, ErrorNote, PageHeader, StatusBadge } from "@/components/ui";
 import { NOVELTY } from "@/components/prior-knowledge";
+import { ExpertReviewPanel } from "@/components/expert-review";
 import { api, fmt, label } from "@/lib/api";
 import { SAFETY_AREAS } from "@/lib/labels";
 import type { Insight } from "@/lib/types";
@@ -18,6 +19,7 @@ const STEPS = [
   "Prior knowledge",
   "Scientific interpretation",
   "Fire-safety insight",
+  "Expert review",
   "Innovation",
 ];
 
@@ -149,6 +151,10 @@ export default function InsightsPage() {
                   {new Date(ins.created_at).toLocaleDateString()}
                 </span>
               </div>
+              <ExpertReviewPanel
+                insight={ins}
+                onChange={(u) => setInsights((all) => all?.map((x) => (x.insight_id === u.insight_id ? u : x)) ?? null)}
+              />
               {ins.references.length > 0 && (
                 <ul className="mt-2 list-disc pl-5 text-xs text-ink-2">
                   {ins.references.map((r) => (

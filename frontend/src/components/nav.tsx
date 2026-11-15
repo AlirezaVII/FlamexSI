@@ -182,6 +182,12 @@ const STAGES: Stage[] = [
         ),
       },
       {
+        href: "/beyond",
+        label: "Moon, Mars & Earth",
+        hint: "Partial gravity from flight data, and uses on Earth",
+        icon: icon("M12 3a9 9 0 1 0 9 9M12 3a9 9 0 0 1 9 9M3 12h18M16 5.5a3 3 0 1 0 0 .01"),
+      },
+      {
         href: "/simulator",
         label: "Simulate",
         hint: "Flammability by oxygen and gravity",

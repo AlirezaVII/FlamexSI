@@ -32,6 +32,7 @@ import type {
   Showcase,
   Source,
   Status,
+  ExpertVerdict,
 } from "./types";
 
 export const API_URL =
@@ -312,6 +313,10 @@ export const api = {
     },
   ) => request<Insight>(`/api/findings/${id}/insight`, json(body)),
   insights: () => request<Insight[]>("/api/insights"),
+  addExpertReview: (
+    id: string,
+    body: { reviewer: string; credentials: string; verdict: ExpertVerdict; comment: string },
+  ) => request<Insight>(`/api/insights/${id}/expert-reviews`, json(body)),
 
   searchPriorKnowledge: (id: string) =>
     request<SearchPlan>(`/api/findings/${id}/prior-knowledge/search`, {

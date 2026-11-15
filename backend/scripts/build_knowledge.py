@@ -87,6 +87,37 @@ def build() -> list[dict]:
                                "samples": [_s12(x) for x in f["samples"]]}
                               for f in s12["flights"]]},
     })
+    bz = load("flight/beyond.json")
+    cards.append({
+        "id": "beyond", "title": "Moon, Mars and Earth: partial gravity and uses on the ground",
+        "page": "/beyond",
+        "keywords": ["moon", "mars", "lunar", "martian", "partial gravity", "habitat",
+                     "earth", "application", "aircraft", "submarine", "hospital",
+                     "hyperbaric", "buoyan", "exploration atmosphere"],
+        "facts": {
+            "partial_gravity_data": "No combustion experiment in NASA PSI has run at lunar "
+                                    "or Martian gravity; FlamexSI does not invent results.",
+            "buoyancy_estimate": "buoyant speed ~ sqrt(g*L*0.85); for a 2 cm flame about "
+                                 "41 cm/s on Earth, 25 cm/s on Mars, 17 cm/s on the Moon, "
+                                 "0 in orbit (a physics estimate, not a measurement).",
+            "saffire_flow": "Saffire-I/II samples burned in about 20 cm/s fan flow, similar "
+                            "to Moon/Mars buoyant flow, so Saffire is the closest flight "
+                            "analogue for small habitat fires.",
+            "habitat_atmosphere": bz["habitat_atmosphere"],
+            "flex_enriched_oxygen": bz["fuels"],
+            "flex_note": bz["method"],
+            "earth_uses": [
+                "Kapton wire smoke is read weakly by light-scattering detectors (SAME): "
+                "aircraft, trains, data centres",
+                "Saffire-III radiometers saw flame long before the smoke detector: "
+                "submarines, cargo holds, mines",
+                "Saffire-I/II: only some materials keep burning in gentle flow: material "
+                "screening at realistic air speeds",
+                "FLEX: higher oxygen, faster burning: hospitals, hyperbaric chambers",
+                "Footage: flame metrics from ordinary lab video",
+            ],
+        },
+    })
     f2 = load("flight/flex2.json")
     cards.append({
         "id": "flex2", "title": "FLEX-2: every raw test log summarised",
@@ -124,8 +155,9 @@ def build() -> list[dict]:
         "facts": [
             "No partial-gravity (Moon, Mars) combustion data exists in PSI yet; microgravity "
             "and 1 g results only bound those cases.",
-            "Findings are statistical associations, not causes, and are not yet signed off "
-            "by a combustion expert (evidence readiness level 7 is never automatic).",
+            "Findings are statistical associations, not causes. Evidence readiness level 7 "
+            "is never automatic: it needs levels 1-6 plus a named expert's endorsement "
+            "recorded on the Insights page.",
             "Droplet results (FLEX) are not cabin fires; the radiometers in Saffire sit next "
             "to the sample, unlike cabin sensors.",
             "FLEX-2 oxygen and diluent per test are not in the public files: the per-test "

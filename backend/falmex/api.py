@@ -40,6 +40,7 @@ from falmex.engine import DiscoveryConfig, run_discovery
 from falmex.evidence_chat import chat_router
 from falmex.findings import (
     DEFAULT_WEIGHTS,
+    ExpertReview,
     Finding,
     Insight,
     Novelty,
@@ -47,6 +48,7 @@ from falmex.findings import (
     Reference,
     SafetyArea,
     Status,
+    insight_readiness,
 )
 from falmex.ingest import UnsupportedFileError
 from falmex.ingest.base import supported_extensions
@@ -139,6 +141,13 @@ class AnalyzeMediaRequest(BaseModel):
     fps: float | None = Field(None, gt=0, le=1_000_000)  # overrides the file's frame rate
     mm_per_px: float | None = Field(None, gt=0)  # calibration; lengths stay in px without it
     detector: Literal["opencv", "classic", "v6"] = "opencv"  # how the flame is found in each frame
+
+
+class ExpertReviewRequest(BaseModel):
+    reviewer: str = Field(min_length=2, max_length=120)
+    credentials: str = Field(min_length=3, max_length=200)
+    verdict: Literal["endorse", "endorse_with_changes", "reject"]
+    comment: str = Field(min_length=10, max_length=4000)
 
 
 class StartUploadRequest(BaseModel):
@@ -686,16 +695,37 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         store(request).save_insight(insight.model_dump(mode="json"))
         return insight
 
+    def with_readiness(request: Request, insight: dict) -> dict:
+        """The finding's evidence level now (it may have moved since promotion), lifted to
+        level 7 only by an expert's endorsement."""
+        live = store(request).get_finding(insight["finding_id"])
+        base = (Finding(**live).readiness if live
+                else insight.get("finding_snapshot", {}).get("readiness", {"level": 0}))
+        return {**insight, "readiness": insight_readiness(base,
+                                                          insight.get("expert_reviews", []))}
+
     @app.get("/api/insights")
     def list_insights(request: Request):
-        return store(request).list_insights()
+        return [with_readiness(request, i) for i in store(request).list_insights()]
 
     @app.get("/api/insights/{insight_id}")
     def get_insight(request: Request, insight_id: str):
         insight = store(request).get_insight(insight_id)
         if insight is None:
             raise HTTPException(404, f"Insight '{insight_id}' not found")
-        return insight
+        return with_readiness(request, insight)
+
+    @app.post("/api/insights/{insight_id}/expert-reviews", status_code=201)
+    def add_expert_review(request: Request, insight_id: str, body: ExpertReviewRequest):
+        """A domain expert reviews an insight (the only route to evidence level 7)."""
+        insight = store(request).get_insight(insight_id)
+        if insight is None:
+            raise HTTPException(404, f"Insight '{insight_id}' not found")
+        review = ExpertReview(**body.model_dump(), reviewed_at=datetime.now(UTC))
+        insight["expert_reviews"] = [*insight.get("expert_reviews", []),
+                                     review.model_dump(mode="json")]
+        store(request).update_insight(insight)
+        return with_readiness(request, insight)
 
     # ---- beyond the challenge: innovation built on insights, decided by the team ----
     def insight_or_404(request: Request, insight_id: str) -> dict:

@@ -201,6 +201,17 @@ class SafetyArea(StrEnum):
     COMBUSTION_MANAGEMENT = "combustion_management"
 
 
+class ExpertReview(BaseModel):
+    """A domain expert's review of an insight, entered by or for that person. The only way
+    evidence reaches level 7; FlamexSI never writes one itself."""
+
+    reviewer: str
+    credentials: str  # role and affiliation, e.g. "Combustion researcher, University of X"
+    verdict: Literal["endorse", "endorse_with_changes", "reject"]
+    comment: str
+    reviewed_at: datetime
+
+
 class Insight(BaseModel):
     """A finding a researcher reviewed and promoted. Never created automatically.
 
@@ -220,6 +231,7 @@ class Insight(BaseModel):
     safety_areas: list[SafetyArea] = []
     related_finding_ids: list[str] = []  # other findings this insight also rests on
     finding_snapshot: dict  # the finding exactly as it was when promoted
+    expert_reviews: list[ExpertReview] = []
 
 
 # ---- ranking ----------------------------------------------------------------------------
@@ -303,6 +315,23 @@ READINESS_NEXT = {
     6: "A combustion expert reviews and signs off. FlamexSI cannot do this step itself.",
     7: "Independent replication in another investigation or flight.",
 }
+
+
+def insight_readiness(finding_readiness: dict, reviews: list[dict]) -> dict:
+    """Level 7 = levels 1-6 met by the finding AND an expert endorsed the insight with no
+    expert rejecting it. An endorsement on weaker evidence is shown but does not lift it."""
+    out = dict(finding_readiness)
+    endorsed = [r for r in reviews if r.get("verdict") == "endorse"]
+    rejected = [r for r in reviews if r.get("verdict") == "reject"]
+    if out.get("level") == 6 and endorsed and not rejected:
+        who = ", ".join(r["reviewer"] for r in endorsed)
+        out.update(level=7, label=f"{READINESS_LEVELS[7][1]} ({who})", next=READINESS_NEXT[7])
+    elif rejected:
+        out["note"] = "An expert rejected this insight: read the review before relying on it."
+    elif endorsed:
+        out["note"] = ("An expert endorsed it, but level 7 also needs every earlier level; "
+                       f"next: {out.get('next', '')}")
+    return out
 
 
 def evidence_readiness(f: "Finding") -> dict:

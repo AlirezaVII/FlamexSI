@@ -395,6 +395,10 @@ class Store:
              insight["created_at"], json.dumps(insight, default=str)],
         )
 
+    def update_insight(self, insight: dict) -> None:
+        self._exec("UPDATE insights SET payload = ? WHERE insight_id = ?",
+                   [json.dumps(insight, default=str), insight["insight_id"]])
+
     def list_insights(self) -> list[dict]:
         rows = self._fetch("SELECT payload FROM insights ORDER BY created_at DESC")
         return [json.loads(r["payload"]) for r in rows]

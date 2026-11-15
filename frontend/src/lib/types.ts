@@ -496,6 +496,17 @@ export interface Insight {
   safety_areas: SafetyArea[];
   related_finding_ids: string[];
   finding_snapshot: Finding;
+  expert_reviews?: ExpertReview[];
+  readiness?: { level: number; of: number; label: string; next: string; note?: string };
+}
+
+export type ExpertVerdict = "endorse" | "endorse_with_changes" | "reject";
+export interface ExpertReview {
+  reviewer: string;
+  credentials: string;
+  verdict: ExpertVerdict;
+  comment: string;
+  reviewed_at: string;
 }
 
 export interface DiscoveryGoal {

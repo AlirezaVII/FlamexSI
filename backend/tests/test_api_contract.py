@@ -572,3 +572,43 @@ def test_footage_analysis_memory_does_not_grow_with_video_length(tmp_path):
         assert r["frames_analyzed"] == 300 and r["summary"]["flame_frames"] > 0
         # the 40 background frames and their median stay (~50 MB); all 300 would be 117 MB+
         assert peak < 75e6, f"{det}: {peak / 1e6:.0f} MB peak"
+
+
+def test_level_7_needs_levels_1_to_6_and_an_expert_endorsement():
+    from falmex.findings import insight_readiness
+
+    six = {"level": 6, "of": 7, "label": "Compared with published knowledge", "next": "x"}
+    four = {"level": 4, "of": 7, "label": "Survives the third-variable checks", "next": "y"}
+    yes = {"reviewer": "Dr. A", "verdict": "endorse"}
+    no = {"reviewer": "Dr. B", "verdict": "reject"}
+    edit = {"reviewer": "Dr. C", "verdict": "endorse_with_changes"}
+    assert insight_readiness(six, [])["level"] == 6, "never automatic"
+    r = insight_readiness(six, [yes])
+    assert r["level"] == 7 and "Dr. A" in r["label"]
+    assert insight_readiness(six, [edit])["level"] == 6, "changes requested first"
+    assert insight_readiness(six, [yes, no])["level"] == 6, "a rejection blocks sign-off"
+    weak = insight_readiness(four, [yes])
+    assert weak["level"] == 4 and "every earlier level" in weak["note"]
+
+
+def test_experts_review_insights_through_the_api(client, finding):
+    did, fid = finding
+    iid = client.post(f"/api/findings/{fid}/insight", json=VALID_INSIGHT).json()["insight_id"]
+    before = client.get(f"/api/insights/{iid}").json()
+    assert before["expert_reviews"] == [] and before["readiness"]["level"] < 7
+    review = {"reviewer": "Dr. Jane Roe", "credentials": "Combustion scientist, Example Lab",
+              "verdict": "endorse", "comment": "Consistent with droplet theory and the data."}
+    res = client.post(f"/api/insights/{iid}/expert-reviews", json=review)
+    assert res.status_code == 201, res.text
+    got = res.json()
+    assert got["expert_reviews"][0]["reviewer"] == "Dr. Jane Roe"
+    assert got["expert_reviews"][0]["reviewed_at"]
+    # this finding has no prior-knowledge check yet, so the endorsement cannot lift it to 7
+    assert got["readiness"]["level"] < 7 and "every earlier level" in got["readiness"]["note"]
+    listed = next(i for i in client.get("/api/insights").json() if i["insight_id"] == iid)
+    assert len(listed["expert_reviews"]) == 1 and "readiness" in listed
+    bad = {**review, "verdict": "maybe"}
+    assert client.post(f"/api/insights/{iid}/expert-reviews", json=bad).status_code == 422
+    short = {**review, "comment": "ok"}
+    assert client.post(f"/api/insights/{iid}/expert-reviews", json=short).status_code == 422
+    assert client.post("/api/insights/nope/expert-reviews", json=review).status_code == 404

@@ -1,0 +1,57 @@
+{
+ "source": "NASA PSI-69, FLEX experimental table (274 tests)",
+ "method": "Numbers for the \"Moon, Mars and Earth\" page, computed from NASA's FLEX table (PSI-69).",
+ "habitat_atmosphere": {
+  "oxygen": 0.34,
+  "pressure_kpa": 56.5,
+  "reference": "NASA/TP-2010-216134"
+ },
+ "oxygen_range_tested": [
+  0.12,
+  0.34
+ ],
+ "fuels": {
+  "Heptane": {
+   "air": {
+    "n": 44,
+    "oxygen": [
+     0.19,
+     0.23
+    ],
+    "median_k_mm2_s": 0.535,
+    "median_pressure_kpa": 101.2
+   },
+   "enriched": {
+    "n": 10,
+    "oxygen": [
+     0.3,
+     0.4
+    ],
+    "median_k_mm2_s": 0.715,
+    "median_pressure_kpa": 72.0
+   },
+   "change_pct": 34
+  },
+  "Methanol": {
+   "air": {
+    "n": 59,
+    "oxygen": [
+     0.19,
+     0.23
+    ],
+    "median_k_mm2_s": 0.48,
+    "median_pressure_kpa": 86.4
+   },
+   "enriched": {
+    "n": 13,
+    "oxygen": [
+     0.3,
+     0.4
+    ],
+    "median_k_mm2_s": 0.65,
+    "median_pressure_kpa": 71.9
+   },
+   "change_pct": 35
+  }
+ }
+}
