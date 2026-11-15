@@ -6,7 +6,7 @@ There are two deployments, and both must show the same commit:
 
 1. **Droplet (backend + full app):** pushing to `main` runs CI and deploys automatically
    (`.github/workflows/ci.yml` → `deploy/deploy.sh`). Live at http://129.212.254.115:3000.
-2. **Vercel (frontend):** https://falmex.vercel.app. It is **not** connected to git, so a push
+2. **Vercel (frontend):** https://flamexsi.vercel.app. It is **not** connected to git, so a push
    does not update it. After every commit that is pushed to `main`, redeploy it by hand:
 
    ```bash
@@ -21,7 +21,7 @@ There are two deployments, and both must show the same commit:
    cannot run on Vercel (it needs DuckDB and persistent files).
 
    Wait for the push's CI deploy to finish first, so the Vercel frontend never calls a
-   backend that does not have its endpoints yet. Then check `https://falmex.vercel.app/health`
+   backend that does not have its endpoints yet. Then check `https://flamexsi.vercel.app/health`
    and one page.
 
 ## Working on the code
