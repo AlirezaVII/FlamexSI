@@ -71,6 +71,12 @@ CV_SEED, CV_LOW, CV_CHANGE, CV_MIN_AREA = 230, 60, 180, 50
 BG_FRAMES = 40  # frames sampled across a video for its median background
 
 
+def _maxc(a: np.ndarray) -> np.ndarray:
+    """Per-pixel maximum over the colour channels; the same as a.max(axis=2), but numpy's
+    reduction over a length-3 last axis is ~10x slower than two element-wise maxima."""
+    return np.maximum(np.maximum(a[..., 0], a[..., 1]), a[..., 2])
+
+
 @dataclass
 class Calibration:
     fps: float | None = None  # overrides the frame rate stored in the file
@@ -136,7 +142,7 @@ class _Footage:
         """First pass: count the frames and return the brightest one (for the threshold)."""
         best, brightest = -1.0, None
         for _, _, f in self.walk():
-            b = float(np.percentile(f.max(axis=2), 99.5))
+            b = float(np.percentile(_maxc(f), 99.5))
             if b > best:
                 best, brightest = b, f
         return brightest
@@ -218,8 +224,8 @@ def v6_masks(path: Path, frames: list[np.ndarray]) -> list[np.ndarray]:
 def _threshold(frames: list[np.ndarray]) -> float:
     """One brightness threshold for the whole clip: Otsu on the brightest frame, so dark
     frames (before ignition, after extinction) are not forced to contain a 'flame'."""
-    brightest = max(frames, key=lambda f: float(np.percentile(f.max(axis=2), 99.5)))
-    v = brightest.max(axis=2)
+    brightest = max(frames, key=lambda f: float(np.percentile(_maxc(f), 99.5)))
+    v = _maxc(brightest)
     t, _ = cv2.threshold(v, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return max(float(t), 40.0)
 
@@ -241,8 +247,8 @@ def background(frames: list[np.ndarray]) -> np.ndarray:
 
 def opencv_mask(frame: np.ndarray, bg: np.ndarray) -> np.ndarray:
     im = frame.astype(np.int16)
-    v = im.max(axis=2)
-    diff = np.abs(im - bg).max(axis=2)
+    v = _maxc(im)
+    diff = _maxc(np.abs(im - bg))
     warm = im[..., 2] - im[..., 0]
     low = ((v >= CV_LOW) & (diff >= CV_CHANGE * 0.5)).astype(np.uint8)
     seed = ((v >= CV_SEED) & (diff >= CV_CHANGE)) | ((v >= 250) & (warm >= 0))
@@ -276,7 +282,7 @@ def _measure(frame: np.ndarray, thresh: float, mask: np.ndarray | None = None) -
     """Metrics of the largest flame region. `mask` comes from a detector; without one the
     classic brightness threshold is used (and the bright-background check applies)."""
     h, w = frame.shape[:2]
-    v = frame.max(axis=2)
+    v = _maxc(frame)
     classic = mask is None
     if classic:
         mask = (v > thresh).astype(np.uint8)
@@ -373,7 +379,7 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
             raise ValueError("The video has no readable frames")
         masks = v6_masks(path, [f for _, f in subset])
         brightest = max((f for _, f in subset),
-                        key=lambda f: float(np.percentile(f.max(axis=2), 99.5)))
+                        key=lambda f: float(np.percentile(_maxc(f), 99.5)))
     else:
         brightest = src.scan()
         n = src.n
