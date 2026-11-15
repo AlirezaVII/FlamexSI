@@ -8,6 +8,7 @@ import { SIDEBAR_KEY } from "@/lib/boot-scripts";
 import { PipelineLink } from "./pipeline-link";
 import { useWorkspace } from "@/lib/workspace";
 import { Skeleton } from "./loading";
+import { GitHubLink } from "./github-link";
 import { BrandLogo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -136,9 +137,7 @@ const STAGES: Stage[] = [
         href: "/review",
         label: "Review",
         hint: "FLEX evidence, limitations and artifacts",
-        icon: icon(
-          "M4 5h16v14H4zM8 9h8M8 13h5M14 16l2 2 4-5",
-        ),
+        icon: icon("M4 5h16v14H4zM8 9h8M8 13h5M14 16l2 2 4-5"),
       },
     ],
   },
@@ -185,7 +184,9 @@ const STAGES: Stage[] = [
         href: "/beyond",
         label: "Moon, Mars & Earth",
         hint: "Partial gravity from flight data, and uses on Earth",
-        icon: icon("M12 3a9 9 0 1 0 9 9M12 3a9 9 0 0 1 9 9M3 12h18M16 5.5a3 3 0 1 0 0 .01"),
+        icon: icon(
+          "M12 3a9 9 0 1 0 9 9M12 3a9 9 0 0 1 9 9M3 12h18M16 5.5a3 3 0 1 0 0 .01",
+        ),
       },
       {
         href: "/simulator",
@@ -465,7 +466,7 @@ function Sidebar({ badges }: { badges: Record<Badge, number> }) {
               : "M4 4h16v16H4zM9 4v16M16 9l-3 3 3 3",
           )}
         </button>
-        <span className="sidebar-label ml-auto text-[11px] text-muted">⌘\</span>
+        <GitHubLink label className="sidebar-gh ml-auto" />
       </div>
     </aside>
   );
@@ -507,6 +508,7 @@ function MobileNav({ badges }: { badges: Record<Badge, number> }) {
             </span>
           </PipelineLink>
           <DatasetPicker pill className="ml-auto max-w-[11rem]" />
+          <GitHubLink />
           <ThemeToggle />
         </div>
         {stage && stage.items.length > 1 && (

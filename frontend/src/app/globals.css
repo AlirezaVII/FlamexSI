@@ -654,3 +654,10 @@ html.lenis body {
   color: #fff; background: #1f2a5c; border: 1px solid rgba(255, 255, 255, .55);
   pointer-events: none;
 }
+
+/* collapsed sidebar: the GitHub button becomes a square icon button like its neighbours */
+:root[data-sidebar="collapsed"] .sidebar-gh {
+  width: 2.25rem;
+  margin-left: 0;
+  padding: 0;
+}

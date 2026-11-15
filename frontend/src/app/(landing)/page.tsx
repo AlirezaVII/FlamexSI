@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { GitHubIcon, REPO_URL } from "@/components/github-link";
 import { join } from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,7 +15,8 @@ import psi from "@/lib/psi/catalog.json";
 
 // counts shown on the page come from the PSI catalog itself
 const INVESTIGATIONS = psi as { acronym: string; pillars: string[] }[];
-const byPillar = (p: string) => INVESTIGATIONS.filter((i) => i.pillars.includes(p));
+const byPillar = (p: string) =>
+  INVESTIGATIONS.filter((i) => i.pillars.includes(p));
 
 export const metadata: Metadata = {
   title: "FlamexSI — Findings you can verify",
@@ -75,7 +77,7 @@ const STEPS = [
     "Interpret",
     "Evidence, limits and what it means for spacecraft fire safety. AI explains only the computed facts.",
   ],
-]
+];
 
 export default function Landing() {
   return (
@@ -118,7 +120,11 @@ export default function Landing() {
             <radialGradient id="gflame" cx="50%" cy="70%" r="70%">
               <stop offset="0" stopColor="#fff6d8" />
               <stop offset="0.35" stopColor="var(--gf-core, #ffc24a)" />
-              <stop offset="1" stopColor="var(--gf-edge, #ff6a1f)" stopOpacity="0.15" />
+              <stop
+                offset="1"
+                stopColor="var(--gf-edge, #ff6a1f)"
+                stopOpacity="0.15"
+              />
             </radialGradient>
           </defs>
           <path data-gflame fill="url(#gflame)" />
@@ -171,6 +177,17 @@ export default function Landing() {
             <ThemeToggle />
           </span>
           <MobileMenu />
+          <a
+            className="btn ghost gh-link"
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            title="Source code on GitHub"
+            aria-label="FlamexSI source code on GitHub"
+          >
+            <GitHubIcon className="h-[18px] w-[18px]" />
+            <span className="gh-text">GitHub</span>
+          </a>
           <Link
             className="btn ghost open-app"
             href="/overview"
@@ -192,25 +209,24 @@ export default function Landing() {
               <h1 className="serif">
                 Decades of microgravity flame experiments.
                 <br />
-                <span className="hl">
-                  Findings you can verify.
-                </span>
+                <span className="hl">Findings you can verify.</span>
               </h1>
               <p className="lead">
-                FlamexSI summarises, ranks and interprets all {INVESTIGATIONS.length}{" "}
-                combustion investigations in NASA&apos;s PSI repository, then tests
-                the flight measurements themselves (274 FLEX experiments, BASS-II
-                footage) to deliver fire-safety evidence for spacecraft, Moon and
-                Mars bases, and pressurized rovers.
+                FlamexSI summarises, ranks and interprets all{" "}
+                {INVESTIGATIONS.length} combustion investigations in NASA&apos;s
+                PSI repository, then tests the flight measurements themselves
+                (274 FLEX experiments, BASS-II footage) to deliver fire-safety
+                evidence for spacecraft, Moon and Mars bases, and pressurized
+                rovers.
               </p>
               <div className="cta">
                 <Link className="btn primary" href="/investigations">
                   Rank the investigations →
                 </Link>
                 <Link className="btn ghost" href="/assistant">
-                Ask FlamexSI
-              </Link>
-              <Link className="btn ghost" href="/flight-evidence">
+                  Ask FlamexSI
+                </Link>
+                <Link className="btn ghost" href="/flight-evidence">
                   Flight evidence
                 </Link>
               </div>
@@ -221,7 +237,12 @@ export default function Landing() {
             </div>
             <div className="grab" data-grab aria-label="Earth — drag to rotate">
               {/* eslint-disable-next-line @next/next/no-img-element -- inline data URI */}
-              <img className="earth-still" src={EARTH_STILL} alt="" aria-hidden />
+              <img
+                className="earth-still"
+                src={EARTH_STILL}
+                alt=""
+                aria-hidden
+              />
               <span className="grab-hint" data-grab-hint>
                 ⟲ Drag to rotate Earth
               </span>
@@ -304,23 +325,45 @@ export default function Landing() {
             Prevent it, detect it, put it out.
           </h2>
           <p className="sub">
-            NASA&apos;s spacecraft fire-safety work rests on three pillars. Each card
-            lists the PSI investigations that inform it.
+            NASA&apos;s spacecraft fire-safety work rests on three pillars. Each
+            card lists the PSI investigations that inform it.
           </p>
           <div className="grid3">
             {(
               [
-                ["prevention", "Prevention", "Which materials burn, and at what oxygen and airflow? Flammability limits decide material selection, more so in oxygen-rich Moon-base air."],
-                ["detection", "Detection", "Smoke in microgravity has different particle sizes, so detectors built for Earth can look for the wrong signature."],
-                ["suppression", "Suppression", "How much inert gas puts a flame out? In FLEX, flames survived at lower oxygen in microgravity than on the ground."],
+                [
+                  "prevention",
+                  "Prevention",
+                  "Which materials burn, and at what oxygen and airflow? Flammability limits decide material selection, more so in oxygen-rich Moon-base air.",
+                ],
+                [
+                  "detection",
+                  "Detection",
+                  "Smoke in microgravity has different particle sizes, so detectors built for Earth can look for the wrong signature.",
+                ],
+                [
+                  "suppression",
+                  "Suppression",
+                  "How much inert gas puts a flame out? In FLEX, flames survived at lower oxygen in microgravity than on the ground.",
+                ],
               ] as const
             ).map(([key, title, text]) => (
-              <Link key={key} href="/investigations" className="card" data-reveal>
+              <Link
+                key={key}
+                href="/investigations"
+                className="card"
+                data-reveal
+              >
                 <h3 className="serif">{title}</h3>
                 <p>{text}</p>
-                <p style={{ marginTop: 12, fontSize: 13, color: "var(--l-hl)" }}>
+                <p
+                  style={{ marginTop: 12, fontSize: 13, color: "var(--l-hl)" }}
+                >
                   {byPillar(key).length} investigations:{" "}
-                  {byPillar(key).slice(0, 6).map((i) => i.acronym).join(", ")}
+                  {byPillar(key)
+                    .slice(0, 6)
+                    .map((i) => i.acronym)
+                    .join(", ")}
                   {byPillar(key).length > 6 ? "…" : ""}
                 </p>
               </Link>
@@ -367,18 +410,19 @@ export default function Landing() {
                 FlamexSI tries to prove itself wrong.
               </h2>
               <p className="sub">
-                A pattern that looks real is not enough. Every association FlamexSI
-                finds in the FLEX flight data is re-tested on tests it never saw,
-                against random shuffles, and with each other condition held fixed.
-                Patterns that fail are thrown out, not reported.
+                A pattern that looks real is not enough. Every association
+                FlamexSI finds in the FLEX flight data is re-tested on tests it
+                never saw, against random shuffles, and with each other
+                condition held fixed. Patterns that fail are thrown out, not
+                reported.
               </p>
               <p
                 className="sub"
                 style={{ marginTop: 14, fontSize: 14, color: "var(--l-muted)" }}
               >
-                Real NASA data: the top finding from the PSI-69 FLEX table and one
-                the same run rejected. Every number comes from the engine&apos;s stored
-                results.
+                Real NASA data: the top finding from the PSI-69 FLEX table and
+                one the same run rejected. Every number comes from the
+                engine&apos;s stored results.
               </p>
             </div>
             <TrustCard />
@@ -404,39 +448,43 @@ export default function Landing() {
               </h3>
               <ul>
                 <li>
-                  Catalog of all {INVESTIGATIONS.length} PSI combustion investigations,
-                  ranked by crew environment and fire-safety question, compared side
-                  by side
+                  Catalog of all {INVESTIGATIONS.length} PSI combustion
+                  investigations, ranked by crew environment and fire-safety
+                  question, compared side by side
                 </li>
                 <li>
                   274 FLEX flight experiments analysed: associations found, then
                   re-tested on later test dates and against random shuffles
                 </li>
                 <li>
-                  154 SAME and SAME-R smoke tests analysed: smoke aging, particle size
-                  by material and ISS detector response, each replicated across both
-                  flights
+                  154 SAME and SAME-R smoke tests analysed: smoke aging,
+                  particle size by material and ISS detector response, each
+                  replicated across both flights
                 </li>
                 <li>
-                  Third-variable checks, uncertainty, sources and limitations on every
-                  finding
+                  Third-variable checks, uncertainty, sources and limitations on
+                  every finding
                 </li>
                 <li>
-                  Scientific report and Gemini interpretation written only from the
-                  computed statistics
+                  Scientific report and Gemini interpretation written only from
+                  the computed statistics
                 </li>
                 <li>
-                  BASS-II camera frames annotated independently by two reviewers; a plain
-                  OpenCV method overlaps them better than the reviewers overlap each other
+                  BASS-II camera frames annotated independently by two
+                  reviewers; a plain OpenCV method overlaps them better than the
+                  reviewers overlap each other
                 </li>
                 <li>
-                  All FLEX-2 raw test logs summarised per test; Saffire-III cabin fire
-                  read from the Cygnus telemetry
+                  All FLEX-2 raw test logs summarised per test; Saffire-III
+                  cabin fire read from the Cygnus telemetry
                 </li>
-                <li>Evidence readiness level (0–7) on every finding; 3D replay of FLEX burns</li>
                 <li>
-                  Upload of PSI tables (CSV, TSV, TXT, Excel, JSON, Parquet); the
-                  original file is kept untouched
+                  Evidence readiness level (0–7) on every finding; 3D replay of
+                  FLEX burns
+                </li>
+                <li>
+                  Upload of PSI tables (CSV, TSV, TXT, Excel, JSON, Parquet);
+                  the original file is kept untouched
                 </li>
               </ul>
             </div>
@@ -450,17 +498,21 @@ export default function Landing() {
               </h3>
               <ul>
                 <li>
-                  Partial-gravity data: none exists in PSI yet (LUCI and FM2 will add
-                  it); microgravity and 1 g results only bound the Moon and Mars
+                  Partial-gravity data: none exists in PSI yet (LUCI and FM2
+                  will add it); microgravity and 1 g results only bound the Moon
+                  and Mars
                 </li>
                 <li>
-                  FLEX-2 atmospheres (oxygen, diluent) per test, from the larger chamber
-                  logs, to link flames to conditions
+                  FLEX-2 atmospheres (oxygen, diluent) per test, from the larger
+                  chamber logs, to link flames to conditions
                 </li>
-                <li>Flame-spread speeds from BASS videos and the other Saffire flights</li>
                 <li>
-                  Expert-reviewed insights: none yet; expert sign-off is separate from
-                  internal evaluation
+                  Flame-spread speeds from BASS videos and the other Saffire
+                  flights
+                </li>
+                <li>
+                  Expert-reviewed insights: none yet; expert sign-off is
+                  separate from internal evaluation
                 </li>
               </ul>
             </div>
@@ -479,12 +531,16 @@ export default function Landing() {
               </div>
               <h3 className="serif">Rank &amp; compare investigations</h3>
               <p>
-                Objectives, fuels, oxygen, pressure, airflow and sensors of every PSI
-                investigation side by side, ranked for the habitat you design for.
+                Objectives, fuels, oxygen, pressure, airflow and sensors of
+                every PSI investigation side by side, ranked for the habitat you
+                design for.
               </p>
             </div>
             <div className="card" data-reveal>
-              <div className="ficon" style={{ color: "var(--l-hl)", fontSize: 20 }}>
+              <div
+                className="ficon"
+                style={{ color: "var(--l-hl)", fontSize: 20 }}
+              >
                 ?
               </div>
               <h3 className="serif">Questions from the data</h3>
@@ -541,8 +597,9 @@ export default function Landing() {
           Findings are statistical associations and require expert review.
         </span>
         <span>
-          AI use: logo AI-generated (marked “AI”) · Ask FlamexSI uses Google Gemini · parts
-          of the code written with an AI coding assistant, reviewed by the team
+          AI use: logo AI-generated (marked “AI”) · Ask FlamexSI uses Google
+          Gemini · parts of the code written with an AI coding assistant,
+          reviewed by the team
         </span>
       </footer>
     </>

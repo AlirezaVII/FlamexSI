@@ -1251,3 +1251,15 @@ html.menu-open .landing .topbar { z-index: 9001; background: transparent !import
 html.menu-open .landing .topbar .progress, html.menu-open .landing .topbar .journey { opacity: 0; pointer-events: none; }
 html.menu-open .landing .topbar .brand { color: #eef2ff; }
 html.menu-open .landing .burger { color: #eef2ff; border-color: #ffffff40; background: #ffffff10; }
+
+/* GitHub button in the top bar: icon + word on wide screens, icon only on phones */
+.landing .gh-link {
+  padding: 8px 14px;
+  font-size: 14px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .landing .gh-link { padding: 8px 10px; }
+  .landing .gh-link .gh-text { display: none; }
+}
