@@ -1,0 +1,119 @@
+{
+ "source": "NASA PSI-101 (SAME-R) and PSI-102 (SAME), 'Combined SAMER Results' reduced data, sheet 'Reduced Data with ISS Det'",
+ "method": "Reads backend/falmex/datasets/PSI-101_SAME_smoke_tests.csv (build_same_table.py) and tests\nthree questions, each in both flights separately, so the second flight is a replication:\n  1 aging      does smoke held in the chamber grow? Paired: the same sample before and after\n               secondary aging (test \"23\" vs \"23a\"); exact sign test.\n  2 material   do materials make different particle sizes? Kruskal-Wallis on the count mean\n               diameter of unaged smoke (aging under 120 s).\n  3 detector   does the ISS smoke detector (light scattering) respond to particle size beyond\n               the amount of smoke? Spearman partial correlation of detector signal with count\n               mean diameter, holding the mass moment M1 fixed; 2000 shuffles.\nDBP (dibutyl phthalate) is a calibration aerosol, not a fire fuel, and is left out.",
+ "tests": 154,
+ "fuel_tests": 134,
+ "full_scale_share": 0.52,
+ "flights": {
+  "SAME (2007)": {
+   "tests": 25,
+   "aging": {
+    "pairs": 8,
+    "grew": 8,
+    "median_ratio": 1.33,
+    "p_value": 0.0078125,
+    "median_aging_s": 849
+   },
+   "material": {
+    "p_value": 0.1952509066734123,
+    "fresh_median_um": {
+     "Kapton": 0.133,
+     "Lampwick": 0.184,
+     "Silicone": 0.207,
+     "Teflon": 0.165
+    },
+    "n": {
+     "Kapton": 4,
+     "Lampwick": 4,
+     "Silicone": 4,
+     "Teflon": 4
+    }
+   },
+   "detector": {
+    "n": 25,
+    "partial_rho": 0.478,
+    "shuffles_as_strong": 37,
+    "shuffles": 2000,
+    "rho_with_mass": 0.543,
+    "rho_with_size": 0.577
+   }
+  },
+  "SAME-R (2010)": {
+   "tests": 109,
+   "aging": {
+    "pairs": 40,
+    "grew": 38,
+    "median_ratio": 1.59,
+    "p_value": 1.4933903003111482e-09,
+    "median_aging_s": 581
+   },
+   "material": {
+    "p_value": 0.00016230967228226373,
+    "fresh_median_um": {
+     "Kapton": 0.088,
+     "Lampwick": 0.144,
+     "Pyrell": 0.237,
+     "Silicone": 0.244,
+     "Teflon": 0.155
+    },
+    "n": {
+     "Kapton": 13,
+     "Lampwick": 10,
+     "Pyrell": 10,
+     "Silicone": 13,
+     "Teflon": 10
+    }
+   },
+   "detector": {
+    "n": 106,
+    "partial_rho": 0.608,
+    "shuffles_as_strong": 0,
+    "shuffles": 2000,
+    "rho_with_mass": 0.443,
+    "rho_with_size": 0.632
+   }
+  }
+ },
+ "materials": [
+  {
+   "material": "Kapton",
+   "tests": 36,
+   "fresh_diameter_um": 0.094,
+   "aged_diameter_um": 0.138,
+   "detector_median_v": 0.87,
+   "at_full_scale": 0.06
+  },
+  {
+   "material": "Lampwick",
+   "tests": 26,
+   "fresh_diameter_um": 0.156,
+   "aged_diameter_um": 0.237,
+   "detector_median_v": 6.25,
+   "at_full_scale": 0.88
+  },
+  {
+   "material": "Teflon",
+   "tests": 23,
+   "fresh_diameter_um": 0.157,
+   "aged_diameter_um": 0.249,
+   "detector_median_v": 0.95,
+   "at_full_scale": 0.0
+  },
+  {
+   "material": "Pyrell",
+   "tests": 20,
+   "fresh_diameter_um": 0.237,
+   "aged_diameter_um": 0.357,
+   "detector_median_v": 6.24,
+   "at_full_scale": 0.8
+  },
+  {
+   "material": "Silicone",
+   "tests": 29,
+   "fresh_diameter_um": 0.241,
+   "aged_diameter_um": 0.425,
+   "detector_median_v": 6.25,
+   "at_full_scale": 1.0
+  }
+ ]
+}

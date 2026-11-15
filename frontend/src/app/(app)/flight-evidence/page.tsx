@@ -10,6 +10,7 @@ import audit from "@/lib/flight/holdout-audit.json";
 import models from "@/lib/flight/models.json";
 import nextExperiments from "@/lib/flight/next_experiments.json";
 import transitions from "@/lib/flight/transitions.json";
+import smoke from "@/lib/flight/smoke.json";
 
 /*
  * Flight evidence: NASA FLEX (PSI-69) droplet measurements and BASS-II frames.
@@ -100,6 +101,7 @@ const SECTIONS = [
   ["transition", "Transition finder"],
   ["next", "Next experiment"],
   ["atmosphere", "Mission check"],
+  ["smoke", "Smoke detection"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
   ["methods", "Methods & uncertainty"],
@@ -114,7 +116,7 @@ const select =
 export default function FlightEvidence() {
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="NASA FLEX · PSI-69 · BASS-II" title="Reading fire in microgravity">
+      <PageHeader eyebrow="NASA FLEX · SAME · SAME-R · BASS-II" title="Reading fire in microgravity">
         In the FLEX experiments, droplets exposed to more oxygen tended to be smaller
         relative to their starting size when the visible flame disappeared. Compare two
         conditions, inspect the optical evidence, and see which conclusions the measurements
@@ -136,6 +138,7 @@ export default function FlightEvidence() {
       <TransitionFinder />
       <NextExperiment />
       <AtmosphereCheck />
+      <SmokeDetection />
       <Ranking />
       <ReportAndPlanner />
       <EvidenceMethods />
@@ -543,6 +546,140 @@ function AtmosphereCheck() {
         Observational contrasts within FLEX droplet tests. Pressure, diluent and droplet size
         differ between experiments, and a droplet is not a cabin fire: use this to choose
         follow-up experiments, not to set oxygen limits.
+      </p>
+    </Card>
+  );
+}
+
+const pv = (p: number | null | undefined) =>
+  p == null ? "–" : p < 0.001 ? "p < 0.001" : `p = ${p.toFixed(3)}`;
+
+/** Detection pillar: what the SAME and SAME-R smoke flights show, each flight tested on
+ * its own so the second one is a replication (backend/scripts/build_smoke_insights.py). */
+function SmokeDetection() {
+  const flights = Object.entries(smoke.flights);
+  const maxD = Math.max(...smoke.materials.map((m) => m.aged_diameter_um));
+  const later = smoke.flights["SAME-R (2010)"];
+  return (
+    <Card title="Smoke detection · SAME and SAME-R" className="scroll-mt-24 print:hidden">
+      <span id="smoke" className="sr-only" />
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        Two ISS flights heated five spacecraft materials and measured the smoke:{" "}
+        {smoke.fuel_tests} flight tests (SAME 2007, SAME-R 2010). Each question below is
+        tested in both flights separately, so the 2010 flight checks the 2007 one.
+      </p>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border border-line bg-surface-2 p-4">
+          <p className="text-xs uppercase tracking-wider text-accent">1 · Smoke ages</p>
+          <p className="mt-1 font-display text-lg text-ink">
+            Smoke held in the cabin air grows larger particles
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-ink-2">
+            {flights.map(([fl, v]) => (
+              <li key={fl}>
+                <b className="text-ink">{fl}</b>: larger after aging in {v.aging.grew} of{" "}
+                {v.aging.pairs} samples, ×{v.aging.median_ratio} median ({pv(v.aging.p_value)})
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-xl border border-line bg-surface-2 p-4">
+          <p className="text-xs uppercase tracking-wider text-accent">2 · Material matters</p>
+          <p className="mt-1 font-display text-lg text-ink">
+            Wire insulation smoke (Kapton) has the smallest particles
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-ink-2">
+            {flights.map(([fl, v]) => (
+              <li key={fl}>
+                <b className="text-ink">{fl}</b>: fresh-smoke size differs by material,{" "}
+                {pv(v.material.p_value)}
+                {(v.material.p_value ?? 1) >= 0.05 && " (not significant: few fresh tests)"}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-xl border border-line bg-surface-2 p-4">
+          <p className="text-xs uppercase tracking-wider text-accent">3 · The ISS detector</p>
+          <p className="mt-1 font-display text-lg text-ink">
+            The light-scattering detector reads Kapton and Teflon smoke weakly
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-ink-2">
+            {flights.map(([fl, v]) => (
+              <li key={fl}>
+                <b className="text-ink">{fl}</b>: signal rises with particle size at the
+                same smoke mass, ρ = {v.detector.partial_rho.toFixed(2)} (
+                {v.detector.shuffles_as_strong} of {v.detector.shuffles} shuffles as strong)
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-xs text-muted">
+              <th className="py-2 pr-3 font-medium">Material</th>
+              <th className="py-2 pr-3 font-medium">Particle size, fresh → aged (µm)</th>
+              <th className="py-2 pr-3 font-medium">ISS detector, median</th>
+              <th className="py-2 font-medium">Tests</th>
+            </tr>
+          </thead>
+          <tbody>
+            {smoke.materials.map((m) => (
+              <tr key={m.material} className="border-b border-line/60">
+                <td className="py-2 pr-3 font-medium text-ink">{m.material}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <div className="relative h-2 w-32 rounded-full bg-surface-2">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-accent/35"
+                        style={{ width: `${(m.aged_diameter_um / maxD) * 100}%` }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-accent"
+                        style={{ width: `${(m.fresh_diameter_um / maxD) * 100}%` }}
+                      />
+                    </div>
+                    <span className="tabular-nums text-xs text-ink-2">
+                      {m.fresh_diameter_um.toFixed(2)} → {m.aged_diameter_um.toFixed(2)}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-2 pr-3 tabular-nums text-xs text-ink-2">
+                  <b
+                    className="text-ink"
+                    style={{ color: m.detector_median_v < 2 ? "var(--serious)" : undefined }}
+                  >
+                    {m.detector_median_v.toFixed(2)} V
+                  </b>
+                  {m.at_full_scale > 0.5 && " (mostly at full scale)"}
+                </td>
+                <td className="py-2 tabular-nums text-xs text-ink-2">{m.tests}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-4 rounded-lg border-l-4 border-accent bg-surface-2 p-3 text-sm text-ink-2">
+        <b className="text-ink">What it means for detection:</b> wire insulation (Kapton,
+        Teflon) is a likely early fire source in spacecraft, and its smoke gave the ISS
+        scattering detector a median of under 1 V, against about 6.2 V for the other
+        materials. Teflon and lampwick smoke have almost the same particle size, so size alone
+        does not explain the gap; the material does. A detector tuned on large, aged smoke may
+        respond late to an electrical fire. The 2010 flight (n = {later.detector.n}) repeated
+        the 2007 pattern.
+      </div>
+      <p className="mt-3 text-xs text-muted">
+        {Math.round(smoke.full_scale_share * 100)}% of detector readings sit at the detector&apos;s
+        full-scale output (about 6.2 V), so differences above that cannot be seen. The table
+        does not include the alarm threshold, so these are signal levels, not alarm times.
+        Associations in flight data, not a detector specification. Source: {smoke.source}.{" "}
+        <a className="text-accent underline" href="/data/psi-101-same-smoke-tests.csv">
+          Download the {smoke.tests}-test table (CSV)
+        </a>
       </p>
     </Card>
   );

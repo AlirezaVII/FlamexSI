@@ -402,6 +402,11 @@ export default function Landing() {
                   re-tested on later test dates and against random shuffles
                 </li>
                 <li>
+                  154 SAME and SAME-R smoke tests analysed: smoke aging, particle size
+                  by material and ISS detector response, each replicated across both
+                  flights
+                </li>
+                <li>
                   Third-variable checks, uncertainty, sources and limitations on every
                   finding
                 </li>
@@ -436,7 +441,7 @@ export default function Landing() {
                   Raw instrument logs (for example FLEX-2) summarised per test before
                   analysis
                 </li>
-                <li>Numerical smoke-particle analysis of SAME / SAME-R</li>
+                <li>Numerical analysis of Saffire sensor logs and BASS burn data</li>
                 <li>Reliable flame detection in camera images (current models are weak)</li>
                 <li>
                   Expert-reviewed insights: none yet; expert sign-off is separate from
