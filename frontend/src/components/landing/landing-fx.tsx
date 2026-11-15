@@ -1,5 +1,6 @@
 "use client";
 
+import Lenis from "lenis";
 import { useEffect, useRef } from "react";
 import { along, DESKTOP_PATH, MOBILE_PATH, PLANETS, STAGES } from "./planets";
 import { create2DSpace } from "./planets2d";
@@ -65,6 +66,18 @@ export function LandingFX() {
     const grab = $<HTMLElement>("[data-grab]");
     const hint = $<HTMLElement>("[data-grab-hint]");
     const reveals = [...root.querySelectorAll<HTMLElement>("[data-reveal]")];
+    const mission = $<SVGSVGElement>(".mission");
+    const route = $<SVGPathElement>("[data-route]");
+    const routeBg = $<SVGPathElement>("[data-route-bg]");
+    const craft = $<SVGGElement>("[data-craft]");
+    const gtag = $<HTMLElement>("[data-gtag]");
+    const gflame = $<SVGPathElement>("[data-gflame]");
+    const gname = $<HTMLElement>("[data-gname]");
+    const gval2 = $<HTMLElement>("[data-gtag] [data-gval]");
+    let gShown = 1;
+    let gTarget = 1;
+    let warp = 0;
+    let lastY = window.scrollY;
 
     reveals.forEach((el) => {
       const siblings = [...(el.parentElement?.children ?? [])].filter((c) =>
@@ -168,9 +181,7 @@ export function LandingFX() {
       }
 
       // parallax: star layers and hero copy
-      layers.forEach((l) => {
-        l.style.transform = `translate3d(0,${-y * parseFloat(l.dataset.speed ?? "0")}px,0)`;
-      });
+
       const h = clamp(y / H);
       if (heroCopy && !reduce) {
         heroCopy.style.transform = `translate3d(0,${y * 0.18}px,0)`;
@@ -221,8 +232,19 @@ export function LandingFX() {
       const t = introStart ? clamp((now - introStart) / 2600) : 0;
       const intro = reduce ? 1 : t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
       const poses = {} as Record<Key, PlanetPose>;
+      // at the top of the page Earth sits in the hero's own globe box (it scrolls with the
+      // hero), then hands over to the journey path
+      const box = grab?.getBoundingClientRect();
       for (const k of Object.keys(paths) as Key[]) {
-        const [, xv, yv, rv, spin] = along(paths[k], p);
+        let path = paths[k];
+        if (k === "earth" && box && box.width > 0) {
+          const rBox = (Math.min(box.width, box.height) / 2) * 0.96;
+          path = [
+            [0, (box.left + box.width / 2) / W, (box.top + box.height / 2) / H, rBox / scale, 0],
+            ...path.slice(1),
+          ];
+        }
+        const [, xv, yv, rv, spin] = along(path, p);
         let r = rv * scale;
         let x = xv * W;
         let yy = yv * H;
@@ -246,12 +268,77 @@ export function LandingFX() {
         tiltY,
         iss: clamp(1 - p / 0.16) * clamp((intro - 0.6) / 0.4),
       });
+
+      // ---- the mission: Earth -> Moon -> Mars, drawn as you travel ----
+      const E = poses.earth;
+      const M = poses.moon;
+      const R = poses.mars;
+      if (route && routeBg && craft) {
+        // leave each world from its limb, arc between them like a transfer orbit
+        const d =
+          `M ${E.x} ${E.y} ` +
+          `Q ${(E.x + M.x) / 2 + W * 0.18} ${Math.min(E.y, M.y) - H * 0.25} ${M.x} ${M.y} ` +
+          `Q ${(M.x + R.x) / 2 - W * 0.22} ${(M.y + R.y) / 2 + H * 0.05} ${R.x} ${R.y}`;
+        route.setAttribute("d", d);
+        routeBg.setAttribute("d", d);
+        const prog = reduce ? 1 : clamp((p - 0.08) / 0.74);
+        route.style.strokeDasharray = `${prog} 1`;
+        const len = route.getTotalLength();
+        const at = route.getPointAtLength(len * prog);
+        const ahead = route.getPointAtLength(Math.min(len, len * prog + 2));
+        const ang = (Math.atan2(ahead.y - at.y, ahead.x - at.x) * 180) / Math.PI;
+        const show = prog > 0.01 && prog < 0.995 ? 1 : 0;
+        craft.setAttribute("transform", `translate(${at.x} ${at.y}) rotate(${ang})`);
+        craft.style.opacity = String(show);
+        mission?.classList.toggle("on", intro > 0.95);
+      }
+
+      // ---- gravity tag on the world you are visiting: its flame shape follows its g ----
+      if (gtag && gflame) {
+        const focus: Key = stage[1] === 3 ? "mars" : stage[1] === 2 ? "moon" : "earth";
+        const f = poses[focus];
+        const gv = parseFloat(stage[2]);
+        gTarget = gv;
+        gShown += (gTarget - gShown) * (reduce ? 1 : 0.08);
+        const sg = Math.sqrt(Math.max(0, gShown));
+        const top = -(9 + 27 * sg);
+        const w = 9.5 - 2.5 * sg;
+        gflame.setAttribute(
+          "d",
+          `M 0 ${top} C ${w * 1.2} ${-6 * sg - 4} ${w} 9 0 9 C ${-w} 9 ${-w * 1.2} ${-6 * sg - 4} 0 ${top} Z`,
+        );
+        gtag.style.setProperty("--gf-core", sg > 0.35 ? "#ffc24a" : "#9fc0ff");
+        gtag.style.setProperty("--gf-edge", sg > 0.35 ? "#ff6a1f" : "#3b6bff");
+        const name =
+          stage[1] === 1 ? "Low Earth orbit" : focus === "earth" ? "Earth" : focus === "moon" ? "Moon" : "Mars";
+        if (gname && gname.textContent !== name) gname.textContent = name;
+        const shape = gv === 0 ? "spherical flame" : gv < 0.3 ? "rounder, slower flame" : gv < 0.6 ? "shorter flame" : "teardrop flame";
+        const label = `${stage[2]} g · ${shape}`;
+        if (gval2 && gval2.textContent !== label) gval2.textContent = label;
+        const tx = f.x + f.r * 0.62;
+        const ty = f.y - f.r * 0.78;
+        const onScreen = tx > 0 && tx < W - 40 && ty > 70 && ty < H - 40 && intro > 0.95;
+        gtag.style.transform = `translate3d(${Math.min(tx, W - 230)}px, ${ty}px, 0)`;
+        gtag.classList.toggle("on", onScreen);
+      }
+
+      // ---- warp: fast scrolling stretches the stars into streaks ----
+      const v = clamp(Math.abs(y - lastY) / 60, 0, 1);
+      lastY = y;
+      warp += (v - warp) * 0.2;
+      layers.forEach((l, i) => {
+        const shift = y * parseFloat(l.dataset.speed ?? "0");
+        // stretch around the middle of the screen so stars streak in place
+        l.style.transformOrigin = `50% ${shift + H / 2}px`;
+        l.style.transform = `translate3d(0,${-shift}px,0) scaleY(${1 + warp * (2 + i * 2.5)})`;
+      });
     }
 
     // ---- animation loop: planets turn and clouds drift while the tab is visible -----------
     let raf = 0;
     let running = false;
-    function tick() {
+    function tick(time: number) {
+      lenis?.raf(time);
       if (!dragging) {
         yaw += vel;
         vel *= 0.9;
@@ -281,39 +368,15 @@ export function LandingFX() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // ---- in-page links glide like a reader scrolling, instead of jumping --------------
-    let glide = 0;
-    const stopGlide = () => {
-      if (glide) cancelAnimationFrame(glide);
-      glide = 0;
-    };
-    const easeInOut = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // ---- smooth scrolling (wheel / trackpad); touch keeps the native feel ----------------
+    const lenis = reduce
+      ? null
+      : new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9 });
     function glideTo(targetY: number) {
-      stopGlide();
-      const startY = window.scrollY;
-      const maxY = document.documentElement.scrollHeight - window.innerHeight;
-      const endY = clamp(targetY, 0, maxY);
-      const dist = Math.abs(endY - startY);
-      if (dist < 2) return;
-      if (reduce) {
-        window.scrollTo(0, endY);
-        return;
-      }
-      // longer trips take longer, like a real scroll: ~0.7 s to ~1.8 s
-      const duration = clamp(500 + dist * 0.45, 700, 1800);
-      // a virtual clock that advances at most ~2 frames per step: if the page stalls for a
-      // moment the glide pauses and resumes instead of jumping ahead
-      let elapsed = 0;
-      let last = performance.now();
-      const step = (now: number) => {
-        elapsed += Math.min(now - last, 34);
-        last = now;
-        const t = clamp(elapsed / duration);
-        window.scrollTo(0, startY + (endY - startY) * easeInOut(t));
-        glide = t < 1 ? requestAnimationFrame(step) : 0;
-      };
-      glide = requestAnimationFrame(step);
+      if (lenis) {
+        const dist = Math.abs(targetY - window.scrollY);
+        lenis.scrollTo(targetY, { duration: clamp(0.7 + dist / 2600, 0.8, 1.9) });
+      } else window.scrollTo(0, targetY);
     }
     const onLinkClick = (e: MouseEvent) => {
       if (
@@ -343,26 +406,7 @@ export function LandingFX() {
       glideTo(target.getBoundingClientRect().top + window.scrollY - margin);
       history.replaceState(null, "", href);
     };
-    // the reader takes over: stop gliding immediately
-    const interrupt = () => stopGlide();
-    const onKey = (e: KeyboardEvent) => {
-      if (
-        [
-          "ArrowUp",
-          "ArrowDown",
-          "PageUp",
-          "PageDown",
-          "Home",
-          "End",
-          " ",
-        ].includes(e.key)
-      )
-        stopGlide();
-    };
     root.addEventListener("click", onLinkClick as EventListener);
-    window.addEventListener("wheel", interrupt, { passive: true });
-    window.addEventListener("touchstart", interrupt, { passive: true });
-    window.addEventListener("keydown", onKey);
     window.addEventListener("resize", render);
     document.addEventListener("visibilitychange", wake);
     render();
@@ -379,11 +423,8 @@ export function LandingFX() {
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
       window.removeEventListener("scroll", onScroll);
-      stopGlide();
+      lenis?.destroy();
       root.removeEventListener("click", onLinkClick as EventListener);
-      window.removeEventListener("wheel", interrupt);
-      window.removeEventListener("touchstart", interrupt);
-      window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", render);
       document.removeEventListener("visibilitychange", wake);
     };

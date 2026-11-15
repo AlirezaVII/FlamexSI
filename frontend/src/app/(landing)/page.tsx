@@ -80,6 +80,39 @@ export default function Landing() {
         ))}
       </div>
       <LandingFX />
+      {/* the mission: a trajectory Earth -> Moon -> Mars that draws itself as you scroll */}
+      <svg className="mission" aria-hidden>
+        <defs>
+          <linearGradient id="route-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="var(--l-hl)" />
+            <stop offset="1" stopColor="#ff9a6a" />
+          </linearGradient>
+        </defs>
+        <path data-route-bg className="route-bg" />
+        <path data-route className="route" pathLength={1} />
+        <g data-craft className="craft">
+          <path className="plume" d="M0 0 L-16 -3.5 Q-22 0 -16 3.5 Z" />
+          <circle r="3.4" />
+        </g>
+      </svg>
+      {/* a gravity tag that follows the planet you are visiting */}
+      <div className="gtag" data-gtag aria-hidden>
+        <svg viewBox="-16 -40 32 56">
+          <defs>
+            <radialGradient id="gflame" cx="50%" cy="70%" r="70%">
+              <stop offset="0" stopColor="#fff6d8" />
+              <stop offset="0.35" stopColor="var(--gf-core, #ffc24a)" />
+              <stop offset="1" stopColor="var(--gf-edge, #ff6a1f)" stopOpacity="0.15" />
+            </radialGradient>
+          </defs>
+          <path data-gflame fill="url(#gflame)" />
+          <circle r="2.2" cy="0" fill="#3a2a1a" />
+        </svg>
+        <span>
+          <b data-gname>Earth</b>
+          <small data-gval>1.00 g · teardrop flame</small>
+        </span>
+      </div>
 
       <header className="topbar">
         <nav className="navrow" aria-label="Main">
