@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 
 from falmex.ai.providers import LLMProvider
 from falmex.findings import Finding, Interpretation
+from falmex.innovation import InnovationKind, Suggestion
 
 SYSTEM = """You explain results from a statistical analysis engine over microgravity
 combustion experiments to NASA combustion researchers. The engine already did the analysis;
@@ -81,3 +82,76 @@ def summarize_findings(findings: list[Finding], provider: LLMProvider, top_k: in
         "provider": provider.name,
         "model": provider.model,
     }
+
+
+# ---- step 8: help the team search prior knowledge -----------------------------------------
+
+SEARCH_TASK = """The team wants to check whether NASA or other researchers already know about
+this finding. Suggest search queries only. Do NOT name papers, authors, experiments, results
+or facts: you might be wrong, and the team reads the sources itself. Return JSON with key
+"queries": a list of 3-5 short search strings (3-8 words each) built from the variables and
+the kind of relationship in the facts, worded for NASA technical reports first."""
+
+# NASA's own sources first; general literature last.
+SEARCH_SITES = [
+    ("NASA Technical Reports Server", "https://ntrs.nasa.gov/search?q={q}"),
+    ("Google Scholar", "https://scholar.google.com/scholar?q={q}"),
+]
+NASA_PSI = "https://psi.nasa.gov/"  # NASA Physical Sciences Informatics (experiment data)
+
+
+def search_plan(finding: Finding, provider: LLMProvider) -> dict:
+    """Search queries and links for the prior-knowledge check. The AI only words queries;
+    it never supplies references, so nothing here can be a made-up citation."""
+    from urllib.parse import quote_plus
+
+    base = f"{finding.condition.replace('_', ' ')} {finding.outcome.replace('_', ' ')}"
+    fallback = [f"{base} microgravity flame", f"{base} microgravity combustion"]
+    facts = {"task": "search", "condition": finding.condition, "outcome": finding.outcome,
+             "headline": finding.headline, "direction": finding.direction}
+    try:
+        out = provider.generate_json(SYSTEM, f"{SEARCH_TASK}\n\nFACTS:{json.dumps(facts)}")
+        queries = [str(q).strip() for q in out.get("queries") or [] if str(q).strip()][:5]
+        source = provider.name
+    except Exception:  # a search plan must work offline too
+        queries, source = [], "template"
+    queries = queries or fallback
+    return {
+        "queries": [
+            {"query": q, "links": [{"site": site, "url": url.format(q=quote_plus(q))}
+                                   for site, url in SEARCH_SITES]}
+            for q in queries
+        ],
+        "nasa_psi": NASA_PSI,
+        "provider": source,
+        "note": "Search terms only. The team reads the sources and records what they say.",
+    }
+
+
+# ---- beyond the challenge: suggest what an insight could make possible ---------------------
+
+INNOVATION_TASK = """A research team reached this insight about spacecraft fire safety. Suggest
+2-4 different directions for what new capability it could make possible. Each kind must be
+one of: indicator, detection_method, risk_map, warning_system, decision_tool,
+prediction_method, other. Stay within what the insight states; do not add facts. These are
+suggestions for the team to judge, not decisions. Return JSON with key "suggestions": a list
+of objects with keys "title", "kind", "enables" (1 sentence: the new capability), and
+"rationale" (1 sentence: which part of the insight it rests on)."""
+
+
+def suggest_innovations(insight: dict, provider: LLMProvider) -> list[Suggestion]:
+    facts = {"task": "innovation", **{k: insight.get(k) for k in (
+        "statement", "scientific_interpretation", "fire_safety_relevance", "limitations",
+        "safety_areas")}}
+    out = provider.generate_json(SYSTEM, f"{INNOVATION_TASK}\n\nFACTS:{json.dumps(facts)}")
+    kinds = {k.value for k in InnovationKind}
+    suggestions = []
+    for s in out.get("suggestions") or []:
+        if not isinstance(s, dict) or not s.get("title"):
+            continue
+        kind = s.get("kind") if s.get("kind") in kinds else "other"
+        suggestions.append(Suggestion(
+            title=str(s["title"]), kind=kind, enables=str(s.get("enables", "")),
+            rationale=str(s.get("rationale", "")),
+        ))
+    return suggestions

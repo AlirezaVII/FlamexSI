@@ -34,6 +34,11 @@ const SECTIONS = [
     title: "Insights",
     text: "Findings a researcher reviewed and interpreted. Created by people, never automatically.",
   },
+  {
+    href: "/innovation",
+    title: "Innovate",
+    text: "Beyond the challenge: what new capability an insight makes possible. AI suggests, the team decides.",
+  },
 ];
 
 export default function Home() {
@@ -100,7 +105,7 @@ export default function Home() {
 
       {error && <ErrorNote message={error} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((s) => (
           <Link
             key={s.href}

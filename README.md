@@ -22,12 +22,16 @@ NASA files ─▶ stored unchanged ─▶ standardize ─▶ quality checks ─�
   discovery goal (generated from the data) ─▶ statistical analysis on 70% ─▶ FINDINGS
        ─▶ validation on the unseen 30% + random shuffles + bootstrap ─▶ third-variable checks
        ─▶ evidence & limitations ─▶ AI explanation (explains only) ─▶ deep analysis (on demand)
-       ─▶ expert review ─▶ INSIGHT (created by a person, never from synthetic data)
+       ─▶ prior-knowledge check (NASA sources first) ─▶ expert review
+       ─▶ INSIGHT (created by a person, never from synthetic data)
+       ─▶ INNOVATION (what the insight makes possible; AI suggests, the team decides)
 ```
 
 Each part has one job: **Explore** finds and filters experiments, **Compare** shows what
 differs between them, **Discover** finds findings, **validation** checks them on unseen data,
-and **Insights** holds only findings a researcher reviewed and interpreted.
+**Prior knowledge** records whether an important finding was already known, **Insights** holds
+only findings a researcher reviewed and interpreted, and **Innovate** turns insights into
+capabilities the team decides to build.
 
 | Layer | Where | Notes |
 |---|---|---|
@@ -40,10 +44,12 @@ and **Insights** holds only findings a researcher reviewed and interpreted.
 | Findings | `backend/falmex/findings.py` | A finding = association + statistics + validation + uncertainty + evidence + limitations + checks. Insights are separate and human-made. Ranking is a weighted framework (strength, data, validation, stability on unseen data, not-chance, relevance, independence); weights are neutral by default. |
 | Question engine | `backend/falmex/questions.py` | Generates discovery goals from the columns a dataset actually has; nothing is hard-coded to extinction or oxygen. |
 | Deep analysis | `backend/falmex/deep.py` | Pluggable probes (`@register_probe`) that generate follow-up questions from a finding and the data: third variables, subgroups, range, independent sources. |
-| AI | `backend/falmex/ai/` | Gemini (default) or `mock`. The AI only explains computed findings and never creates them. |
+| Prior knowledge | `findings.py` (`PriorKnowledge`) | Step 8, for important findings only: the system builds search queries with NASA NTRS / PSI links first; a person records the novelty (known, partly known, new conditions, possibly new) and the sources. The AI never supplies references. |
+| Innovation | `backend/falmex/innovation.py` | Beyond the challenge: an innovation must link to at least one insight. Its kind (indicator, detection method, risk map, warning system, decision tool, prediction method, other) is not fixed in advance. AI suggestions are never saved; the team moves ideas from idea to demo. |
+| AI | `backend/falmex/ai/` | Gemini (default) or `mock`. The AI only explains computed findings, words search queries and suggests innovation directions. It never creates findings or references. |
 | API | `backend/falmex/api.py` | FastAPI. Interactive docs at `/docs`. |
 | Landing page | `frontend/src/app/(landing)/` | `/`: the story page. A scroll journey Earth → orbit → Moon → Mars with real planets rendered from NASA surface maps (`public/textures`, credits there); the hero Earth turns with the cursor and can be dragged. |
-| App | `frontend/src/app/(app)/` | `/overview`, Explore, Compare, Discover, Findings, Insights, Data, and a finding detail page. |
+| App | `frontend/src/app/(app)/` | `/overview`, Explore, Compare, Discover, Findings, Insights, Innovate, Data, and a finding detail page. |
 
 ### Finding statuses
 
@@ -95,7 +101,9 @@ and PR (`.github/workflows/ci.yml`). No API keys are needed in CI.
 3. Add a reader in `ingest/` if the format is new.
 4. Pick analyzers, validators and deep-analysis probes that fit the data (add new ones with
    the decorators) and, if the team decides so, set ranking weights.
-5. Run discovery goals. Promote a finding to an insight only after expert review.
+5. Run discovery goals. For important findings, check prior knowledge (NASA sources first).
+   Promote a finding to an insight only after expert review.
+6. From insights, decide with the team what is worth building (Innovate).
 
 Brand: logo files are in `brand/logo/`: the original artwork, a transparent "glow" cut-out for dark
 surfaces and a "badge" cut-out (artwork on its navy disc) for light ones; the app switches with the theme.

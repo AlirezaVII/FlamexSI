@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ListSkeleton } from "@/components/loading";
 import { Card, ErrorNote, PageHeader, StatusBadge } from "@/components/ui";
+import { NOVELTY } from "@/components/prior-knowledge";
 import { api, fmt, label } from "@/lib/api";
+import { SAFETY_AREAS } from "@/lib/labels";
 import type { Insight } from "@/lib/types";
 
 const STEPS = [
@@ -13,8 +15,10 @@ const STEPS = [
   "Finding",
   "Validation on unseen data",
   "Evidence",
-  "Scientific review & interpretation",
-  "Insight",
+  "Prior knowledge",
+  "Scientific interpretation",
+  "Fire-safety insight",
+  "Innovation",
 ];
 
 export default function InsightsPage() {
@@ -42,7 +46,7 @@ export default function InsightsPage() {
           <li key={s} className="flex items-center gap-2">
             <span
               className={
-                i >= 5
+                i >= 6
                   ? "rounded-full bg-accent px-2 py-0.5 text-accent-ink"
                   : "text-ink-2"
               }
@@ -85,11 +89,29 @@ export default function InsightsPage() {
               <p className="mt-2 text-sm text-ink-2">
                 {ins.scientific_interpretation}
               </p>
+              {ins.limitations && (
+                <p className="mt-2 text-sm text-ink-2">
+                  <span className="text-muted">Limitations: </span>
+                  {ins.limitations}
+                </p>
+              )}
               <div className="mt-3 rounded-lg border border-line bg-surface-2 p-3 text-sm">
                 <p className="text-xs font-medium uppercase tracking-wider text-accent">
                   Fire safety relevance
                 </p>
                 <p className="mt-1 text-ink">{ins.fire_safety_relevance}</p>
+                {(ins.safety_areas ?? []).length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {ins.safety_areas.map((a) => (
+                      <span
+                        key={a}
+                        className="rounded-full border border-line px-2 py-0.5 text-xs text-ink-2"
+                      >
+                        {SAFETY_AREAS[a]}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <StatusBadge status={ins.finding_snapshot.status} />
@@ -107,6 +129,21 @@ export default function InsightsPage() {
                   {fmt(ins.finding_snapshot.effect_size, 2)} ·{" "}
                   {ins.finding_snapshot.evidence.n_experiments} experiments
                 </span>
+                {ins.finding_snapshot.prior_knowledge && (
+                  <span>
+                    · prior work:{" "}
+                    {
+                      NOVELTY[ins.finding_snapshot.prior_knowledge.novelty]
+                        .label
+                    }
+                  </span>
+                )}
+                {(ins.related_finding_ids ?? []).length > 0 && (
+                  <span>
+                    · +{ins.related_finding_ids.length} related finding
+                    {ins.related_finding_ids.length > 1 ? "s" : ""}
+                  </span>
+                )}
                 <span>
                   · reviewed by {ins.reviewer} on{" "}
                   {new Date(ins.created_at).toLocaleDateString()}
@@ -119,6 +156,12 @@ export default function InsightsPage() {
                   ))}
                 </ul>
               )}
+              <Link
+                href={`/innovation?insight=${ins.insight_id}`}
+                className="mt-3 inline-block text-sm font-medium text-accent"
+              >
+                What could this insight make possible? →
+              </Link>
             </Card>
           ))}
         </div>

@@ -9,12 +9,14 @@ An **insight** is created only by a person: a validated finding from real (non-s
 data that a researcher reviewed, interpreted scientifically and judged meaningful.
 
     data -> statistical analysis -> finding -> validation -> evidence -> AI explanation
-         -> (deep analysis) -> expert review -> insight
+         -> (deep analysis) -> prior-knowledge check -> expert review -> insight
+         -> innovation (see innovation.py)
 """
 
 import math
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import AliasChoices, BaseModel, Field
 
@@ -113,6 +115,35 @@ class Interpretation(BaseModel):
     generated_at: datetime
 
 
+class Novelty(StrEnum):
+    """How a finding relates to what NASA and other researchers already know."""
+
+    UNREVIEWED = "unreviewed"
+    KNOWN = "known"  # already described in NASA reports or the literature
+    PARTLY_KNOWN = "partly_known"  # part of it is known, part is not
+    NEW_CONDITIONS = "new_conditions"  # known relationship, new conditions or combination
+    POSSIBLY_NEW = "possibly_new"  # no prior description found; needs expert confirmation
+
+
+class Reference(BaseModel):
+    title: str = Field(min_length=3)
+    url: str = ""
+    # NASA's own sources and the challenge material come first; papers only when needed
+    kind: Literal["nasa_primary", "challenge", "paper", "other"] = "nasa_primary"
+    note: str = ""  # what this source says about the finding
+
+
+class PriorKnowledge(BaseModel):
+    """Step 8: a person's check of whether the finding was already known. Only for
+    findings worth it, not for every finding."""
+
+    novelty: Novelty
+    summary: str = Field(min_length=5)  # how the finding relates to prior work
+    references: list[Reference] = []
+    reviewer: str = Field(min_length=2)
+    reviewed_at: datetime
+
+
 class Finding(BaseModel):
     finding_id: str
     dataset_id: str
@@ -148,10 +179,24 @@ class Finding(BaseModel):
     limitations: list[str] = []
     deep: list[ProbeResult] = []  # third-variable checks and other deep-analysis results
     interpretation: Interpretation | None = None
+    prior_knowledge: PriorKnowledge | None = None
+
+
+class SafetyArea(StrEnum):
+    """Where an insight could help spacecraft fire safety."""
+
+    FIRE_BEHAVIOR = "fire_behavior"  # understanding how fire behaves
+    RISK_ASSESSMENT = "risk_assessment"
+    EXPERIMENT_DESIGN = "experiment_design"
+    SAFETY_DECISIONS = "safety_decisions"
+    COMBUSTION_MANAGEMENT = "combustion_management"
 
 
 class Insight(BaseModel):
-    """A finding a researcher reviewed and promoted. Never created automatically."""
+    """A finding a researcher reviewed and promoted. Never created automatically.
+
+    A finding is a statistical result; an insight is the deeper understanding built from
+    findings, data analysis and scientific interpretation."""
 
     insight_id: str
     finding_id: str
@@ -162,6 +207,9 @@ class Insight(BaseModel):
     fire_safety_relevance: str
     reviewer: str
     references: list[str] = []
+    limitations: str = ""  # what the interpretation does not show
+    safety_areas: list[SafetyArea] = []
+    related_finding_ids: list[str] = []  # other findings this insight also rests on
     finding_snapshot: dict  # the finding exactly as it was when promoted
 
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { GroupBars, ScatterChart } from "@/components/charts";
+import { PriorKnowledgeCard } from "@/components/prior-knowledge";
 import {
   ChartSkeleton,
   ListSkeleton,
@@ -22,7 +23,14 @@ import {
   SyntheticBanner,
 } from "@/components/ui";
 import { api, fmt, label } from "@/lib/api";
-import type { DeepSuggestion, Finding, ProbeResult, Row } from "@/lib/types";
+import { SAFETY_AREAS } from "@/lib/labels";
+import type {
+  DeepSuggestion,
+  Finding,
+  ProbeResult,
+  Row,
+  SafetyArea,
+} from "@/lib/types";
 import { useWorkspace } from "@/lib/workspace";
 
 const PIPELINE = [
@@ -509,6 +517,8 @@ export default function FindingPage() {
         )}
       </Card>
 
+      <PriorKnowledgeCard finding={f} onSaved={setFinding} />
+
       <PromoteCard finding={f} />
     </>
   );
@@ -613,15 +623,32 @@ function PromoteCard({ finding }: { finding: Finding }) {
     statement: "",
     scientific_interpretation: "",
     fire_safety_relevance: "",
+    limitations: "",
     reviewer: "",
     references: "",
   });
+  const [areas, setAreas] = useState<SafetyArea[]>([]);
+  const [others, setOthers] = useState<Finding[]>([]);
+  const [related, setRelated] = useState<string[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const blocked = finding.synthetic
     ? "Findings from synthetic test data can never become insights."
     : finding.status !== "validated"
       ? "Only validated findings can be promoted to an insight."
       : null;
+
+  function start() {
+    setOpen(true);
+    api
+      .findings({ dataset_id: finding.dataset_id, status: "validated" })
+      .then((list) =>
+        setOthers(list.filter((x) => x.finding_id !== finding.finding_id)),
+      )
+      .catch(() => setOthers([]));
+  }
+
+  const toggle = <T,>(list: T[], v: T) =>
+    list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
   async function submit() {
     try {
@@ -631,6 +658,8 @@ function PromoteCard({ finding }: { finding: Finding }) {
           .split("\n")
           .map((r) => r.trim())
           .filter(Boolean),
+        safety_areas: areas,
+        related_finding_ids: related,
       });
       setMsg("Saved as an insight.");
       setOpen(false);
@@ -642,13 +671,20 @@ function PromoteCard({ finding }: { finding: Finding }) {
   return (
     <Card title="From finding to insight" className="mt-4">
       <p className="text-sm text-ink-2">
-        A finding becomes an insight only when a researcher has reviewed its
-        evidence, checked other explanations and interpreted it scientifically.
+        A finding is a statistical result. An insight is the deeper
+        understanding a researcher builds from findings, the data and a
+        scientific interpretation — and what it means for fire safety in space.
       </p>
+      {!finding.prior_knowledge && !blocked && (
+        <p className="mt-2 text-xs text-muted">
+          Tip: check prior knowledge above first, so the insight says what is
+          new.
+        </p>
+      )}
       {blocked ? (
         <p className="mt-2 text-sm text-muted">{blocked}</p>
       ) : !open ? (
-        <Button className="mt-3" variant="ghost" onClick={() => setOpen(true)}>
+        <Button className="mt-3" variant="ghost" onClick={start}>
           Promote to insight…
         </Button>
       ) : (
@@ -658,9 +694,16 @@ function PromoteCard({ finding }: { finding: Finding }) {
               ["statement", "Insight statement"],
               [
                 "scientific_interpretation",
-                "Scientific interpretation (reviewed)",
+                "Scientific interpretation: what it can mean for flame and combustion physics",
               ],
-              ["fire_safety_relevance", "Relevance to fire safety"],
+              [
+                "limitations",
+                "Limitations: what this interpretation does not show",
+              ],
+              [
+                "fire_safety_relevance",
+                "What it means for fire safety in space",
+              ],
               ["reviewer", "Reviewer"],
               ["references", "References (one per line)"],
             ] as const
@@ -675,6 +718,47 @@ function PromoteCard({ finding }: { finding: Finding }) {
               />
             </label>
           ))}
+          <fieldset>
+            <legend className="mb-1 text-xs text-muted">
+              Where it could help
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(SAFETY_AREAS) as SafetyArea[]).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setAreas(toggle(areas, a))}
+                  className={`rounded-full border px-3 py-1 text-xs ${areas.includes(a) ? "border-accent bg-accent text-accent-ink" : "border-line text-ink-2 hover:bg-surface-2"}`}
+                >
+                  {SAFETY_AREAS[a]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          {others.length > 0 && (
+            <fieldset>
+              <legend className="mb-1 text-xs text-muted">
+                Other findings this insight also rests on
+              </legend>
+              <ul className="max-h-40 space-y-1 overflow-y-auto text-sm">
+                {others.map((o) => (
+                  <li key={o.finding_id}>
+                    <label className="flex items-start gap-2 text-ink-2">
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={related.includes(o.finding_id)}
+                        onChange={() =>
+                          setRelated(toggle(related, o.finding_id))
+                        }
+                      />
+                      {o.headline}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
           <div className="flex gap-2">
             <Button onClick={submit}>Save insight</Button>
             <Button variant="ghost" onClick={() => setOpen(false)}>

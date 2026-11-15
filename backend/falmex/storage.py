@@ -86,6 +86,8 @@ class Store:
             CREATE TABLE IF NOT EXISTS insights (
                 insight_id VARCHAR PRIMARY KEY, finding_id VARCHAR, dataset_id VARCHAR,
                 created_at TIMESTAMPTZ, payload JSON);
+            CREATE TABLE IF NOT EXISTS innovations (
+                innovation_id VARCHAR PRIMARY KEY, created_at TIMESTAMPTZ, payload JSON);
             """
         )
 
@@ -262,4 +264,24 @@ class Store:
 
     def get_insight(self, insight_id: str) -> dict | None:
         rows = self._fetch("SELECT payload FROM insights WHERE insight_id = ?", [insight_id])
+        return json.loads(rows[0]["payload"]) if rows else None
+
+    # ---- innovations (built on insights, decided by the team) ---------------------------
+    def save_innovation(self, innovation: dict) -> None:
+        """Insert or replace an innovation."""
+        self._exec("DELETE FROM innovations WHERE innovation_id = ?",
+                   [innovation["innovation_id"]])
+        self._exec(
+            "INSERT INTO innovations VALUES (?, ?, ?)",
+            [innovation["innovation_id"], innovation["created_at"],
+             json.dumps(innovation, default=str)],
+        )
+
+    def list_innovations(self) -> list[dict]:
+        rows = self._fetch("SELECT payload FROM innovations ORDER BY created_at DESC")
+        return [json.loads(r["payload"]) for r in rows]
+
+    def get_innovation(self, innovation_id: str) -> dict | None:
+        rows = self._fetch("SELECT payload FROM innovations WHERE innovation_id = ?",
+                           [innovation_id])
         return json.loads(rows[0]["payload"]) if rows else None

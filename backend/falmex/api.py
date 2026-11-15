@@ -11,13 +11,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from falmex import __version__, deep, questions, services, synthetic
-from falmex.ai import get_provider, interpret_finding, summarize_findings
+from falmex.ai import (
+    get_provider,
+    interpret_finding,
+    search_plan,
+    suggest_innovations,
+    summarize_findings,
+)
 from falmex.ai.providers import LLMError, LLMProvider
 from falmex.analysis.base import available_analyzers
 from falmex.engine import DiscoveryConfig, run_discovery
-from falmex.findings import DEFAULT_WEIGHTS, Finding, Insight, Status
+from falmex.findings import (
+    DEFAULT_WEIGHTS,
+    Finding,
+    Insight,
+    Novelty,
+    PriorKnowledge,
+    Reference,
+    SafetyArea,
+    Status,
+)
 from falmex.ingest import UnsupportedFileError
 from falmex.ingest.base import supported_extensions
+from falmex.innovation import Innovation, InnovationKind, Stage
 from falmex.schema import Schema
 from falmex.settings import Settings, get_settings
 from falmex.storage import DatasetRecord, Filter, Store
@@ -68,6 +84,30 @@ class InsightRequest(BaseModel):
     fire_safety_relevance: str = Field(min_length=5)
     reviewer: str = Field(min_length=2)
     references: list[str] = []
+    limitations: str = ""
+    safety_areas: list[SafetyArea] = []
+    related_finding_ids: list[str] = []
+
+
+class PriorKnowledgeRequest(BaseModel):
+    novelty: Novelty
+    summary: str = Field(min_length=5)
+    references: list[Reference] = []
+    reviewer: str = Field(min_length=2)
+
+
+class InnovationRequest(BaseModel):
+    title: str = Field(min_length=3)
+    kind: InnovationKind
+    enables: str = Field(min_length=5)
+    description: str = ""
+    insight_ids: list[str] = Field(min_length=1)
+    proposed_by: str = Field(min_length=2)
+
+
+class InnovationUpdate(BaseModel):
+    stage: Stage | None = None
+    decision_note: str | None = None
 
 
 class SyntheticRequest(BaseModel):
@@ -176,6 +216,10 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             "probes": deep.available_probes(),
             "ranking_weights": DEFAULT_WEIGHTS,
             "file_types": supported_extensions(),
+            "novelty": [n.value for n in Novelty],
+            "safety_areas": [a.value for a in SafetyArea],
+            "innovation_kinds": [k.value for k in InnovationKind],
+            "innovation_stages": [s.value for s in Stage],
         }
 
     # ---- datasets -----------------------------------------------------------
@@ -395,6 +439,27 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         store(request).update_finding(finding.model_dump(mode="json"))
         return result
 
+    # ---- step 8: prior knowledge, checked by a person for findings worth it ---------
+    @app.post("/api/findings/{finding_id}/prior-knowledge/search")
+    def prior_knowledge_search(request: Request, finding_id: str):
+        """Search terms and links (NASA sources first) to check prior work. The AI words
+        the queries; it never supplies references."""
+        finding = finding_or_404(request, finding_id)
+        return search_plan(finding, request.app.state.provider)
+
+    @app.put("/api/findings/{finding_id}/prior-knowledge")
+    def save_prior_knowledge(request: Request, finding_id: str, body: PriorKnowledgeRequest):
+        finding = finding_or_404(request, finding_id)
+        if finding.synthetic:
+            raise HTTPException(409, "Prior knowledge is not recorded for synthetic test data.")
+        if finding.status not in (Status.VALIDATED, Status.CANDIDATE):
+            raise HTTPException(409, "Check prior knowledge only for validated or candidate "
+                                     "findings.")
+        finding.prior_knowledge = PriorKnowledge(**body.model_dump(),
+                                                 reviewed_at=datetime.now(UTC))
+        store(request).update_finding(finding.model_dump(mode="json"))
+        return finding
+
     # ---- insights: promoted by a person from a reviewed, validated finding ---------
     @app.post("/api/findings/{finding_id}/insight", status_code=201)
     def promote(request: Request, finding_id: str, body: InsightRequest):
@@ -404,6 +469,12 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                                      "insights.")
         if finding.status != Status.VALIDATED:
             raise HTTPException(409, "Only validated findings can be promoted to an insight.")
+        for rid in body.related_finding_ids:
+            related = store(request).get_finding(rid)
+            if related is None:
+                raise HTTPException(422, f"Related finding '{rid}' not found")
+            if related.get("synthetic"):
+                raise HTTPException(409, "An insight cannot rest on synthetic test data.")
         insight = Insight(
             insight_id=uuid.uuid4().hex[:12], finding_id=finding.finding_id,
             dataset_id=finding.dataset_id, created_at=datetime.now(UTC),
@@ -422,6 +493,47 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         if insight is None:
             raise HTTPException(404, f"Insight '{insight_id}' not found")
         return insight
+
+    # ---- beyond the challenge: innovation built on insights, decided by the team ----
+    def insight_or_404(request: Request, insight_id: str) -> dict:
+        insight = store(request).get_insight(insight_id)
+        if insight is None:
+            raise HTTPException(404, f"Insight '{insight_id}' not found")
+        return insight
+
+    @app.post("/api/insights/{insight_id}/innovation-suggestions")
+    def innovation_suggestions(request: Request, insight_id: str):
+        """AI-suggested directions for an insight. Not saved; the team decides."""
+        insight = insight_or_404(request, insight_id)
+        try:
+            return {"insight_id": insight_id,
+                    "suggestions": suggest_innovations(insight, request.app.state.provider)}
+        except LLMError as exc:
+            raise HTTPException(502, str(exc)) from exc
+
+    @app.post("/api/innovations", status_code=201)
+    def create_innovation(request: Request, body: InnovationRequest):
+        for iid in body.insight_ids:
+            insight_or_404(request, iid)
+        now = datetime.now(UTC)
+        innovation = Innovation(innovation_id=uuid.uuid4().hex[:12], created_at=now,
+                                updated_at=now, **body.model_dump())
+        store(request).save_innovation(innovation.model_dump(mode="json"))
+        return innovation
+
+    @app.get("/api/innovations")
+    def list_innovations(request: Request):
+        return store(request).list_innovations()
+
+    @app.patch("/api/innovations/{innovation_id}")
+    def update_innovation(request: Request, innovation_id: str, body: InnovationUpdate):
+        raw = store(request).get_innovation(innovation_id)
+        if raw is None:
+            raise HTTPException(404, f"Innovation '{innovation_id}' not found")
+        changes = body.model_dump(exclude_none=True)
+        innovation = Innovation(**{**raw, **changes, "updated_at": datetime.now(UTC)})
+        store(request).save_innovation(innovation.model_dump(mode="json"))
+        return innovation
 
     @app.get("/api/datasets/{dataset_id}/summary")
     def summary(request: Request, dataset_id: str):

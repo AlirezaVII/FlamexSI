@@ -17,6 +17,10 @@ export interface Meta {
   probes: { name: string; category: string; description: string }[];
   ranking_weights: Record<string, number>;
   file_types: string[];
+  novelty: Novelty[];
+  safety_areas: SafetyArea[];
+  innovation_kinds: InnovationKind[];
+  innovation_stages: InnovationStage[];
 }
 
 export interface Dataset {
@@ -172,6 +176,72 @@ export interface Finding {
   limitations: string[];
   deep: ProbeResult[];
   interpretation: Interpretation | null;
+  prior_knowledge: PriorKnowledge | null;
+}
+
+export type Novelty =
+  "unreviewed" | "known" | "partly_known" | "new_conditions" | "possibly_new";
+
+export interface Reference {
+  title: string;
+  url: string;
+  kind: "nasa_primary" | "challenge" | "paper" | "other";
+  note: string;
+}
+
+export interface PriorKnowledge {
+  novelty: Novelty;
+  summary: string;
+  references: Reference[];
+  reviewer: string;
+  reviewed_at: string;
+}
+
+export interface SearchPlan {
+  queries: { query: string; links: { site: string; url: string }[] }[];
+  nasa_psi: string;
+  provider: string;
+  note: string;
+}
+
+export type SafetyArea =
+  | "fire_behavior"
+  | "risk_assessment"
+  | "experiment_design"
+  | "safety_decisions"
+  | "combustion_management";
+
+export type InnovationKind =
+  | "indicator"
+  | "detection_method"
+  | "risk_map"
+  | "warning_system"
+  | "decision_tool"
+  | "prediction_method"
+  | "other";
+
+export type InnovationStage =
+  "idea" | "evaluating" | "building" | "prototype" | "demo" | "dropped";
+
+export interface Innovation {
+  innovation_id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  kind: InnovationKind;
+  enables: string;
+  description: string;
+  insight_ids: string[];
+  proposed_by: string;
+  stage: InnovationStage;
+  decision_note: string;
+}
+
+export interface InnovationSuggestion {
+  title: string;
+  kind: InnovationKind;
+  enables: string;
+  rationale: string;
 }
 
 export interface Insight {
@@ -184,6 +254,9 @@ export interface Insight {
   fire_safety_relevance: string;
   reviewer: string;
   references: string[];
+  limitations: string;
+  safety_areas: SafetyArea[];
+  related_finding_ids: string[];
   finding_snapshot: Finding;
 }
 

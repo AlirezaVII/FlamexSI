@@ -8,8 +8,17 @@ import type {
   Filter,
   Finding,
   Goals,
+  Innovation,
+  InnovationKind,
+  InnovationStage,
+  InnovationSuggestion,
   Insight,
   Meta,
+  Novelty,
+  PriorKnowledge,
+  Reference,
+  SafetyArea,
+  SearchPlan,
   ProbeResult,
   Quality,
   Row,
@@ -152,9 +161,53 @@ export const api = {
       fire_safety_relevance: string;
       reviewer: string;
       references: string[];
+      limitations?: string;
+      safety_areas?: SafetyArea[];
+      related_finding_ids?: string[];
     },
   ) => request<Insight>(`/api/findings/${id}/insight`, json(body)),
   insights: () => request<Insight[]>("/api/insights"),
+
+  searchPriorKnowledge: (id: string) =>
+    request<SearchPlan>(`/api/findings/${id}/prior-knowledge/search`, {
+      method: "POST",
+    }),
+  savePriorKnowledge: (
+    id: string,
+    body: {
+      novelty: Novelty;
+      summary: string;
+      references: Reference[];
+      reviewer: string;
+    },
+  ) =>
+    request<Finding & { prior_knowledge: PriorKnowledge }>(
+      `/api/findings/${id}/prior-knowledge`,
+      { ...json(body), method: "PUT" },
+    ),
+
+  innovations: () => request<Innovation[]>("/api/innovations"),
+  suggestInnovations: (insightId: string) =>
+    request<{ insight_id: string; suggestions: InnovationSuggestion[] }>(
+      `/api/insights/${insightId}/innovation-suggestions`,
+      { method: "POST" },
+    ),
+  createInnovation: (body: {
+    title: string;
+    kind: InnovationKind;
+    enables: string;
+    description: string;
+    insight_ids: string[];
+    proposed_by: string;
+  }) => request<Innovation>("/api/innovations", json(body)),
+  updateInnovation: (
+    id: string,
+    body: { stage?: InnovationStage; decision_note?: string },
+  ) =>
+    request<Innovation>(`/api/innovations/${id}`, {
+      ...json(body),
+      method: "PATCH",
+    }),
   showcase: () => request<Showcase>("/api/showcase"),
   findings: (params: {
     dataset_id?: string;

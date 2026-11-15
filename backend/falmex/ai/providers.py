@@ -60,6 +60,18 @@ class MockProvider(LLMProvider):
 
     def generate_json(self, system: str, prompt: str) -> dict:
         facts = json.loads(prompt.split("FACTS:", 1)[1])
+        if facts.get("task") == "search":
+            base = f"{facts['condition']} {facts['outcome']}".replace("_", " ")
+            return {"queries": [f"{base} microgravity flame",
+                                f"{base} microgravity combustion experiment",
+                                f"{base} spacecraft fire safety"]}
+        if facts.get("task") == "innovation":
+            return {"suggestions": [{
+                "title": "Template suggestion (mock provider)",
+                "kind": "other",
+                "enables": "A placeholder direction; set GEMINI_API_KEY for real suggestions.",
+                "rationale": f"Based on: {facts['statement']}",
+            }]}
         if "findings" in facts:
             top = facts["findings"][:3]
             return {

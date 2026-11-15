@@ -53,6 +53,13 @@ const LINKS = [
     ),
   },
   {
+    href: "/innovation",
+    label: "Innovate",
+    icon: icon(
+      "M12 2l2.4 5.6L20 10l-5.6 2.4L12 18l-2.4-5.6L4 10l5.6-2.4zM19 17l.9 2.1L22 20l-2.1.9L19 23l-.9-2.1L16 20l2.1-.9z",
+    ),
+  },
+  {
     href: "/data",
     label: "Data",
     icon: icon(
@@ -127,7 +134,7 @@ const Logo = () => (
 /**
  * Desktop: one top bar with links + dataset picker.
  * Mobile: compact top bar (logo + dataset) and a bottom tab bar, so every section is one
- * thumb-tap away. (A hamburger menu was tried too; it hid the five sections behind an extra tap.)
+ * thumb-tap away. (A hamburger menu was tried too; it hid the sections behind an extra tap.)
  */
 export function Nav() {
   const pathname = usePathname();
@@ -159,7 +166,7 @@ export function Nav() {
         aria-label="Sections"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        <ul className="grid grid-cols-6">
+        <ul className="grid grid-cols-7">
           {LINKS.map((l) => {
             const active = isActive(l.href);
             return (

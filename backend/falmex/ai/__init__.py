@@ -1,4 +1,10 @@
-from falmex.ai.interpreter import interpret_finding, summarize_findings
+from falmex.ai.interpreter import (
+    interpret_finding,
+    search_plan,
+    suggest_innovations,
+    summarize_findings,
+)
 from falmex.ai.providers import LLMProvider, get_provider
 
-__all__ = ["LLMProvider", "get_provider", "interpret_finding", "summarize_findings"]
+__all__ = ["LLMProvider", "get_provider", "interpret_finding", "search_plan",
+           "suggest_innovations", "summarize_findings"]
