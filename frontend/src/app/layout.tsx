@@ -38,6 +38,11 @@ export const metadata: Metadata = {
   description:
     "Explore, compare and validate findings from NASA microgravity combustion experiments.",
   applicationName: "FlamexSI",
+  // NASA Space Apps rules: AI use is stated in text and metadata
+  other: {
+    "ai-disclosure":
+      "Logo artwork is AI-generated (marked AI). Ask FlamexSI answers with Google Gemini from FlamexSI's verified results. Parts of the code and documentation were written with an AI coding assistant, directed and reviewed by Team NovaForge. All data is NASA PSI flight data; no data is AI-generated.",
+  },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

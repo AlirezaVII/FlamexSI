@@ -7,6 +7,8 @@ import Image from "next/image";
  * - "light": the artwork re-inked on a pale disc (blue linework, same flame) — light surfaces
  * `variant="auto"` follows the app theme (light/dark, incl. the system setting) in CSS,
  * so the right one is visible from the first paint.
+ * The artwork is AI-generated, so every logo carries a visible "AI" mark (NASA Space Apps
+ * rules: AI-generated images must show a visible watermark).
  */
 export function BrandLogo({
   size = 28,
@@ -22,7 +24,7 @@ export function BrandLogo({
   const img = (v: "glow" | "badge" | "light", extra = "") => (
     <Image
       src={src(v)}
-      alt=""
+      alt="FlamexSI logo (AI-generated)"
       width={size}
       height={size}
       unoptimized
@@ -31,11 +33,15 @@ export function BrandLogo({
       style={{ width: size, height: size }}
     />
   );
-  if (variant !== "auto") return img(variant);
   return (
-    <>
-      {img("light", "logo-on-light")}
-      {img("glow", "logo-on-dark")}
-    </>
+    <span className="ai-logo" title="AI-generated logo" style={{ width: size, height: size }}>
+      {variant !== "auto" ? img(variant) : (
+        <>
+          {img("light", "logo-on-light")}
+          {img("glow", "logo-on-dark")}
+        </>
+      )}
+      <span className="ai-mark" aria-hidden>AI</span>
+    </span>
   );
 }

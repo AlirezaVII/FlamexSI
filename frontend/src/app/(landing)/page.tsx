@@ -540,6 +540,10 @@ export default function Landing() {
         <span>
           Findings are statistical associations and require expert review.
         </span>
+        <span>
+          AI use: logo AI-generated (marked “AI”) · Ask FlamexSI uses Google Gemini · parts
+          of the code written with an AI coding assistant, reviewed by the team
+        </span>
       </footer>
     </>
   );

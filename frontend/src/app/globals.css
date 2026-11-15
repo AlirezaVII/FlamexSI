@@ -645,3 +645,12 @@ html.lenis body {
 .line-draw { stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: line-draw 1.4s ease-out forwards; }
 @keyframes line-draw { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .bar-grow, .line-draw { animation: none; stroke-dashoffset: 0; } }
+
+/* AI-generated artwork carries a visible mark (NASA Space Apps rules) */
+.ai-logo { position: relative; display: inline-flex; flex: none; }
+.ai-logo .ai-mark {
+  position: absolute; right: -5px; bottom: -4px; padding: 0 3px; border-radius: 4px;
+  font: 700 8px/11px ui-sans-serif, system-ui, sans-serif; letter-spacing: .02em;
+  color: #fff; background: #1f2a5c; border: 1px solid rgba(255, 255, 255, .55);
+  pointer-events: none;
+}

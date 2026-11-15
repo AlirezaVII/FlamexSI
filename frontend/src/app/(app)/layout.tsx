@@ -12,7 +12,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
       <footer className="border-t border-line px-4 py-4 text-center text-xs text-muted">
         FlamexSI · NASA Space Apps 2026 · Findings are statistical associations
-        and require expert review.
+        and require expert review. · AI use: the logo is AI-generated; Ask FlamexSI
+        answers with Google Gemini; parts of the code were written with an AI coding
+        assistant, reviewed by the team.
       </footer>
     </div>
   );

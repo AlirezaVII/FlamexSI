@@ -15,6 +15,12 @@ Open http://localhost:3000/review for the real FLEX workspace and http://localho
 
 **SI-powered fire-safety insights from microgravity combustion data.** Research prototype for NASA Space Apps; not an operational fire-safety or suppression system.
 
+**Live:** https://flamexsi.com · **Team NovaForge:** Pouya Latifiyan (team owner), Alireza Mosavi, Fatemeh Iranmanesh, Mohammad Ali Hatefi, Haniyeh Z. Budaqi, Fariba Shahrouei.
+
+**Contributors:** Pouya Latifiyan (BASS-II computer vision, models v3 to v6, `bass-cv/`).
+
+**AI use:** the logo is AI-generated (marked "AI" on the site); Ask FlamexSI answers with Google Gemini from FlamexSI's verified results; parts of the code were written with an AI coding assistant and reviewed by the team; no data is AI-generated. Full statement: [AI_USE.md](AI_USE.md).
+
 ## Current scientific status
 
 ### Real FLEX analysis — PSI-69
