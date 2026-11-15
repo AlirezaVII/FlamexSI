@@ -1,4 +1,4 @@
-# Falmex — Flame in Freefall
+# FlamexSI — Flame in Freefall
  
 ## Run the integrated dashboard
 

@@ -39,7 +39,7 @@ export function Team() {
     <section className="wrap block" id="team">
       <div className="eyebrow">About the team</div>
       <h2 className="serif" data-reveal>
-        The crew behind Falmex.
+        The crew behind FlamexSI.
       </h2>
       <p className="sub" data-reveal>
         We are a multidisciplinary team passionate about space, science,

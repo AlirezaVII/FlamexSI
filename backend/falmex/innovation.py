@@ -1,4 +1,4 @@
-"""Innovation: the part of Falmex that goes beyond the challenge.
+"""Innovation: the part of FlamexSI that goes beyond the challenge.
 
 After the team reaches an insight about fire safety, it asks what new capability that
 insight makes possible. The kind of innovation is deliberately not fixed in advance: it can

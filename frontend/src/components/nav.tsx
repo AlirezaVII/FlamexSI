@@ -44,7 +44,7 @@ interface Stage {
 }
 
 /**
- * The navigation *is* the Falmex pipeline: five numbered stages, from NASA files to
+ * The navigation *is* the FlamexSI pipeline: five numbered stages, from NASA files to
  * innovation, each holding the pages that belong to it.
  */
 const STAGES: Stage[] = [
@@ -348,11 +348,11 @@ function Sidebar({ badges }: { badges: Record<Badge, number> }) {
         <Link
           href="/"
           className="flex min-w-0 items-center gap-2.5"
-          title="Falmex home"
+          title="FlamexSI home"
         >
           <BrandLogo size={26} />
           <span className="sidebar-label font-display text-lg font-medium tracking-tight text-ink">
-            Falmex
+            FlamexSI
           </span>
         </Link>
       </div>
@@ -489,7 +489,7 @@ function MobileNav({ badges }: { badges: Record<Badge, number> }) {
           >
             <BrandLogo size={28} />
             <span className="font-display text-lg font-medium tracking-tight">
-              Falmex
+              FlamexSI
             </span>
           </PipelineLink>
           <DatasetPicker pill className="ml-auto max-w-[11rem]" />

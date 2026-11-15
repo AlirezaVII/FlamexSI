@@ -598,7 +598,7 @@
    12.0,
    34.0
   ],
-  "oxygen_source": "PSI-69 experimental table (initial ambient O2 mole fraction 0.12-0.34), as analysed in Falmex",
+  "oxygen_source": "PSI-69 experimental table (initial ambient O2 mole fraction 0.12-0.34), as analysed in FlamexSI",
   "apparatus_oxygen": "MDCA accepts up to 40% oxygen at 0-3 atm (NASA Researcher's Guide, 2015)",
   "measurements": [
    "thermocouple / temperature",

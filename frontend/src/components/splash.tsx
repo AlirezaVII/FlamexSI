@@ -188,8 +188,8 @@ export function Splash() {
             <small>g</small>
           </div>
         </div>
-        <h1 className="sp-title" aria-label="Falmex">
-          {"FALMEX".split("").map((c, i) => (
+        <h1 className="sp-title" aria-label="FlamexSI">
+          {"FLAMEXSI".split("").map((c, i) => (
             <span key={i} style={{ animationDelay: `${0.25 + i * 0.06}s` }}>
               {c}
             </span>

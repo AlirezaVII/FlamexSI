@@ -158,7 +158,7 @@ export default function FlightEvidence() {
 
 /* ---------------------------------------------------------------------------------- */
 
-/** What NASA concluded from these experiments, next to what Falmex re-tested in the data. */
+/** What NASA concluded from these experiments, next to what FlamexSI re-tested in the data. */
 function NasaLessons() {
   return (
     <Card title="What microgravity fire experiments changed" className="print:hidden">
@@ -303,7 +303,7 @@ function TransitionFinder() {
       <p className="mb-4 max-w-3xl text-sm text-ink-2">
         FLEX records how each burn ended: the visible flame went out (extinction), the
         droplet broke apart (disruption), or the fuel burned away (completion). Below
-        which oxygen level do flames go out? Falmex looks for that boundary, then tries to
+        which oxygen level do flames go out? FlamexSI looks for that boundary, then tries to
         break it with shuffles and with test dates it did not use. It reports a boundary
         only if it survives.
       </p>
@@ -538,7 +538,7 @@ function AtmosphereCheck() {
                 </div>
               ) : (
                 <p className="mt-3 rounded-lg border border-dashed border-line p-3 text-xs text-ink-2">
-                  Outside the FLEX data: FLEX did not test this oxygen level, so Falmex makes
+                  Outside the FLEX data: FLEX did not test this oxygen level, so FlamexSI makes
                   no estimate here. Higher-oxygen evidence exists only for gas flames
                   (ACME CFI-G, up to 85%); droplet and solid-material data at this level
                   is where new experiments are needed.
@@ -802,7 +802,7 @@ function Flex2Logs() {
       <p className="mb-4 max-w-3xl text-sm text-ink-2">
         FLEX-2 (PSI-68) ran {flex2.tests} droplet test points on the ISS between{" "}
         {flex2.dates[0]} and {flex2.dates[1]}, but NASA publishes them as raw instrument logs,
-        not a results table. Falmex read every log and wrote one row per test: igniter
+        not a results table. FlamexSI read every log and wrote one row per test: igniter
         settings, whether a flame kept burning after the igniter switched off, how long, and
         the chamber pressure and temperature.
       </p>

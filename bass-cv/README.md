@@ -1,4 +1,4 @@
-# Falmex BASS-II computer vision — lightweight GitHub bundle
+# FlamexSI BASS-II computer vision — lightweight GitHub bundle
 
 Research code and evidence for segmentation of **visibly luminous flame regions** in real BASS-II video frames (PSI-25; DOI `10.60555/4qc4-de67`; recorded source license CC0-1.0). This is not an operational fire-detection or suppression system.
 

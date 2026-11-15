@@ -1,5 +1,5 @@
 /**
- * End-to-end test of a running Falmex site in a real browser (live droplet or Vercel).
+ * End-to-end test of a running FlamexSI site in a real browser (live droplet or Vercel).
  *
  *   E2E_BASE=http://129.212.254.115:3000 node <runner> --script frontend/e2e/live.mjs
  *

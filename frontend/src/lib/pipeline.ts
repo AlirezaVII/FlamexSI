@@ -1,5 +1,5 @@
 /**
- * The Falmex pipeline, in order. The navigation is built from it, and page transitions
+ * The FlamexSI pipeline, in order. The navigation is built from it, and page transitions
  * use it for direction: moving to a later step animates forward, to an earlier step back,
  * and between two pages of the same stage sideways.
  */

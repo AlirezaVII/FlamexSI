@@ -1,6 +1,6 @@
 """Flammability map: where does a material burn, as a function of oxygen and gravity (or flow)?
 
-Estimated only from experiments loaded into Falmex — no built-in reference numbers. Model:
+Estimated only from experiments loaded into FlamexSI — no built-in reference numbers. Model:
 
     logit P(burn) = b0 + b1·oxygen + b2·x [+ b3·pressure]
 

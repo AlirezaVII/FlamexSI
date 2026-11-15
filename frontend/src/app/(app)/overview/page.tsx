@@ -104,11 +104,11 @@ export default function Home() {
           NASA Microgravity Combustion
         </p>
         <h1 className="mt-2 font-display text-5xl font-medium tracking-tight sm:text-6xl">
-          Falmex
+          FlamexSI
         </h1>
         <p className="mt-3 max-w-2xl text-ink-2">
           Decades of flame experiments in microgravity, made searchable,
-          comparable and explainable. Falmex finds statistical associations
+          comparable and explainable. FlamexSI finds statistical associations
           between experiment conditions and flame behaviour, checks whether they
           hold up on data it never saw, and shows the evidence behind every
           finding. Interpreting them scientifically stays with researchers.

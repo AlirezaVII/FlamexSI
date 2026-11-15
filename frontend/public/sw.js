@@ -1,4 +1,4 @@
-/* Falmex application-shell caching. HTML and API responses always use the network. */
+/* FlamexSI application-shell caching. HTML and API responses always use the network. */
 const STATIC_CACHE = "falmex-static-v1";
 const STATIC_PREFIXES = [
   "/_next/static/",

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Falmex data backup for the shared droplet (no root). Cron, every 30 minutes:
+# FlamexSI data backup for the shared droplet (no root). Cron, every 30 minutes:
 #   */30 * * * * /home/deploy/falmex-backups/backup.sh # falmex-backup
 #
 # 1. Copies the data folder (DuckDB + parquet + raw files) to a temp folder and packs it.

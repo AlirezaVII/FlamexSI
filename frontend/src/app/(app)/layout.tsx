@@ -11,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <footer className="border-t border-line px-4 py-4 text-center text-xs text-muted">
-        Falmex · NASA Space Apps 2026 · Findings are statistical associations
+        FlamexSI · NASA Space Apps 2026 · Findings are statistical associations
         and require expert review.
       </footer>
     </div>

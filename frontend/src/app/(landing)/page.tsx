@@ -15,9 +15,9 @@ const INVESTIGATIONS = psi as { acronym: string; pillars: string[] }[];
 const byPillar = (p: string) => INVESTIGATIONS.filter((i) => i.pillars.includes(p));
 
 export const metadata: Metadata = {
-  title: "Falmex — Findings you can verify",
+  title: "FlamexSI — Findings you can verify",
   description:
-    "Falmex summarises, ranks and interprets NASA PSI combustion investigations for spacecraft, Moon and Mars fire safety, and tests the flight data itself: findings re-tested on experiments they never saw, with the evidence behind each.",
+    "FlamexSI summarises, ranks and interprets NASA PSI combustion investigations for spacecraft, Moon and Mars fire safety, and tests the flight data itself: findings re-tested on experiments they never saw, with the evidence behind each.",
 };
 
 // A pre-rendered Earth, inlined into the HTML: the globe is on screen the moment the page
@@ -131,7 +131,7 @@ export default function Landing() {
       <header className="topbar">
         <nav className="navrow" aria-label="Main">
           <Link href="/" className="brand serif">
-            <BrandLogo size={34} /> Falmex
+            <BrandLogo size={34} /> FlamexSI
           </Link>
           <a className="nl" href="#pillars">
             Fire safety
@@ -191,7 +191,7 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="lead">
-                Falmex summarises, ranks and interprets all {INVESTIGATIONS.length}{" "}
+                FlamexSI summarises, ranks and interprets all {INVESTIGATIONS.length}{" "}
                 combustion investigations in NASA&apos;s PSI repository, then tests
                 the flight measurements themselves (274 FLEX experiments, BASS-II
                 footage) to deliver fire-safety evidence for spacecraft, Moon and
@@ -239,7 +239,7 @@ export default function Landing() {
               <p className="sub">
                 That is why fire safety for crews cannot simply copy what we
                 know on the ground, and why NASA has burned candles, droplets
-                and fabrics in microgravity for decades. Falmex turns those
+                and fabrics in microgravity for decades. FlamexSI turns those
                 experiments into findings you can check.
               </p>
               <p className="fine">
@@ -353,10 +353,10 @@ export default function Landing() {
             <div>
               <div className="eyebrow">Why trust it</div>
               <h2 className="serif" data-reveal>
-                Falmex tries to prove itself wrong.
+                FlamexSI tries to prove itself wrong.
               </h2>
               <p className="sub">
-                A pattern that looks real is not enough. Every association Falmex
+                A pattern that looks real is not enough. Every association FlamexSI
                 finds in the FLEX flight data is re-tested on tests it never saw,
                 against random shuffles, and with each other condition held fixed.
                 Patterns that fail are thrown out, not reported.
@@ -523,7 +523,7 @@ export default function Landing() {
       </main>
       <footer>
         <span>
-          Falmex · NASA Space Apps Challenge 2026 · Flame in Freefall · Planet
+          FlamexSI · NASA Space Apps Challenge 2026 · Flame in Freefall · Planet
           maps: NASA
         </span>
         <span>

@@ -1,9 +1,9 @@
 #!/bin/bash
-# Server-side deploy for Falmex. Installed as the *forced command* of the CI deploy key
+# Server-side deploy for FlamexSI. Installed as the *forced command* of the CI deploy key
 # (see deploy/README.md), so that key can do nothing on the droplet except this.
 #
 # stdin: a .tar.gz bundle with web/ (Next.js standalone), backend/ (Python package), run.sh
-# Swaps the new release in, restarts Falmex, health-checks it, and rolls back on failure.
+# Swaps the new release in, restarts FlamexSI, health-checks it, and rolls back on failure.
 # Only touches /home/deploy/falmex — data/ and .env are never modified.
 
 set -euo pipefail

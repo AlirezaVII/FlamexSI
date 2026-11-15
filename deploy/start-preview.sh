@@ -29,10 +29,10 @@ for attempt in range(60):
     try:
         os.kill(int(os.environ["FALMEX_BACKEND_PID"]), 0)
     except OSError as error:
-        raise SystemExit("The Falmex API stopped during startup") from error
+        raise SystemExit("The FlamexSI API stopped during startup") from error
     time.sleep(0.5)
 else:
-    raise SystemExit("The Falmex API did not become ready within 30 seconds")
+    raise SystemExit("The FlamexSI API did not become ready within 30 seconds")
 PY
 
 node /app/frontend/server.js &

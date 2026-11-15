@@ -50,7 +50,7 @@ export function EvidenceChat({ frame, counts }: { frame?: string; counts?: Count
   }
   return (
     <section className="mt-5 rounded-xl border border-line bg-surface p-4">
-      <h3 className="font-display text-xl text-ink">Ask Falmex</h3>
+      <h3 className="font-display text-xl text-ink">Ask FlamexSI</h3>
       <p className="mt-1 text-sm text-muted">{frame ?? "Local frame"} · Ask about pixel counts, FLEX gas mixtures or a follow-up experiment. Questions and numeric evidence are sent for analysis. The image stays in your browser.</p>
       <div className="my-3 flex flex-wrap gap-2">{prompts.map(p =>
         <button key={p} type="button" disabled={busy} onClick={() => ask(p)}

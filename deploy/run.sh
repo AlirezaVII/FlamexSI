@@ -1,9 +1,9 @@
 #!/bin/bash
-# Falmex watchdog for a shared droplet (no root needed). Run from cron every minute:
+# FlamexSI watchdog for a shared droplet (no root needed). Run from cron every minute:
 # starts the backend (127.0.0.1:8010) and the web app (0.0.0.0:3000) if they are not running.
 #
 # Both processes set oom_score_adj=1000 and run with low CPU priority, so if the droplet
-# runs out of memory the kernel kills Falmex first, never the other services on the host.
+# runs out of memory the kernel kills FlamexSI first, never the other services on the host.
 
 ROOT=/home/deploy/falmex
 cd "$ROOT" || exit 1

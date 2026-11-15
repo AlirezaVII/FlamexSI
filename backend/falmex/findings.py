@@ -300,7 +300,7 @@ READINESS_NEXT = {
     3: "Run the third-variable checks (Deep analysis on the finding page).",
     4: "Needs a tighter, stable bootstrap interval: more experiments.",
     5: "Record what NASA reports and papers say (prior-knowledge check).",
-    6: "A combustion expert reviews and signs off. Falmex cannot do this step itself.",
+    6: "A combustion expert reviews and signs off. FlamexSI cannot do this step itself.",
     7: "Independent replication in another investigation or flight.",
 }
 

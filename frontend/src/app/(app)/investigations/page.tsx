@@ -177,7 +177,7 @@ function Downloads() {
     const url = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "falmex-psi-combustion-investigations.csv";
+    a.download = "flamexsi-psi-combustion-investigations.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -476,7 +476,7 @@ function CatalogList({ compare, toggle }: { compare: string[]; toggle: (id: stri
             </div>
             {i.in_falmex && (
               <p className="mt-2 text-xs" style={{ color: "var(--good)" }}>
-                In Falmex: {i.in_falmex}
+                In FlamexSI: {i.in_falmex}
               </p>
             )}
             <details className="mt-2 text-sm">

@@ -34,10 +34,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Falmex — Microgravity Combustion Findings",
+  title: "FlamexSI — Microgravity Combustion Findings",
   description:
     "Explore, compare and validate findings from NASA microgravity combustion experiments.",
-  applicationName: "Falmex",
+  applicationName: "FlamexSI",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "Falmex",
+    title: "FlamexSI",
     statusBarStyle: "black-translucent",
   },
 };

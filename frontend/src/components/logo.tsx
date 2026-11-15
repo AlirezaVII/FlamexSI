@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 /**
- * The Falmex logo (raster artwork, see brand/logo/). Two cut-outs of the same artwork:
+ * The FlamexSI logo (raster artwork, see brand/logo/). Two cut-outs of the same artwork:
  * - "glow":  transparent background, soft glows kept — for dark surfaces
  * - "badge": the artwork on its own navy disc
  * - "light": the artwork re-inked on a pale disc (blue linework, same flame) — light surfaces

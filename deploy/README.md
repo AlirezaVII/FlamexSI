@@ -1,4 +1,4 @@
-# Deploying Falmex
+# Deploying FlamexSI
 
 Every push to `main` runs the CI checks. When they all pass, the `deploy` job builds the web app,
 bundles it with the backend and ships it to the droplet. Live at **http://129.212.254.115:3000**.
@@ -23,9 +23,9 @@ that folder is touched (the droplet also runs other services).
 | `deploy.sh` | Receives a bundle, swaps it in, health-checks it, and rolls back automatically on failure. |
 | `logs/` | `backend.log`, `web.log` |
 
-**Memory safety:** the droplet has about 1 GB of RAM shared with other services. Both Falmex
+**Memory safety:** the droplet has about 1 GB of RAM shared with other services. Both FlamexSI
 processes run with `oom_score_adj=1000` and `nice 10`, so under memory pressure the kernel kills
-Falmex first, never the other services. The watchdog brings it back within a minute.
+FlamexSI first, never the other services. The watchdog brings it back within a minute.
 
 **Why cron and not systemd:** the `deploy` user has no root access and user-level systemd services
 do not survive logout without root (`loginctl enable-linger`). The droplet's other bot uses the
@@ -41,7 +41,7 @@ host key) and `FALMEX_DEPLOY_HOST` (variable). On the server, the matching publi
 restrict,command="/home/deploy/falmex/deploy.sh" ssh-ed25519 … falmex-github-actions
 ```
 
-So a leaked key can only redeploy Falmex. It gets no shell and no access to anything else.
+So a leaked key can only redeploy FlamexSI. It gets no shell and no access to anything else.
 
 `deploy.sh` is the forced command, so deploys do **not** update it. After changing
 `deploy/deploy.sh`, copy it to the server manually.

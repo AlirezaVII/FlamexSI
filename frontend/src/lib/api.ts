@@ -56,7 +56,7 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     throw new ApiError(
       0,
-      "Cannot reach the Falmex server. Check your connection and try again.",
+      "Cannot reach the FlamexSI server. Check your connection and try again.",
     );
   }
   if (!res.ok) {
@@ -98,7 +98,7 @@ function checkUploadSize(file: File) {
   if (onVercel && file.size > 4_400_000)
     throw new ApiError(
       413,
-      `${file.name} is ${mb.toFixed(1)} MB. Files over 4.5 MB cannot be uploaded through falmex.vercel.app; upload it at ${DROPLET_UPLOAD_URL} (same workspace).`,
+      `${file.name} is ${mb.toFixed(1)} MB. Files over 4.5 MB cannot be uploaded through flamexsi.vercel.app; upload it at ${DROPLET_UPLOAD_URL} (same workspace).`,
     );
   if (file.size > 100_000_000)
     throw new ApiError(

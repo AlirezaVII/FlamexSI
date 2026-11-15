@@ -1,4 +1,4 @@
-# طرح ازپیش‌مشخص replication برای یافتههای Falmex / NASA FLEX
+# طرح ازپیش‌مشخص replication برای یافتههای FlamexSI / NASA FLEX
 
 نسخه: 1.0  
 تاریخ تثبیت: ۲۰۲۶-۱۱-۰۸  

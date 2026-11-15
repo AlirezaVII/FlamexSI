@@ -238,7 +238,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         yield
         app.state.store.close()
 
-    app = FastAPI(title="Falmex API", version=__version__, lifespan=lifespan)
+    app = FastAPI(title="FlamexSI API", version=__version__, lifespan=lifespan)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, exc: RequestValidationError):
@@ -324,7 +324,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
 
     @app.post("/api/datasets/nasa/flex", status_code=201)
     def load_flex(request: Request):
-        """Load NASA's PSI-69 FLEX experimental table shipped with Falmex (274 tests)."""
+        """Load NASA's PSI-69 FLEX experimental table shipped with FlamexSI (274 tests)."""
         from pathlib import Path
 
         # shipped inside the package so it also exists in a non-editable install

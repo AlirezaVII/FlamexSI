@@ -1,4 +1,4 @@
-# Falmex
+# FlamexSI
 
 ## Deploy rule: every commit also updates Vercel
 
