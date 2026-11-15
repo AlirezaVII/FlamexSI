@@ -208,7 +208,7 @@ def test_query_hostile(client, body):
 @pytest.mark.parametrize("raw", ["1e309", "-1e309", "NaN", "Infinity"])
 def test_query_non_finite_numbers(client, raw):
     did = _synthetic(client)
-    body = '{"filters": [{"field": "oxygen", "op": "gt", "value": %s}]}' % raw
+    body = '{"filters": [{"field": "oxygen", "op": "gt", "value": ' + raw + "}]}"
     res = client.post(f"/api/datasets/{did}/query", content=body,
                       headers={"content-type": "application/json"})
     _ok_json_error(res)
