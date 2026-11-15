@@ -37,12 +37,16 @@ class GeminiProvider(LLMProvider):
 
     def __init__(self, api_key: str | list[str], model: str):
         from google import genai
+        from google.genai import types
 
         keys = [api_key] if isinstance(api_key, str) else list(api_key)
         keys = [k for i, k in enumerate(keys) if k and k not in keys[:i]]
         if not keys:
             raise ValueError("at least one Gemini API key is required")
-        self._clients = [genai.Client(api_key=k) for k in keys]
+        # v1beta explicitly: google-genai 3.x defaults to v1, where the "-latest" model
+        # aliases this app uses (gemini-flash-latest, gemini-flash-lite-latest) do not exist
+        http = types.HttpOptions(api_version="v1beta")
+        self._clients = [genai.Client(api_key=k, http_options=http) for k in keys]
         self._active = 0
         self.model = model
 
