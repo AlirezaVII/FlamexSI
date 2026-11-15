@@ -7,3 +7,8 @@
 data/
 .env
 *.zip
+**/.venv
+bass-cv
+services
+graphify-out
+**/.ruff_cache

@@ -1,6 +1,9 @@
 #!/bin/bash
-# FlamexSI data backup for the shared droplet (no root). Cron, every 30 minutes:
+# FlamexSI data backup (no root needed). Cron, every 30 minutes:
 #   */30 * * * * /home/deploy/falmex-backups/backup.sh # falmex-backup
+# Paths default to the droplet; another host sets them in the cron line, e.g. flamexsi.com:
+#   FALMEX_BACKUP_DATA=/home/asd/flamexsi-data FALMEX_BACKUP_DEST=/home/asd/flamexsi-backups
+#   FALMEX_BACKUP_PY=/home/asd/flamexsi-backups/venv/bin/python
 #
 # 1. Copies the data folder (DuckDB + parquet + raw files) to a temp folder and packs it.
 # 2. Verifies the archive: it unpacks, the database opens, every table is readable, and
@@ -11,9 +14,9 @@
 # Low CPU/IO priority and oom_score_adj=1000: the bots on this host always win.
 
 set -u
-ROOT=/home/deploy/falmex
-DEST=/home/deploy/falmex-backups
-PY=$ROOT/venv/bin/python
+DATA=${FALMEX_BACKUP_DATA:-/home/deploy/falmex/data}
+DEST=${FALMEX_BACKUP_DEST:-/home/deploy/falmex-backups}
+PY=${FALMEX_BACKUP_PY:-/home/deploy/falmex/venv/bin/python}
 KEEP=3
 mkdir -p "$DEST/archives"
 LOG=$DEST/backup.log
@@ -28,7 +31,7 @@ TMP=$(mktemp -d "$DEST/tmp.XXXX")
 trap 'rm -rf "$TMP"' EXIT
 
 snapshot() {
-  rm -rf "$TMP/data" && cp -a "$ROOT/data" "$TMP/data"
+  rm -rf "$TMP/data" && cp -a "$DATA" "$TMP/data"
 }
 verify() {  # prints "<datasets> <findings> <insights>" or fails
   "$PY" - "$1" <<'EOF'
