@@ -94,3 +94,27 @@ def test_flex_d2_quantities_are_derived_not_regressed(schema):
     assert row["d2_law_normalized_residual"] == pytest.approx(expected_residual / 3.23**2)
     assert schema.get("d2_law_residual_mm2").role.value == "meta"
     assert pd.isna(frame.set_index("experiment_id").loc["24", "d2_law_residual_mm2"])
+
+
+def test_open_discovery_runs_on_an_uploaded_flex_table(tmp_path):
+    """Dry run for real challenge data: upload the PSI-69 table as a user would and run
+    open discovery. Bootstrap resamples repeat row labels; this used to fail with
+    'cannot reindex on an axis with duplicate labels'."""
+    from pathlib import Path
+
+    from fastapi.testclient import TestClient
+
+    from falmex.ai.providers import MockProvider
+    from falmex.api import create_app
+    from falmex.settings import Settings
+
+    seed = Path(__file__).resolve().parents[1] / "review_seed"
+    table = seed / "PSI-69_Experimental table_FLEX.csv"
+    app = create_app(Settings(data_dir=tmp_path, llm_provider="mock"), provider=MockProvider())
+    with TestClient(app) as client:
+        upload = client.post("/api/datasets", files={"file": (table.name, table.read_bytes())})
+        assert upload.status_code == 201
+        dataset = upload.json()["dataset"]["dataset_id"]
+        result = client.post(f"/api/datasets/{dataset}/discover", json={})
+        assert result.status_code == 200, result.text
+        assert result.json()["tested"] > 0

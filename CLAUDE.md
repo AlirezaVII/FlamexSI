@@ -54,3 +54,20 @@ width/height**. A canvas is a replaced element, so it showed at its pixel size �
 - Note: Vercel is now also connected to git; those automatic git deployments show
   "Blocked" (commit authors are not team members on the Hobby plan). The CLI deploy above is
   still what goes live.
+
+## Challenge-data day: checklist (from the 2026-11-12 dry run with NASA PSI-68 / FLEX-2)
+
+- **Getting PSI files:** `https://psi.nasa.gov/geode-py/ws/studies` lists investigations;
+  `POST /geode-py/ws/files/v2` with `{"folder":"","fileType":"study","studyId":"PSI-68","version":"1"}`
+  lists files; `GET /geode-py/ws/studies/<ID>/download?file=<plain file name>&version=1&redirect=false`
+  returns a signed S3 URL. Combustion IDs: PSI-10, 20–26, 39, 68, 69, 98–102, 106–107, 159.
+- **Summary tables** (one row per experiment, like the PSI-69 "Experimental table") work
+  end to end in seconds: upload → quality → open discovery (PSI-69: 119 tested, 18 validated).
+- **Raw instrument logs** (FLEX-2 `*_Chamber_Readings.txt`, radiometer, test-point settings)
+  load correctly but are time series of ONE test: every sample is counted as an
+  "experiment". Build a per-test summary table first (one row per test point) before
+  discovery; never run discovery on raw time series.
+- **Units in column names** like `(PSIA)` / `(Deg C)` are stripped, not converted: add
+  aliases + units in `backend/falmex/config/variables.yaml`.
+- **Upload size:** Vercel caps request bodies at 4.5 MB → upload big files at
+  http://129.212.254.115:3000/data. The droplet proxy accepts up to 100 MB.

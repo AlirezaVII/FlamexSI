@@ -73,6 +73,28 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/**
+ * Upload size limits, checked before sending so the user gets a clear message instead of
+ * a proxy error. Vercel rejects request bodies over 4.5 MB (a platform limit); the droplet
+ * accepts up to 100 MB through the Next.js proxy (next.config.ts).
+ */
+export const DROPLET_UPLOAD_URL = "http://129.212.254.115:3000/data";
+function checkUploadSize(file: File) {
+  const mb = file.size / 1_000_000;
+  const onVercel =
+    typeof window !== "undefined" && window.location.hostname.endsWith("vercel.app");
+  if (onVercel && file.size > 4_400_000)
+    throw new ApiError(
+      413,
+      `${file.name} is ${mb.toFixed(1)} MB. Files over 4.5 MB cannot be uploaded through falmex.vercel.app; upload it at ${DROPLET_UPLOAD_URL} (same workspace).`,
+    );
+  if (file.size > 100_000_000)
+    throw new ApiError(
+      413,
+      `${file.name} is ${mb.toFixed(0)} MB; the limit is 100 MB. Split the file or export only the needed columns.`,
+    );
+}
+
 const json = (body: unknown): RequestInit => ({
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -95,6 +117,7 @@ export const api = {
   scientificArtifactUrl: (id: string, key: string) =>
     `${API_URL}/api/datasets/${id}/scientific-review/artifacts/${key}`,
   upload: (file: File, name?: string) => {
+    checkUploadSize(file);
     const form = new FormData();
     form.append("file", file);
     if (name) form.append("name", name);
@@ -137,6 +160,7 @@ export const api = {
     ),
   quality: (id: string) => request<Quality>(`/api/datasets/${id}/quality`),
   addSource: (id: string, file: File) => {
+    checkUploadSize(file);
     const form = new FormData();
     form.append("file", file);
     return request<{ dataset: Dataset | null; source: Source }>(
@@ -243,6 +267,7 @@ export const api = {
   syntheticMedia: () =>
     request<{ source: Source }>("/api/media/synthetic", { method: "POST" }),
   uploadMedia: (file: File) => {
+    checkUploadSize(file);
     const form = new FormData();
     form.append("file", file);
     return request<{ dataset: Dataset | null; source: Source }>(

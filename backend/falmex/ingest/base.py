@@ -69,23 +69,68 @@ def read_file(filename: str, content: bytes) -> IngestResult:
     return adapter(filename, content)
 
 
-@register("csv")
-def _read_csv(filename: str, content: bytes) -> IngestResult:
-    # PSI exports are not uniformly UTF-8. FLEX v5, for example, contains CP1252
-    # en-dashes as explicit missing-value markers. Try strict decodings in order;
-    # never silently replace unrecognised bytes.
+def _decode(content: bytes) -> tuple[str, str]:
+    """PSI exports are not uniformly UTF-8. FLEX v5, for example, contains CP1252
+    en-dashes as explicit missing-value markers. Try strict decodings in order;
+    never silently replace unrecognised bytes."""
     last_error: UnicodeDecodeError | None = None
     for encoding in ("utf-8-sig", "cp1252"):
         try:
-            text = content.decode(encoding)
-            break
+            return content.decode(encoding), encoding
         except UnicodeDecodeError as exc:
             last_error = exc
-    else:  # pragma: no cover - the final exception is the useful diagnostic
-        raise last_error  # type: ignore[misc]
+    raise last_error  # type: ignore[misc]  # pragma: no cover
 
-    frame = pd.read_csv(io.StringIO(text), sep=None, engine="python")
-    metadata: dict = {"encoding": encoding}
+
+_DELIMITERS = (",", "\t", ";", "|")
+
+
+def _layout(lines: list[str]) -> tuple[str, int]:
+    """Find the delimiter and the header row of a delimited text export.
+
+    Instrument logs often start with a few free-text lines (a reference time stamp, a
+    unit note) before the real header. The header is the first line whose field count
+    matches the field count of the data lines that follow it.
+    """
+    body = [ln for ln in lines if ln.strip()][:200]
+    best: tuple[int, str, int] | None = None  # (data lines that agree, delimiter, header)
+    for delim in _DELIMITERS:
+        counts = [ln.count(delim) for ln in body]
+        if not any(counts):
+            continue
+        for start in range(min(15, len(body))):
+            tail = counts[start + 1 : start + 41]
+            if not tail or counts[start] == 0:
+                continue
+            modal = max(set(tail), key=tail.count)
+            agree = sum(c == modal for c in tail)
+            if counts[start] == modal and agree >= max(1, int(0.8 * len(tail))):
+                if best is None or agree > best[0]:
+                    best = (agree, delim, start)
+                break
+    if best is None:
+        return ",", 0
+    _, delim, start = best
+    header = body[start]
+    return delim, lines.index(header)
+
+
+def _read_delimited(filename: str, content: bytes) -> IngestResult:
+    text, encoding = _decode(content)
+    lines = text.splitlines()
+    delim, header = _layout(lines)
+    frame = pd.read_csv(
+        io.StringIO("\n".join(lines[header:])), sep=delim, skipinitialspace=True,
+        engine="python",
+    )
+    frame.columns = [str(c).strip() for c in frame.columns]
+    metadata: dict = {"encoding": encoding, "delimiter": delim}
+    if header:
+        metadata["preamble"] = [ln for ln in lines[:header] if ln.strip()]
+    if frame.shape[1] == 1 and len(lines) > 2 and any(d in lines[header] for d in ",;|\t"):
+        raise ValueError(
+            f"{filename}: could not split the columns (one column only); check the delimiter"
+        )
     from falmex.ingest.flex import is_flex_table, prepare_flex
 
     if is_flex_table(frame):
@@ -94,10 +139,7 @@ def _read_csv(filename: str, content: bytes) -> IngestResult:
     return IngestResult(tables=[RawTable(Path(filename).stem, frame)], metadata=metadata)
 
 
-@register("tsv", "txt")
-def _read_tsv(filename: str, content: bytes) -> IngestResult:
-    frame = pd.read_csv(io.BytesIO(content), sep="\t")
-    return IngestResult(tables=[RawTable(Path(filename).stem, frame)])
+register("csv", "tsv", "txt")(_read_delimited)
 
 
 @register("xlsx", "xls")

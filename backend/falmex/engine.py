@@ -81,7 +81,10 @@ def _bootstrap(analyzer: Analyzer, found: Evaluation, data: pd.DataFrame, x: str
     pair = data[[*condition_columns(x), y]].dropna().reset_index(drop=True)
     effects, kept = [], 0
     for _ in range(BOOTSTRAP_RESAMPLES):
-        ev = analyzer.evaluate(pair.iloc[rng.integers(0, len(pair), len(pair))], x, y)
+        # resampling with replacement repeats row labels; analyzers filter by label, so
+        # give every resample a fresh index
+        sample = pair.iloc[rng.integers(0, len(pair), len(pair))].reset_index(drop=True)
+        ev = analyzer.evaluate(sample, x, y)
         if ev is None:
             continue
         effects.append(ev.effect_size)

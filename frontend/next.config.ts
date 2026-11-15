@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: __dirname,
   images: { qualities: [75, 90] },
+  // uploads go through the /api proxy; the default 10 MB buffer cut NASA files short.
+  // 100 MB stays safe on the 1 GB droplet (the body is buffered in memory)
+  experimental: { proxyClientMaxBodySize: "100mb" },
   devIndicators: false,
   // planet maps rarely change: let browsers keep them for a week (revalidate in background)
   async headers() {
