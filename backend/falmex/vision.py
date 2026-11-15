@@ -29,6 +29,7 @@ OVERLAY_WIDTH = 720
 HEAT_COLS = 24
 MIN_AREA_SHARE = 0.0002  # contours smaller than this share of the frame are noise
 MAX_AREA_SHARE = 0.5  # a "flame" filling half the frame is a bright background, not a flame
+MAX_EXTENT = 0.9  # share of its bounding box a region fills; an ellipse fills 0.785
 BACKGROUND_SHARE = 0.75  # background median must stay below this share of the threshold
 SAT_MIN = 60  # below this saturation a pixel has no reliable hue
 BLUE_HUE = (90, 135)  # OpenCV hue scale 0-180
@@ -92,6 +93,8 @@ def _not_a_flame(v: np.ndarray, mask: np.ndarray, c, area: float, thresh: float)
     edges = (x <= 1) + (y <= 1) + (x + bw >= w - 1) + (y + bh >= h - 1)
     if edges >= 3:
         return "the bright region touches the frame edges on three or more sides"
+    if bw * bh and area / (bw * bh) > MAX_EXTENT:
+        return "the bright region is a filled rectangle (a button, panel or screen), not a flame"
     outside = v[mask == 0]
     if outside.size and float(np.median(outside)) > BACKGROUND_SHARE * thresh:
         return "the background is nearly as bright as the brightest region"

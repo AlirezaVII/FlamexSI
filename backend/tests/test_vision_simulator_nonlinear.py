@@ -214,3 +214,15 @@ def test_bright_page_is_not_reported_as_a_flame():
     assert m["present"] is False and "frame" in m["rejected"]
     s = vision.summarize([{**m, "index": 0, "time_s": None}], None, None)
     assert s["note"].startswith("This does not look like flame footage")
+
+
+def test_orange_button_on_dark_page_is_not_a_flame():
+    import cv2
+    import numpy as np
+
+    from falmex import vision
+
+    page = np.full((400, 600, 3), 25, np.uint8)  # dark app screenshot with an orange button
+    cv2.rectangle(page, (400, 150), (520, 190), (60, 120, 230), -1)
+    m = vision._measure(page, vision._threshold([page]))
+    assert m["present"] is False and "rectangle" in m["rejected"]
