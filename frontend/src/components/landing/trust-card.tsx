@@ -109,9 +109,9 @@ export function TrustCard() {
         <b>Result:</b> the association holds with every one of the{" "}
         {s.controls.length} other conditions held fixed (it keeps at least{" "}
         {Math.round(Math.min(...s.controls.map((c) => c.retained_share)) * 100)}%
-        of its strength), so none of them explains it. It ranks first of {s.of}{" "}
-        validated findings out of {s.tested} tested.{" "}
-        <Link href={`/findings/${s.finding_id}`}>Open the finding →</Link>
+        of its strength), so none of them explains it. In the full open run over the FLEX
+        table it ranked first of {s.of} validated findings out of {s.tested} tested.{" "}
+        <Link href="/findings">See the current findings →</Link>
       </div>
       <p style={{ fontSize: 13, color: "var(--l-muted)", margin: "16px 0 0" }}>
         <b style={{ color: "var(--l-ink2)" }}>Thrown out in the same run:</b>{" "}
