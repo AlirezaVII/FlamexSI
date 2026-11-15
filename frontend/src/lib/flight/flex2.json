@@ -1,0 +1,217 @@
+{
+ "source": "NASA PSI-68 (FLEX-2), per-test main logs and MDCA test-point settings",
+ "method": "Reads, for each test point, NASA's main log \"<TEST>.txt\" (sequence timestamps and a 1 Hz table\nof the narrow- and wide-view radiometers with chamber pressure and temperature) and\n\"<TEST>_MDCA_Testpoint_Settings.txt\" (commanded settings). Nothing is modelled. Per test:\n  sequence    date, igniter on time and power, the burn-to-completion window\n  setup       fiber-supported or free droplet, which fuel dispenser, soot sampler used\n  flame       wide-view radiometer (the narrow one saturates); baseline = median of the\n              readings before the igniter came on; \"lit\" = 1 Hz readings above 20% of the\n              peak (the slow decay of hot gas afterwards is not counted). The hot igniter\n              wire itself glows, so a flame is \"seen\" only when the radiometer stays lit for\n              at least 2 s starting 1 s after the igniter switched off; flame seconds =\n              lit readings; first flame = first lit reading\n  chamber     median pressure (psia) and temperature (\u00b0C); their rise during the test\nThe atmosphere (oxygen, diluent) is logged in the larger per-test chamber files, not read\nhere, so it is not in this table.",
+ "tests": 690,
+ "with_log": 521,
+ "flame_seen": 456,
+ "fiber_supported": 40,
+ "free_droplet": 641,
+ "soot_sampler": 0,
+ "median_flame_seconds": 11.0,
+ "median_first_flame_s": 1.6,
+ "median_psia": 14.9,
+ "psia_range": [
+  7.37,
+  45.05
+ ],
+ "median_temp_rise_c": 0.07,
+ "median_pressure_rise_psia": 0.07,
+ "dates": [
+  "2012-01-17",
+  "2016-11-02"
+ ],
+ "per_month": [
+  {
+   "month": "2012-01",
+   "tests": 5,
+   "flames": 4
+  },
+  {
+   "month": "2012-02",
+   "tests": 8,
+   "flames": 5
+  },
+  {
+   "month": "2012-03",
+   "tests": 10,
+   "flames": 8
+  },
+  {
+   "month": "2012-04",
+   "tests": 49,
+   "flames": 40
+  },
+  {
+   "month": "2012-05",
+   "tests": 14,
+   "flames": 10
+  },
+  {
+   "month": "2012-06",
+   "tests": 13,
+   "flames": 11
+  },
+  {
+   "month": "2012-07",
+   "tests": 20,
+   "flames": 20
+  },
+  {
+   "month": "2012-08",
+   "tests": 13,
+   "flames": 11
+  },
+  {
+   "month": "2012-09",
+   "tests": 11,
+   "flames": 9
+  },
+  {
+   "month": "2012-10",
+   "tests": 13,
+   "flames": 10
+  },
+  {
+   "month": "2012-11",
+   "tests": 28,
+   "flames": 15
+  },
+  {
+   "month": "2012-12",
+   "tests": 6,
+   "flames": 5
+  },
+  {
+   "month": "2013-03",
+   "tests": 21,
+   "flames": 15
+  },
+  {
+   "month": "2013-11",
+   "tests": 8,
+   "flames": 4
+  },
+  {
+   "month": "2013-12",
+   "tests": 11,
+   "flames": 10
+  },
+  {
+   "month": "2014-02",
+   "tests": 12,
+   "flames": 4
+  },
+  {
+   "month": "2014-03",
+   "tests": 15,
+   "flames": 12
+  },
+  {
+   "month": "2014-04",
+   "tests": 16,
+   "flames": 13
+  },
+  {
+   "month": "2014-06",
+   "tests": 37,
+   "flames": 27
+  },
+  {
+   "month": "2014-07",
+   "tests": 26,
+   "flames": 22
+  },
+  {
+   "month": "2014-08",
+   "tests": 54,
+   "flames": 44
+  },
+  {
+   "month": "2014-09",
+   "tests": 44,
+   "flames": 39
+  },
+  {
+   "month": "2014-10",
+   "tests": 40,
+   "flames": 36
+  },
+  {
+   "month": "2014-12",
+   "tests": 13,
+   "flames": 0
+  },
+  {
+   "month": "2015-01",
+   "tests": 9,
+   "flames": 0
+  },
+  {
+   "month": "2015-02",
+   "tests": 19,
+   "flames": 0
+  },
+  {
+   "month": "2015-03",
+   "tests": 7,
+   "flames": 0
+  },
+  {
+   "month": "2015-04",
+   "tests": 16,
+   "flames": 0
+  },
+  {
+   "month": "2016-02",
+   "tests": 27,
+   "flames": 15
+  },
+  {
+   "month": "2016-03",
+   "tests": 24,
+   "flames": 16
+  },
+  {
+   "month": "2016-04",
+   "tests": 23,
+   "flames": 18
+  },
+  {
+   "month": "2016-05",
+   "tests": 36,
+   "flames": 19
+  },
+  {
+   "month": "2016-06",
+   "tests": 18,
+   "flames": 0
+  },
+  {
+   "month": "2016-10",
+   "tests": 15,
+   "flames": 9
+  },
+  {
+   "month": "2016-11",
+   "tests": 7,
+   "flames": 5
+  }
+ ],
+ "flame_seconds_hist": [
+  0,
+  21,
+  145,
+  233,
+  54,
+  3
+ ],
+ "flame_seconds_bins": [
+  0,
+  2,
+  5,
+  10,
+  20,
+  40,
+  80
+ ]
+}

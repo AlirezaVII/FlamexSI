@@ -12,6 +12,7 @@ import nextExperiments from "@/lib/flight/next_experiments.json";
 import transitions from "@/lib/flight/transitions.json";
 import smoke from "@/lib/flight/smoke.json";
 import saffire from "@/lib/flight/saffire.json";
+import flex2 from "@/lib/flight/flex2.json";
 
 /*
  * Flight evidence: NASA FLEX (PSI-69) droplet measurements and BASS-II frames.
@@ -104,6 +105,7 @@ const SECTIONS = [
   ["atmosphere", "Mission check"],
   ["smoke", "Smoke detection"],
   ["saffire", "Saffire cabin fire"],
+  ["flex2", "FLEX-2 raw logs"],
   ["ranking", "Ranking"],
   ["report", "Report & planner"],
   ["methods", "Methods & uncertainty"],
@@ -142,6 +144,7 @@ export default function FlightEvidence() {
       <AtmosphereCheck />
       <SmokeDetection />
       <SaffireCabin />
+      <Flex2Logs />
       <Ranking />
       <ReportAndPlanner />
       <EvidenceMethods />
@@ -776,6 +779,67 @@ function SaffireCabin() {
         gave only a brief, weak signal. The file gives no distance between the radiometers, so
         no spread speed is computed; radiometer values are in the file&apos;s units. The second
         detector&apos;s channels are empty in this file. Source: {saffire.source}.
+      </p>
+    </Card>
+  );
+}
+
+/** FLEX-2: every raw per-test log summarised (build_flex2_summary.py). */
+function Flex2Logs() {
+  const bins = flex2.flame_seconds_bins;
+  const hist = flex2.flame_seconds_hist;
+  const max = Math.max(...hist);
+  const stats: [string, string][] = [
+    ["Test points with a log", `${flex2.with_log} of ${flex2.tests}`],
+    ["Sustained flame after the igniter", `${flex2.flame_seen} (${Math.round((flex2.flame_seen / flex2.with_log) * 100)}%)`],
+    ["Median flame time", `${flex2.median_flame_seconds} s`],
+    ["Chamber pressure tested", `${flex2.psia_range?.[0]}–${flex2.psia_range?.[1]} psia`],
+    ["Free droplets / on a fiber", `${flex2.free_droplet} / ${flex2.fiber_supported}`],
+  ];
+  return (
+    <Card title="FLEX-2 · every raw test log, summarised" className="scroll-mt-24 print:hidden">
+      <span id="flex2" className="sr-only" />
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        FLEX-2 (PSI-68) ran {flex2.tests} droplet test points on the ISS between{" "}
+        {flex2.dates[0]} and {flex2.dates[1]}, but NASA publishes them as raw instrument logs,
+        not a results table. Falmex read every log and wrote one row per test: igniter
+        settings, whether a flame kept burning after the igniter switched off, how long, and
+        the chamber pressure and temperature.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {stats.map(([k, v]) => (
+          <div key={k} className="rounded-xl border border-line bg-surface-2 p-3">
+            <p className="text-xs text-muted">{k}</p>
+            <p className="mt-1 font-display text-lg tabular-nums text-ink">{v}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 text-xs font-medium text-ink-2">How long the flames burned (tests with a sustained flame)</p>
+      <div className="mt-2 flex h-32 items-end gap-2">
+        {hist.map((n, i) => (
+          <div key={i} className="flex flex-1 flex-col items-center gap-1">
+            <span className="text-[11px] tabular-nums text-ink-2">{n}</span>
+            <div className="w-full rounded-t bg-accent/70" style={{ height: `${(n / max) * 90}px` }} />
+            <span className="text-[11px] text-muted">{bins[i]}–{bins[i + 1]} s</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border-l-4 border-accent bg-surface-2 p-3 text-sm text-ink-2">
+        <b className="text-ink">Why it matters:</b> {flex2.with_log - flex2.flame_seen} logged
+        tests ({Math.round(((flex2.with_log - flex2.flame_seen) / flex2.with_log) * 100)}%) show
+        only the igniter&apos;s own glow and no flame afterwards. Those are the conditions
+        where a droplet would not keep burning: the boundary a fire-safety analysis needs,
+        now findable without opening hundreds of files.
+      </div>
+      <p className="mt-3 text-xs text-muted">
+        The hot igniter wire glows, so a flame counts only when the wide-view radiometer stays
+        above 20% of its peak for 2 s or more, starting 1 s after the igniter switched off
+        (spot-checked by hand on example logs). The oxygen and diluent of each test are in
+        separate, larger chamber files not read yet, so this table cannot yet link flames to
+        atmosphere. Source: {flex2.source}.{" "}
+        <a className="text-accent underline" href="/data/psi-68-flex2-test-summary.csv">
+          Download the {flex2.tests}-test summary (CSV)
+        </a>
       </p>
     </Card>
   );

@@ -415,9 +415,14 @@ export default function Landing() {
                   computed statistics
                 </li>
                 <li>
-                  BASS-II camera frames annotated independently by two reviewers;
-                  image models scored against both
+                  BASS-II camera frames annotated independently by two reviewers; a plain
+                  OpenCV method overlaps them better than the reviewers overlap each other
                 </li>
+                <li>
+                  All FLEX-2 raw test logs summarised per test; Saffire-III cabin fire
+                  read from the Cygnus telemetry
+                </li>
+                <li>Evidence readiness level (0–7) on every finding; 3D replay of FLEX burns</li>
                 <li>
                   Upload of PSI tables (CSV, TSV, TXT, Excel, JSON, Parquet); the
                   original file is kept untouched
@@ -438,11 +443,10 @@ export default function Landing() {
                   it); microgravity and 1 g results only bound the Moon and Mars
                 </li>
                 <li>
-                  Raw instrument logs (for example FLEX-2) summarised per test before
-                  analysis
+                  FLEX-2 atmospheres (oxygen, diluent) per test, from the larger chamber
+                  logs, to link flames to conditions
                 </li>
-                <li>Numerical analysis of Saffire sensor logs and BASS burn data</li>
-                <li>Reliable flame detection in camera images (current models are weak)</li>
+                <li>Flame-spread speeds from BASS videos and the other Saffire flights</li>
                 <li>
                   Expert-reviewed insights: none yet; expert sign-off is separate from
                   internal evaluation
