@@ -1,5 +1,6 @@
 "use client";
 
+import { AiWait } from "@/components/ai-wait";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FindingList } from "@/components/finding-list";
@@ -102,6 +103,7 @@ function FindingsForDataset({ dataset }: { dataset: Dataset }) {
         >
           {busy ? (
             <div className="space-y-3" aria-busy="true">
+              <AiWait what="Gemini is summarising the validated findings" />
               <TextSkeleton lines={4} />
               <LoadingLabel>Reading the validated findings…</LoadingLabel>
             </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { AiWait } from "@/components/ai-wait";
 import { ReadinessChip, ReadinessLadder } from "@/components/readiness";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -482,9 +483,7 @@ export default function FindingPage() {
           <div className="space-y-4" aria-busy="true">
             <TextSkeleton lines={2} />
             <TextSkeleton lines={2} />
-            <LoadingLabel>
-              Gemini is reading the statistics and evidence…
-            </LoadingLabel>
+            <AiWait what="Gemini is reading the statistics and evidence" />
           </div>
         ) : ai ? (
           <div className="space-y-3 text-sm">

@@ -249,6 +249,7 @@ export default function FlameLab() {
           <div
             key={`${i}-${compare}`}
             className="relative h-[340px] overflow-hidden rounded-2xl border border-line bg-[#04060c] md:h-[460px]"
+            data-lenis-prevent
           >
             <canvas
               ref={canvases[i]}

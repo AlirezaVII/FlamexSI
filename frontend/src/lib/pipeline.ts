@@ -5,14 +5,18 @@
  */
 export const STAGE_PAGES: { stage: number; name: string; hrefs: string[] }[] = [
   { stage: 0, name: "Overview", hrefs: ["/overview"] },
-  { stage: 1, name: "Data", hrefs: ["/data", "/footage"] },
+  { stage: 1, name: "Data", hrefs: ["/investigations", "/data", "/bass-review", "/footage"] },
   { stage: 2, name: "Explore", hrefs: ["/explorer", "/compare"] },
   {
     stage: 3,
     name: "Discover",
     hrefs: ["/relationships", "/findings", "/review"],
   },
-  { stage: 4, name: "Understand", hrefs: ["/insights", "/simulator"] },
+  {
+    stage: 4,
+    name: "Understand",
+    hrefs: ["/assistant", "/insights", "/flight-evidence", "/flame-lab", "/simulator"],
+  },
   { stage: 5, name: "Build", hrefs: ["/innovation"] },
 ];
 

@@ -16,7 +16,7 @@
 const BASE = (process.env.E2E_BASE || "http://129.212.254.115:3000").replace(/\/$/, "");
 const ROUTES = ["/", "/overview", "/investigations", "/data", "/bass-review", "/footage",
   "/explorer", "/compare", "/relationships", "/findings", "/review", "/insights",
-  "/flight-evidence", "/flame-lab", "/simulator", "/innovation"];
+  "/flight-evidence", "/assistant", "/flame-lab", "/simulator", "/innovation"];
 const BAD_TEXT = /\{"detail"|"loc":\s*\[|Traceback|\[object Object\]|\bundefined\b|\bNaN\b|string_too_short|Internal Server Error|Unhandled Runtime Error|Application error/;
 
 export default async function run(page) {
@@ -196,7 +196,7 @@ export default async function run(page) {
   void fps;
 
   // ------------------------------------------------------------- evidence chat -------
-  await go("/flight-evidence");
+  await go("/assistant");
   const ask = page.getByRole("button", { name: /^Ask$/ });
   if (await ask.count()) {
     check("chat: Ask is disabled with an empty question", await ask.first().isDisabled());

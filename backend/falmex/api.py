@@ -34,6 +34,7 @@ from falmex.ai import (
 )
 from falmex.ai.providers import LLMError, LLMProvider
 from falmex.analysis.base import available_analyzers
+from falmex.assistant import router as assistant_router
 from falmex.engine import DiscoveryConfig, run_discovery
 from falmex.evidence_chat import chat_router
 from falmex.findings import (
@@ -253,6 +254,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                             for k, v in e["ctx"].items()}
         return JSONResponse(status_code=422, content={"detail": detail})
     app.include_router(chat_router())
+    app.include_router(assistant_router())
     app.add_middleware(
         CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"],
         allow_headers=["*"],

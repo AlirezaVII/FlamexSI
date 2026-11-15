@@ -44,6 +44,7 @@ include = ["falmex*"]
 falmex = [
     "config/*.yaml",
     "datasets/*.csv",
+    "knowledge/*.json",
     "review_artifacts/*.json",
     "review_artifacts/compositional/*",
     "review_artifacts/replication/*",

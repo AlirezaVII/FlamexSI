@@ -163,6 +163,9 @@ export function createFlameEngine(
   }
   const lost = (e: Event) => { e.preventDefault(); onLost?.(); };
   canvas.addEventListener("webglcontextlost", lost);
+  // the wheel zooms the 3D view only; it must never scroll the page underneath
+  const wheel = (e: WheelEvent) => e.preventDefault();
+  canvas.addEventListener("wheel", wheel, { passive: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === "high" ? 2 : 1.25));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -399,6 +402,7 @@ export function createFlameEngine(
     },
     dispose() {
       canvas.removeEventListener("webglcontextlost", lost);
+      canvas.removeEventListener("wheel", wheel);
       controls.dispose();
       composer?.dispose();
       scene.traverse((o) => {

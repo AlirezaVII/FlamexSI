@@ -1,5 +1,6 @@
 "use client";
 
+import { AiWait } from "@/components/ai-wait";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -268,6 +269,7 @@ function NewInnovation({
         <span className="text-xs text-muted">
           Suggestions only. Nothing is saved until the team chooses.
         </span>
+        {busy && <AiWait what="Gemini is turning the insight into directions" />}
       </div>
       {error && (
         <div className="mt-3">

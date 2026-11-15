@@ -151,6 +151,14 @@ const STAGES: Stage[] = [
     ),
     items: [
       {
+        href: "/assistant",
+        label: "Ask FlamexSI",
+        hint: "Research assistant: answers from the NASA results, every number cited",
+        icon: icon(
+          "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3.5 9h17M3.5 15h17M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18",
+        ),
+      },
+      {
         href: "/insights",
         label: "Insights",
         hint: "Reviewed fire-safety insights",

@@ -1,5 +1,6 @@
 "use client";
 
+import { AiWait } from "@/components/ai-wait";
 import { EvidenceChat } from "./evidence-chat";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, PageHeader, Stat } from "@/components/ui";
@@ -1116,6 +1117,7 @@ function ReportAndPlanner() {
               {ai.state === "busy" ? "Asking Gemini…" : "Add Gemini interpretation"}
             </Button>
           </div>
+          {ai.state === "busy" && <AiWait what="Gemini is writing the fire-safety reading" usual="10–30 s" />}
           {ai.state === "error" && (
             <p className="text-xs text-muted" role="status">
               Gemini unavailable ({ai.text}). The measurement-based report above is complete

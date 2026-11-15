@@ -3,6 +3,7 @@
 import json
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 from falmex.settings import Settings
 
@@ -20,6 +21,11 @@ class LLMProvider(ABC):
     @abstractmethod
     def generate_json(self, system: str, prompt: str) -> dict:
         """Return the model's answer parsed as a JSON object."""
+
+    def stream_text(self, system: str, prompt: str) -> Iterator[str]:
+        """Yield the answer as it is written. Default: one piece, not streamed."""
+        out = self.generate_json(system, prompt)
+        yield str(out.get("answer", "")) if isinstance(out, dict) else ""
 
 
 class GeminiProvider(LLMProvider):
@@ -75,12 +81,48 @@ class GeminiProvider(LLMProvider):
                             index + 1, len(self._clients))
         raise LLMError(f"Gemini request failed: {last}") from last
 
+    def stream_text(self, system: str, prompt: str) -> Iterator[str]:
+        """Stream plain text. A key that is out of quota before the first piece arrives is
+        skipped; a failure after text has started is raised (nothing is silently retried)."""
+        from google.genai import types
+
+        config = types.GenerateContentConfig(
+            system_instruction=system, temperature=0.25,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        )
+        last: Exception | None = None
+        for step in range(len(self._clients)):
+            index = (self._active + step) % len(self._clients)
+            started = False
+            try:
+                for chunk in self._clients[index].models.generate_content_stream(
+                    model=self.model, contents=prompt, config=config
+                ):
+                    text = getattr(chunk, "text", None)
+                    if text:
+                        started = True
+                        yield text
+                self._active = index
+                return
+            except Exception as exc:
+                if started:
+                    raise LLMError(f"Gemini stopped mid-answer: {exc}") from exc
+                last = exc
+                if not self._is_quota(exc):
+                    break
+        raise LLMError(f"Gemini request failed: {last}") from last
+
 
 class MockProvider(LLMProvider):
     """Deterministic, template-based answers built only from the facts given."""
 
     name = "mock"
     model = "template"
+
+    def stream_text(self, system: str, prompt: str) -> Iterator[str]:
+        """Template answer that cites the first evidence card (tests, offline)."""
+        yield from ["Template answer (mock provider) ", "built only from the evidence ",
+                    "cards [S1]."]
 
     def generate_json(self, system: str, prompt: str) -> dict:
         facts = json.loads(prompt.split("FACTS:", 1)[1])
