@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
-import { Nav } from "@/components/nav";
 import { ProgressBar } from "@/components/progress-bar";
 import { Splash } from "@/components/splash";
 import { splashInitScript, themeInitScript } from "@/lib/boot-scripts";
@@ -48,18 +47,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col pb-16 md:pb-0">
+      <body className="min-h-full">
         <WorkspaceProvider>
           <Splash />
           <ProgressBar />
-          <Nav />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-            {children}
-          </main>
-          <footer className="border-t border-line px-4 py-4 text-center text-xs text-muted">
-            Falmex · NASA Space Apps 2026 · Findings are statistical
-            associations and require expert review.
-          </footer>
+          {children}
         </WorkspaceProvider>
       </body>
     </html>

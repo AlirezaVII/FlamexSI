@@ -42,7 +42,8 @@ and **Insights** holds only findings a researcher reviewed and interpreted.
 | Deep analysis | `backend/falmex/deep.py` | Pluggable probes (`@register_probe`) that generate follow-up questions from a finding and the data: third variables, subgroups, range, independent sources. |
 | AI | `backend/falmex/ai/` | Gemini (default) or `mock`. The AI only explains computed findings and never creates them. |
 | API | `backend/falmex/api.py` | FastAPI. Interactive docs at `/docs`. |
-| Dashboard | `frontend/` | Next.js: Explore, Compare, Discover, Insights, Data, and a finding detail page. |
+| Landing page | `frontend/src/app/(landing)/` | `/`: the story page. A scroll journey Earth → orbit → Moon → Mars with real planets rendered from NASA surface maps (`public/textures`, credits there); the hero Earth turns with the cursor and can be dragged. |
+| App | `frontend/src/app/(app)/` | `/overview`, Explore, Compare, Discover, Findings, Insights, Data, and a finding detail page. |
 
 ### Finding statuses
 
