@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-/* The landing menu on small screens: a burger with a flame orbiting it, opening into a
+/* The landing menu below 1280px (the section links move here): a burger with a flame orbiting it, opening into a
  * full-screen "mission panel" that grows as a circle from the button. Links fly in one by
  * one, each on its own little orbit; Escape, the backdrop or any link closes it. */
 
@@ -72,7 +72,7 @@ export function MobileMenu() {
 
   // a phone turned to landscape or a resized window must not keep a hidden menu open
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 901px)");
+    const mq = window.matchMedia("(min-width: 1280px)"); // the burger hides from here
     const on = () => mq.matches && setOpen(false);
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);

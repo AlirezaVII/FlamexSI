@@ -26,7 +26,7 @@ html:has(.landing) {
   --l-hl: #8fc0ff;
   --l-card: linear-gradient(180deg, #111831ee, #0c1122ee);
   --l-card-shadow: inset 0 1px 0 #ffffff0d, 0 20px 50px -25px #000;
-  --l-glass: rgba(6, 9, 20, 0.62);
+  --l-glass: rgba(6, 9, 20, 0.74);
   --l-pill: #0a1022b0;
   --l-pill-on: #e8eeff;
   --l-pill-on-ink: #0b0b0b;
@@ -111,7 +111,6 @@ html:has(.landing) {
 .landing .topbar.scrolled {
   background: var(--l-glass);
   backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom-color: var(--l-line);
 }
 .landing .navrow {
@@ -1096,7 +1095,6 @@ html.lenis body {
   border: 1px solid color-mix(in srgb, var(--l-hl) 35%, transparent);
   background: color-mix(in srgb, var(--l-bg) 72%, transparent);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   pointer-events: none;
   opacity: 0;
   will-change: transform;
@@ -1247,19 +1245,61 @@ html.menu-open, html.menu-open body { overflow: hidden !important; }
 }
 /* while the menu is open the header floats above it, transparent, light on the dark panel */
 html.menu-open .landing .topbar { z-index: 9001; background: transparent !important; border-color: transparent !important;
-  backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  backdrop-filter: none !important; }
 html.menu-open .landing .topbar .progress, html.menu-open .landing .topbar .journey { opacity: 0; pointer-events: none; }
 html.menu-open .landing .topbar .brand { color: #eef2ff; }
 html.menu-open .landing .burger { color: #eef2ff; border-color: #ffffff40; background: #ffffff10; }
 
-/* GitHub button in the top bar: icon + word on wide screens, icon only on phones */
-.landing .gh-link {
-  padding: 8px 14px;
-  font-size: 14px;
-  flex-shrink: 0;
-  white-space: nowrap;
+/* ---- top bar: aligned with the page and never overflowing ---------------------------------
+   The bar has exactly the content column's width (.wrap: 1200px, 40px padding), so the logo
+   lines up with the headline and "Open the app" with the column's right edge. In that width
+   the journey pill shows the current world and its gravity, and GitHub is an icon.
+   901-1279: the section links move into the mission menu (burger). <= 900: phone layout.   */
+.landing .navrow,
+.landing .topbar.scrolled .navrow {
+  max-width: 1200px;
+  padding-left: 40px;
+  padding-right: 40px;
+  gap: 16px;
 }
-@media (max-width: 1100px) {
-  .landing .gh-link { padding: 8px 10px; }
-  .landing .gh-link .gh-text { display: none; }
+.landing .navrow > * {
+  flex-shrink: 0;
+}
+.landing .journey { gap: 6px; }
+.landing .journey li:not(.on) { display: none; }
+.landing .journey .g small { display: none; }
+.landing .gh-link {
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+}
+.landing .gh-link .gh-text { display: none; }
+/* frosted glass from the first pixel, so nothing behind the bar competes with it.
+   Write only the standard backdrop-filter: with both forms, the CSS optimizer keeps just the
+   -webkit- one, which Chrome ignores (that is why the bar used to have no blur). */
+.landing .topbar,
+.landing .topbar.scrolled {
+  background: var(--l-glass);
+  backdrop-filter: blur(22px) saturate(160%);
+  border-bottom-color: var(--l-line);
+}
+@media (max-width: 1279px) {
+  .landing .nl { display: none; }
+  .landing .burger { display: inline-grid; }
+}
+@media (max-width: 900px) {
+  .landing .navrow,
+  .landing .topbar.scrolled .navrow {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+}
+/* the open mission menu has its own theme and "Open the app" buttons: the bar's copies step
+   aside instead of sitting dark-on-dark over the panel */
+html.menu-open .landing .navrow .theme,
+html.menu-open .landing .navrow .gh-link,
+html.menu-open .landing .navrow .open-app {
+  opacity: 0;
+  pointer-events: none;
 }
