@@ -553,3 +553,22 @@ def test_deleting_a_dataset_removes_ideas_that_rest_only_on_its_insights(client,
     assert any(i["innovation_id"] == nid for i in client.get("/api/innovations").json())
     assert client.delete(f"/api/datasets/{did}").status_code == 204
     assert not any(i["innovation_id"] == nid for i in client.get("/api/innovations").json())
+
+
+def test_footage_analysis_memory_does_not_grow_with_video_length(tmp_path):
+    """A real BASS-II clip (536 sampled 720x480 frames) once needed ~600 MB because every
+    frame was held at once, and the server was killed. Frames are now streamed."""
+    import tracemalloc
+
+    from falmex import vision
+
+    path = tmp_path / "long.avi"
+    vision.synthetic_clip(path, frames=300, size=360)  # 300 frames x 389 KB = 117 MB if held
+    for det in ("opencv", "classic"):
+        tracemalloc.start()
+        r = vision.analyze(path, tmp_path / det, detector=det)
+        peak = tracemalloc.get_traced_memory()[1]
+        tracemalloc.stop()
+        assert r["frames_analyzed"] == 300 and r["summary"]["flame_frames"] > 0
+        # the 40 background frames and their median stay (~50 MB); all 300 would be 117 MB+
+        assert peak < 75e6, f"{det}: {peak / 1e6:.0f} MB peak"

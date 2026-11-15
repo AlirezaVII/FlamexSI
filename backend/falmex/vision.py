@@ -77,34 +77,67 @@ class Calibration:
     mm_per_px: float | None = None
 
 
-def _frames(path: Path):
-    """Yield (index, BGR frame) for every analyzed frame, plus the frame rate."""
-    ext = path.suffix.lower()
-    if ext in IMAGE_EXT:
-        img = cv2.imread(str(path), cv2.IMREAD_COLOR)
-        if img is None:
-            raise ValueError("Could not read the image")
-        return [(0, img)], None, 1
-    if ext not in VIDEO_EXT:
-        raise ValueError(f"Not an image or video file: {path.name}")
-    cap = cv2.VideoCapture(str(path))
-    if not cap.isOpened():
-        raise ValueError("Could not open the video")
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
-    fps = cap.get(cv2.CAP_PROP_FPS) or None
-    stride = max(1, int(np.ceil(total / MAX_ANALYZED))) if total else 1
-    out, i = [], 0
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if i % stride == 0:
-            out.append((i, frame))
-        i += 1
-    cap.release()
-    if not out:
-        raise ValueError("The video has no readable frames")
-    return out, fps, i
+class _Footage:
+    """The analyzed frames of an image or video, read on demand. Videos are walked again for
+    each step instead of being held in memory: a 720x480 clip sampled at 600 frames would
+    need ~600 MB, more than the server has; at most BG_FRAMES (or V6_FRAMES) frames are kept.
+    Sampled frames are numbered k = 0..n-1; `index` is the frame number in the file."""
+
+    def __init__(self, path: Path):
+        self.path, ext = path, path.suffix.lower()
+        self.image = None
+        if ext in IMAGE_EXT:
+            self.image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+            if self.image is None:
+                raise ValueError("Could not read the image")
+            self.fps, self.stride = None, 1
+            return
+        if ext not in VIDEO_EXT:
+            raise ValueError(f"Not an image or video file: {path.name}")
+        cap = cv2.VideoCapture(str(path))
+        if not cap.isOpened():
+            raise ValueError("Could not open the video")
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
+        self.fps = cap.get(cv2.CAP_PROP_FPS) or None
+        cap.release()
+        self.stride = max(1, int(np.ceil(total / MAX_ANALYZED))) if total else 1
+
+    def walk(self):
+        """Yield (k, index, frame) for every sampled frame; sets n (sampled) and total."""
+        if self.image is not None:
+            self.n, self.total = 1, 1
+            yield 0, 0, self.image
+            return
+        cap = cv2.VideoCapture(str(self.path))
+        i = k = 0
+        try:
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                if i % self.stride == 0:
+                    yield k, i, frame
+                    k += 1
+                i += 1
+        finally:
+            cap.release()
+        self.n, self.total = k, i
+        if not k:
+            raise ValueError("The video has no readable frames")
+
+    def scan(self) -> np.ndarray:
+        """First pass: count the frames and return the brightest one (for the threshold)."""
+        best, brightest = -1.0, None
+        for _, _, f in self.walk():
+            b = float(np.percentile(f.max(axis=2), 99.5))
+            if b > best:
+                best, brightest = b, f
+        return brightest
+
+    def pick(self, ks) -> list[tuple[int, np.ndarray]]:
+        """(index, frame) of the sampled frames numbered ks."""
+        want = set(int(k) for k in ks)
+        return [(i, f) for k, i, f in self.walk() if k in want]
 
 
 def _v6_config() -> tuple[str, str]:
@@ -317,29 +350,38 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
     if detector not in detectors():
         raise ValueError(f"Unknown detector '{detector}'" if detector != "v6"
                          else "The v6 method is not set up on this server")
+    if detector == "v6" and path.suffix.lower() not in VIDEO_EXT:
+        raise ValueError("v6 needs a video: it compares each frame with the clip's first "
+                         "second. Use OpenCV for a single image.")
     cal = calibration or Calibration()
-    sampled, file_fps, n_total = _frames(path)
-    bg = background([f for _, f in sampled]) if detector == "opencv" else None
-    masks = None
+    src = _Footage(path)
+    file_fps = src.fps
+    brightest = src.scan()
+    n = src.n
+    h, w = brightest.shape[:2]
+    bg, masks, subset = None, None, None
+    if detector == "opencv":
+        bg = background([f for _, f in src.pick(np.linspace(0, n - 1, min(BG_FRAMES, n)))])
     if detector == "v6":
-        if path.suffix.lower() not in VIDEO_EXT:
-            raise ValueError("v6 needs a video: it compares each frame with the clip's first "
-                             "second. Use OpenCV for a single image.")
-        pick = np.linspace(0, len(sampled) - 1, min(V6_FRAMES, len(sampled))).astype(int)
-        sampled = [sampled[i] for i in sorted(set(pick))]
-        masks = v6_masks(path, [f for _, f in sampled])
+        subset = src.pick(np.linspace(0, n - 1, min(V6_FRAMES, n)))
+        masks = v6_masks(path, [f for _, f in subset])
+        brightest = max((f for _, f in subset),
+                        key=lambda f: float(np.percentile(f.max(axis=2), 99.5)))
     fps = cal.fps or file_fps
-    thresh = _threshold([f for _, f in sampled])
-    h, w = sampled[0][1].shape[:2]
+    thresh = _threshold([brightest])
+    del brightest
 
     out_dir.mkdir(parents=True, exist_ok=True)
     for old in out_dir.glob("frame_*.jpg"):
         old.unlink()
-    keep = set(np.linspace(0, len(sampled) - 1, min(MAX_OVERLAY, len(sampled))).astype(int))
+    count = len(subset) if subset is not None else n
+    keep = set(np.linspace(0, count - 1, min(MAX_OVERLAY, count)).astype(int))
     scale = min(1.0, OVERLAY_WIDTH / w)
+    stream = (((k, idx, img) for k, (idx, img) in enumerate(subset)) if subset is not None
+              else src.walk())
 
     frames, saved = [], 0
-    for k, (idx, img) in enumerate(sampled):
+    for k, idx, img in stream:
         mask = masks[k] if masks is not None else opencv_mask(img, bg) if bg is not None else None
         m = _measure(img, thresh, mask)
         m.update(index=idx, time_s=round(idx / fps, 6) if fps else None)
@@ -350,6 +392,7 @@ def analyze(path: Path, out_dir: Path, calibration: Calibration | None = None,
             cv2.imwrite(str(out_dir / name), small, [cv2.IMWRITE_JPEG_QUALITY, 85])
             m["image"] = name
         frames.append(m)
+    n_total = src.total
     return {
         "frame_size": [w, h],
         "overlay_scale": scale,
