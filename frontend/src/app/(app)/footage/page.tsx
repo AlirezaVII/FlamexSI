@@ -23,6 +23,7 @@ export default function FootagePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<number | null>(null); // upload progress, 0..1
 
   const load = useCallback(async (select?: string) => {
     try {
@@ -48,7 +49,8 @@ export default function FootagePage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.uploadMedia(file);
+      setSent(0);
+      const res = await api.uploadMedia(file, (done, total) => setSent(done / total));
       if (res.dataset) {
         setError(
           "That file is a table, not footage. Use the Data page for tables.",
@@ -59,6 +61,7 @@ export default function FootagePage() {
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      setSent(null);
     }
   }
 
@@ -92,7 +95,7 @@ export default function FootagePage() {
           <Card title="Add footage">
             <label className="block text-sm">
               <span className="mb-1 block text-xs text-muted">
-                Video (mp4, avi, mov) or image (png, jpg, tif)
+                Video (mp4, avi, mov, up to 2 GB) or image (png, jpg, tif)
               </span>
               <input
                 type="file"
@@ -104,6 +107,16 @@ export default function FootagePage() {
                 className="w-full text-xs"
               />
             </label>
+            {sent !== null && (
+              <div className="mt-2" role="status" aria-live="polite">
+                <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${Math.round(sent * 100)}%` }} />
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {sent < 1 ? `Uploading… ${Math.round(sent * 100)}%` : "Saving on the server…"}
+                </p>
+              </div>
+            )}
             <p className="mt-3 text-xs text-muted">
               No NASA footage yet? A synthetic test clip has a known growth
               rate, shape and colour mix, to check the pipeline.
@@ -183,6 +196,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
   const [detector, setDetector] = useState("opencv");
   const [comparison, setComparison] = useState<FootageComparison | null>(null);
   const [comparing, setComparing] = useState(false);
+  const [elapsed, setElapsed] = useState<number | null>(null); // seconds the server has worked
 
   useEffect(() => {
     api.meta().then((m) => setDetectors(m.footage_detectors ?? [])).catch(() => {});
@@ -207,17 +221,19 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
     setError(null);
     try {
       setAnalysis(
-        await api.analyzeMedia(id, {
+        // a background job: long videos take minutes, more than a proxy keeps a request open
+        await api.analyzeMediaJob(id, {
           fps: fps ? Number(fps) : null,
           mm_per_px: mmPerPx ? Number(mmPerPx) : null,
           detector,
-        }),
+        }, (_, t) => setElapsed(t)),
       );
       onDone();
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      setElapsed(null);
     }
   }
 
@@ -225,10 +241,11 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
     setComparing(true);
     setError(null);
     try {
-      // one request per method, so none runs past a proxy's time limit; v6 waits on its own
-      // service, so it runs alongside the local methods, which run one after the other
+      // one background job per method; v6 waits on its own service, so it runs alongside
+      // the local methods, which run one after the other
       const body = { fps: fps ? Number(fps) : null, mm_per_px: mmPerPx ? Number(mmPerPx) : null };
-      const one = (d: string) => api.compareMedia(id, { ...body, detectors: [d] });
+      const one = (d: string) => api.compareMediaJob(id, { ...body, detectors: [d] },
+        (_, t) => setElapsed(t));
       const ids = usable.length ? usable.map((d) => d.id) : ["opencv", "classic"];
       const local = (async () => {
         const out: FootageComparison[] = [];
@@ -250,6 +267,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
       setError((e as Error).message);
     } finally {
       setComparing(false);
+      setElapsed(null);
     }
   }
 
@@ -332,6 +350,7 @@ function Analysis({ item, onDone }: { item: MediaItem; onDone: () => void }) {
                 : detector === "v6"
                   ? "Sending 24 frames to Pouya's v6 model… about a minute"
                   : "Measuring every frame…"}
+              {elapsed != null && elapsed > 3 && ` (${Math.round(elapsed)} s; long videos take a few minutes, you can keep this page open)`}
             </LoadingLabel>
           </div>
         )}

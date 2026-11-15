@@ -49,6 +49,25 @@ jobs:
       - run: npx next typegen && npm run typecheck
       - run: npm run build
 
+  mark-tested:
+    name: Mark as tested (flamexsi.com deploys this branch)
+    # The flamexsi.com host pulls the `tested` branch, so it only ever gets commits that
+    # passed every check. Never moves the branch backwards if runs finish out of order.
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: |
+          if git fetch -q origin tested 2>/dev/null && ! git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            echo "tested is already ahead of this commit; leaving it"; exit 0
+          fi
+          git push origin HEAD:refs/heads/tested
+
   deploy:
     name: Deploy to droplet
     # Only after every check passed, and only for pushes to main.

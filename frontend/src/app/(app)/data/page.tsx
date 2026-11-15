@@ -20,6 +20,7 @@ export default function DataPage() {
   const [detail, setDetail] = useState<DatasetDetail | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<number | null>(null); // upload progress, 0..1
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [quality, setQuality] = useState<Quality | null>(null);
@@ -68,16 +69,22 @@ export default function DataPage() {
       if (!file) return null;
       const into =
         append && dataset && !dataset.synthetic ? dataset.dataset_id : null;
-      const res = into
-        ? await api.addSource(into, file)
-        : await api.upload(file);
-      if (!res.dataset) {
-        setNotice(
-          `Stored ${res.source.filename} as media. Media analysis is not enabled yet.`,
-        );
-        return null;
+      const onProgress = (done: number, total: number) => setSent(done / total);
+      setSent(0);
+      try {
+        const res = into
+          ? await api.addSource(into, file, onProgress)
+          : await api.upload(file, undefined, onProgress);
+        if (!res.dataset) {
+          setNotice(
+            `Stored ${res.source.filename} as footage. Analyse it on the Footage page.`,
+          );
+          return null;
+        }
+        return res.dataset.dataset_id;
+      } finally {
+        setSent(null);
       }
-      return res.dataset.dataset_id;
     });
 
   const flex = () => run(async () => (await api.loadFlex()).dataset.dataset_id);
@@ -126,6 +133,16 @@ export default function DataPage() {
               Add to “{dataset.name}” (rows link to experiments by their
               experiment ID)
             </label>
+          )}
+          {sent !== null && (
+            <div className="mt-3" role="status" aria-live="polite">
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${Math.round(sent * 100)}%` }} />
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {sent < 1 ? `Uploading… ${Math.round(sent * 100)}%` : "Reading and standardizing on the server…"}
+              </p>
+            </div>
           )}
           <Button className="mt-4" onClick={upload} disabled={!file || busy}>
             {busy ? "Working…" : "Upload & standardize"}

@@ -53,7 +53,8 @@ def test_gemini_rotates_to_the_next_key_on_quota(monkeypatch):
             return type("R", (), {"text": '{"ok": "' + self.key + '"}'})()
 
     class FakeClient:
-        def __init__(self, api_key):
+        def __init__(self, api_key, http_options=None):
+            assert http_options is not None and http_options.api_version == "v1beta"
             self.models = FakeModels(api_key)
 
     import google.genai as genai

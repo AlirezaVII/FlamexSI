@@ -1,6 +1,7 @@
 #!/bin/bash
 # FlamexSI on flamexsi.com (a shared host: VPN, bots, other containers). Root cron, every
-# 5 minutes: if GitHub main moved, rebuild the image and swap the container. The new
+# 5 minutes: if the `tested` branch moved (CI moves it only after every check on main
+# passed), rebuild the image and swap the container. The new
 # container must answer /health within 3 minutes, otherwise the previous image is restarted.
 # Everything FlamexSI creates is named flamexsi*; nothing else on the host is touched.
 #   */5 * * * * root /usr/local/bin/flamexsi-update.sh   (in /etc/cron.d/flamexsi)
@@ -17,13 +18,15 @@ log() { echo "$(date -u +%FT%TZ) $*" >> "$LOG"; }
 [ "$(stat -c%s "$LOG" 2>/dev/null || echo 0)" -gt 2000000 ] && tail -c 500000 "$LOG" > "$LOG.1" && : > "$LOG"
 
 git_() { sudo -u "$APP_USER" -H git -C "$SRC" "$@"; }
-git_ fetch -q origin main 2>>"$LOG" || { log "fetch failed"; exit 1; }
-new=$(git_ rev-parse origin/main); cur=$(git_ rev-parse HEAD)
+BRANCH=tested
+git_ fetch -q origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" 2>>"$LOG" \
+  || { log "fetch failed"; exit 1; }
+new=$(git_ rev-parse "origin/$BRANCH"); cur=$(git_ rev-parse HEAD)
 running=$(docker inspect -f '{{index .Config.Labels "flamexsi.commit"}}' flamexsi 2>/dev/null || true)
 [ "$new" = "$cur" ] && [ "$running" = "$cur" ] && [ -z "${FORCE:-}" ] && exit 0
 
 log "deploying ${new:0:7} (running: ${running:0:7})"
-git_ reset -q --hard origin/main
+git_ reset -q --hard "origin/$BRANCH"
 if ! nice -n 15 env DOCKER_BUILDKIT=0 docker build -q --cpu-quota 70000 --memory 2g \
      --memory-swap 4g --label flamexsi.commit="$new" -t flamexsi:candidate "$SRC" >>"$LOG" 2>&1; then
   log "build failed; the running site is unchanged"; exit 1

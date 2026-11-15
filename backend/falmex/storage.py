@@ -140,6 +140,32 @@ class Store:
         )
         return rec
 
+    def save_raw_path(self, filename: str, path: Path, sha: str, size: int,
+                      media_type: str = "media") -> SourceRecord:
+        """save_raw for a file already on disk (a joined chunked upload): it is moved into
+        the raw folder, never read into memory. The same file uploaded twice is kept once."""
+        source_id = sha[:16]
+        existing = self._fetch("SELECT * FROM sources WHERE source_id = ?", [source_id])
+        if existing:
+            Path(path).unlink(missing_ok=True)
+            return SourceRecord(**existing[0])
+        dest = self.raw_dir / f"{sha}{Path(filename).suffix.lower()}"
+        if dest.exists():
+            Path(path).unlink(missing_ok=True)
+        else:
+            shutil.move(str(path), dest)
+        rec = SourceRecord(
+            source_id=source_id, filename=filename, sha256=sha, size_bytes=size,
+            media_type=media_type, ingested_at=_now(), synthetic=False,
+        )
+        self._exec(
+            "INSERT INTO sources (source_id, filename, sha256, size_bytes, media_type, "
+            "ingested_at, synthetic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [rec.source_id, rec.filename, rec.sha256, rec.size_bytes, rec.media_type,
+             rec.ingested_at, rec.synthetic],
+        )
+        return rec
+
     def get_sources(self, source_ids: list[str]) -> list[SourceRecord]:
         if not source_ids:
             return []

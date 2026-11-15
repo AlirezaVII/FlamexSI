@@ -87,17 +87,94 @@ async function send<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /**
- * Upload size limit, checked before sending so the user gets a clear message instead of a
- * proxy error. The server accepts up to 100 MB. Uploads through flamexsi.vercel.app are
- * passed straight to the server (an external rewrite, not a Vercel function), so Vercel's
- * 4.5 MB function limit does not apply: checked with 10, 15 and 40 MB files on 2026-11-15.
+ * Uploads. Files larger than CHUNKED_FROM go in pieces of the size the server asks for
+ * (8 MB): each piece is its own short request, so no proxy limit applies (Cloudflare caps a
+ * request at 100 MB and 100 s; Vercel at 120 s), a failed piece is retried alone, and the
+ * server writes pieces to disk instead of holding the file in memory. Videos may be up to
+ * 2 GB, tables up to 200 MB (they are read in memory).
  */
+const CHUNKED_FROM = 8_000_000;
+const MEDIA_EXT = /\.(mp4|avi|mov|png|jpe?g|tiff?)$/i;
+export type UploadProgress = (sent: number, total: number) => void;
+type UploadResult = { dataset: Dataset | null; source: Source; assets: unknown[] };
+
 function checkUploadSize(file: File) {
-  if (file.size > 100_000_000)
+  const media = MEDIA_EXT.test(file.name);
+  const limit = media ? 2_000_000_000 : 200_000_000;
+  if (file.size > limit)
     throw new ApiError(
       413,
-      `${file.name} is ${(file.size / 1_000_000).toFixed(0)} MB; the limit is 100 MB. Split the file or export only the needed columns.`,
+      `${file.name} is ${(file.size / 1_000_000).toFixed(0)} MB; the limit is ${limit / 1_000_000} MB for ${media ? "videos and images" : "tables"}. ${media ? "Trim the video" : "Split the file or export only the needed columns"}.`,
     );
+}
+
+async function sendPiece(path: string, body: Blob, tries = 4): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await send(path, { method: "PUT", body, headers: { "Content-Type": "application/octet-stream" } });
+      return;
+    } catch (e) {
+      const status = (e as ApiError).status;
+      // a refused piece (wrong size, unknown upload) will not get better by retrying
+      if (attempt >= tries || (status >= 400 && status < 500 && status !== 429)) throw e;
+      await new Promise((r) => setTimeout(r, 1500 * attempt));
+    }
+  }
+}
+
+async function uploadInPieces(
+  file: File, extra: { name?: string; dataset_id?: string }, onProgress?: UploadProgress,
+): Promise<UploadResult> {
+  const start = await send<{ upload_id: string; chunk_bytes: number; chunks: number }>(
+    "/api/uploads", json({ filename: file.name, size: file.size }));
+  const base = `/api/uploads/${start.upload_id}`;
+  try {
+    for (let i = 0; i < start.chunks; i++) {
+      const from = i * start.chunk_bytes;
+      await sendPiece(`${base}/${i}`, file.slice(from, Math.min(file.size, from + start.chunk_bytes)));
+      onProgress?.(Math.min(file.size, from + start.chunk_bytes), file.size);
+    }
+    return await send<UploadResult>(`${base}/complete`, json(extra));
+  } catch (e) {
+    send(base, { method: "DELETE" }).catch(() => {});
+    throw e;
+  }
+}
+
+function uploadFile(
+  file: File, extra: { name?: string; dataset_id?: string }, onProgress?: UploadProgress,
+  path = "/api/datasets",
+): Promise<UploadResult> {
+  checkUploadSize(file);
+  if (file.size > CHUNKED_FROM) return progress.track(uploadInPieces(file, extra, onProgress));
+  const form = new FormData();
+  form.append("file", file);
+  if (extra.name) form.append("name", extra.name);
+  return request<UploadResult>(path, { method: "POST", body: form }).then((r) => {
+    onProgress?.(file.size, file.size);
+    return r;
+  });
+}
+
+/** Start a background job and wait for it, asking every few seconds (no proxy time limit). */
+export type JobTick = (status: string, elapsed: number) => void;
+async function runJob<T>(startPath: string, body: unknown, onTick?: JobTick): Promise<T> {
+  const { job_id } = await send<{ job_id: string }>(startPath, json(body));
+  const t0 = Date.now();
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    let job: { status: string; result?: T; error?: string; code?: number; elapsed_s: number };
+    try {
+      job = await send(`/api/jobs/${job_id}`);
+    } catch (e) {
+      if ((e as ApiError).status === 0 && Date.now() - t0 < 30 * 60_000) continue; // blip
+      throw e;
+    }
+    onTick?.(job.status, job.elapsed_s);
+    if (job.status === "done") return job.result as T;
+    if (job.status === "error") throw new ApiError(job.code ?? 500, job.error ?? "The job failed.");
+    if (Date.now() - t0 > 30 * 60_000) throw new ApiError(504, "The analysis is taking longer than 30 minutes; try a shorter clip.");
+  }
 }
 
 /** A FastAPI/pydantic validation issue as a sentence a person can act on. */
@@ -162,17 +239,8 @@ export const api = {
     request<ScientificReview>(`/api/datasets/${id}/scientific-review`),
   scientificArtifactUrl: (id: string, key: string) =>
     `${API_URL}/api/datasets/${id}/scientific-review/artifacts/${key}`,
-  upload: (file: File, name?: string) => {
-    checkUploadSize(file);
-    const form = new FormData();
-    form.append("file", file);
-    if (name) form.append("name", name);
-    return request<{
-      dataset: Dataset | null;
-      source: Source;
-      assets: unknown[];
-    }>("/api/datasets", { method: "POST", body: form });
-  },
+  upload: (file: File, name?: string, onProgress?: UploadProgress) =>
+    uploadFile(file, { name }, onProgress),
   loadFlex: () =>
     request<{ dataset: Dataset }>("/api/datasets/nasa/flex", { method: "POST" }),
   deleteDataset: (id: string) =>
@@ -209,15 +277,8 @@ export const api = {
       json({ experiment_ids }),
     ),
   quality: (id: string) => request<Quality>(`/api/datasets/${id}/quality`),
-  addSource: (id: string, file: File) => {
-    checkUploadSize(file);
-    const form = new FormData();
-    form.append("file", file);
-    return request<{ dataset: Dataset | null; source: Source }>(
-      `/api/datasets/${id}/sources`,
-      { method: "POST", body: form },
-    );
-  },
+  addSource: (id: string, file: File, onProgress?: UploadProgress) =>
+    uploadFile(file, { dataset_id: id }, onProgress, `/api/datasets/${id}/sources`),
   goals: (id: string) => request<Goals>(`/api/datasets/${id}/goals`),
 
   discover: (
@@ -316,21 +377,25 @@ export const api = {
   media: () => request<MediaItem[]>("/api/media"),
   syntheticMedia: () =>
     request<{ source: Source }>("/api/media/synthetic", { method: "POST" }),
-  uploadMedia: (file: File) => {
-    checkUploadSize(file);
-    const form = new FormData();
-    form.append("file", file);
-    return request<{ dataset: Dataset | null; source: Source }>(
-      "/api/datasets",
-      { method: "POST", body: form },
-    );
-  },
+  uploadMedia: (file: File, onProgress?: UploadProgress) =>
+    uploadFile(file, {}, onProgress),
   analyzeMedia: (
     id: string,
     body: { fps?: number | null; mm_per_px?: number | null; detector?: string },
   ) => request<FootageAnalysis>(`/api/media/${id}/analyze`, json(body)),
   compareMedia: (id: string, body: { fps?: number | null; mm_per_px?: number | null; detectors?: string[] }) =>
     request<FootageComparison>(`/api/media/${id}/compare`, json(body)),
+  /** The same as analyzeMedia / compareMedia, as background jobs (long videos). */
+  analyzeMediaJob: (
+    id: string,
+    body: { fps?: number | null; mm_per_px?: number | null; detector?: string },
+    onTick?: JobTick,
+  ) => progress.track(runJob<FootageAnalysis>(`/api/media/${id}/analyze/start`, body, onTick)),
+  compareMediaJob: (
+    id: string,
+    body: { fps?: number | null; mm_per_px?: number | null; detectors?: string[] },
+    onTick?: JobTick,
+  ) => progress.track(runJob<FootageComparison>(`/api/media/${id}/compare/start`, body, onTick)),
   mediaAnalysis: (id: string) =>
     request<FootageAnalysis>(`/api/media/${id}/analysis`),
   mediaFrameUrl: (id: string, name: string) =>

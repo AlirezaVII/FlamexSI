@@ -51,9 +51,11 @@ from falmex.findings import (
 from falmex.ingest import UnsupportedFileError
 from falmex.ingest.base import supported_extensions
 from falmex.innovation import Innovation, InnovationKind, Stage
+from falmex.jobs import Jobs
 from falmex.schema import Schema
 from falmex.settings import Settings, get_settings
 from falmex.storage import DatasetRecord, Filter, Store
+from falmex.uploads import Uploads
 from falmex.validation import available_validators
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024
@@ -137,6 +139,16 @@ class AnalyzeMediaRequest(BaseModel):
     fps: float | None = Field(None, gt=0, le=1_000_000)  # overrides the file's frame rate
     mm_per_px: float | None = Field(None, gt=0)  # calibration; lengths stay in px without it
     detector: Literal["opencv", "classic", "v6"] = "opencv"  # how the flame is found in each frame
+
+
+class StartUploadRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+    size: int = Field(gt=0)
+
+
+class CompleteUploadRequest(BaseModel):
+    name: str | None = Field(None, max_length=200)
+    dataset_id: str | None = Field(None, max_length=64)  # add the file to this dataset
 
 
 class CompareMediaRequest(AnalyzeMediaRequest):
@@ -244,6 +256,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         app.state.store = Store(settings.data_dir)
         app.state.schema = Schema.load(settings.schema_path)
         app.state.provider = provider or get_provider(settings)
+        app.state.uploads = Uploads(settings.data_dir / "uploads")
+        app.state.jobs = Jobs()
         yield
         app.state.store.close()
 
@@ -756,9 +770,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                                              synthetic=True)
         return {"source": source}
 
-    @app.post("/api/media/{source_id}/analyze")
-    def analyze_media(request: Request, source_id: str, body: AnalyzeMediaRequest | None = None):
-        body = body or AnalyzeMediaRequest()
+    def run_analyze(request: Request, source_id: str, body: AnalyzeMediaRequest) -> dict:
         source = media_or_404(request, source_id)
         try:
             result = vision.analyze(
@@ -773,14 +785,12 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         store(request).save_media_analysis(source_id, result)
         return result
 
-    @app.post("/api/media/{source_id}/compare")
-    def compare_media(request: Request, source_id: str, body: CompareMediaRequest | None = None):
+    def run_compare(request: Request, source_id: str, body: CompareMediaRequest) -> dict:
         """Run every detector on the same footage: summaries and radius curves side by side.
         Nothing is saved; the stored analysis keeps the detector chosen on the page."""
         import tempfile
         from pathlib import Path
 
-        body = body or CompareMediaRequest()
         source = media_or_404(request, source_id)
         out, skipped = {}, {}
         path = store(request).raw_path(source)
@@ -807,6 +817,114 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         return {"source_id": source_id, "detectors": out, "skipped": skipped,
                 "x": "time_s" if any(d["summary"].get("growth_rate_unit") for d in out.values())
                 else "frame"}
+
+    @app.post("/api/media/{source_id}/analyze")
+    def analyze_media(request: Request, source_id: str, body: AnalyzeMediaRequest | None = None):
+        return run_analyze(request, source_id, body or AnalyzeMediaRequest())
+
+    @app.post("/api/media/{source_id}/compare")
+    def compare_media(request: Request, source_id: str, body: CompareMediaRequest | None = None):
+        return run_compare(request, source_id, body or CompareMediaRequest())
+
+    # Background versions: the same work, started at once and polled at /api/jobs/{id}, so a
+    # long video never hits a proxy's time limit.
+    @app.post("/api/media/{source_id}/analyze/start", status_code=202)
+    def analyze_media_start(request: Request, source_id: str,
+                            body: AnalyzeMediaRequest | None = None):
+        media_or_404(request, source_id)
+        b = body or AnalyzeMediaRequest()
+        return {"job_id": request.app.state.jobs.submit(
+            "analyze", lambda: run_analyze(request, source_id, b))}
+
+    @app.post("/api/media/{source_id}/compare/start", status_code=202)
+    def compare_media_start(request: Request, source_id: str,
+                            body: CompareMediaRequest | None = None):
+        media_or_404(request, source_id)
+        b = body or CompareMediaRequest()
+        return {"job_id": request.app.state.jobs.submit(
+            "compare", lambda: run_compare(request, source_id, b))}
+
+    @app.get("/api/jobs/{job_id}")
+    def job_status(request: Request, job_id: str):
+        try:
+            return request.app.state.jobs.get(job_id)
+        except KeyError as exc:
+            raise HTTPException(404, "Unknown job (the server may have restarted); "
+                                     "start it again.") from exc
+
+    # ---- chunked uploads (large files in 8 MB pieces) ------------------------------
+    def upload_or_404(request: Request, upload_id: str):
+        try:
+            return request.app.state.uploads.get(upload_id)
+        except KeyError as exc:
+            raise HTTPException(404, "Unknown upload; start it again") from exc
+
+    @app.post("/api/uploads", status_code=201)
+    def upload_start(request: Request, body: StartUploadRequest):
+        try:
+            up = request.app.state.uploads.start(body.filename, body.size,
+                                                 set(supported_extensions()))
+        except OverflowError as exc:
+            raise HTTPException(413, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(415, str(exc)) from exc
+        return {"upload_id": up.upload_id, "chunk_bytes": up.chunk_bytes,
+                "chunks": up.chunks}
+
+    @app.get("/api/uploads/{upload_id}")
+    def upload_status(request: Request, upload_id: str):
+        up = upload_or_404(request, upload_id)
+        return {"upload_id": up.upload_id, "filename": up.filename, "size": up.size,
+                "chunks": up.chunks, "received": request.app.state.uploads.received(upload_id)}
+
+    @app.put("/api/uploads/{upload_id}/{index}")
+    async def upload_piece(request: Request, upload_id: str, index: int):
+        up = upload_or_404(request, upload_id)
+        try:
+            want = request.app.state.uploads.expected(up, index)
+        except IndexError as exc:
+            raise HTTPException(422, f"No piece {index}; this upload has {up.chunks}") from exc
+        if int(request.headers.get("content-length") or 0) > want:
+            raise HTTPException(413, "Piece too large")
+        data = await request.body()
+        try:
+            got = request.app.state.uploads.put(upload_id, index, data)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return {"received": len(got), "chunks": up.chunks}
+
+    @app.post("/api/uploads/{upload_id}/complete", status_code=201)
+    def upload_complete(request: Request, upload_id: str,
+                        body: CompleteUploadRequest | None = None):
+        body = body or CompleteUploadRequest()
+        up = upload_or_404(request, upload_id)
+        uploads = request.app.state.uploads
+        into = dataset_or_404(request, body.dataset_id) if body.dataset_id else None
+        try:
+            path, sha, size = uploads.assemble(upload_id)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        try:
+            if up.is_media and into is None:  # stored as is, never read into memory
+                kind = "video" if path.suffix in vision.VIDEO_EXT else "image"
+                source = store(request).save_raw_path(up.filename, path, sha, size)
+                return {"dataset": None, "source": source,
+                        "assets": [{"name": up.filename, "media_type": kind, "size_bytes": size}]}
+            dataset, source, assets = services.ingest_upload(
+                store(request), schema(request), up.filename, path.read_bytes(),
+                name=body.name, into=into)
+        except UnsupportedFileError as exc:
+            raise HTTPException(415, str(exc)) from exc
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise HTTPException(422, f"Could not read file: {exc}") from exc
+        finally:
+            uploads.discard(upload_id)
+        return {"dataset": dataset, "source": source, "assets": assets}
+
+    @app.delete("/api/uploads/{upload_id}", status_code=204)
+    def upload_cancel(request: Request, upload_id: str):
+        upload_or_404(request, upload_id)
+        request.app.state.uploads.discard(upload_id)
 
     @app.get("/api/media/{source_id}/analysis")
     def media_analysis(request: Request, source_id: str):
