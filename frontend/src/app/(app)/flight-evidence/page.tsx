@@ -1239,6 +1239,11 @@ function ImageEvidence() {
             Each model learned one annotation convention from the other two videos. This replay
             cannot estimate a cabin false-alarm rate.
           </p>
+          <p className="text-xs text-ink-2">
+            A plain OpenCV method with no training overlaps the reviewers far better (pixel IoU
+            0.53 vs A, 0.38 vs B, against 0.03 for these models).{" "}
+            <a className="text-accent underline" href="/bass-review">See it on BASS-II evidence</a>
+          </p>
         </div>
       </div>
       <EvidenceChat key={name} frame={name} />
