@@ -408,7 +408,26 @@ function inline(text: string, cite: (n: number) => void): ReactNode[] {
   return out;
 }
 
-function renderMarkdown(text: string, cite: (n: number) => void): ReactNode[] {
+/* Gemini sometimes writes $\rho = 0.6$ despite the prompt: turn it into plain symbols. */
+const GREEK: Record<string, string> = {
+  rho: "ρ", alpha: "α", beta: "β", gamma: "γ", delta: "δ", Delta: "Δ", mu: "µ", sigma: "σ",
+  lambda: "λ", eta: "η", theta: "θ", pi: "π", chi: "χ", times: "×", cdot: "·", approx: "≈",
+  le: "≤", leq: "≤", ge: "≥", geq: "≥", pm: "±", sim: "~", circ: "°", to: "→", rightarrow: "→",
+};
+function deLatex(text: string): string {
+  return text.replace(/\$\$?([^$\n]{1,120})\$\$?/g, (_, inner: string) =>
+    inner
+      .replace(/\\text\{([^}]*)\}/g, "$1")
+      .replace(/\\mathrm\{([^}]*)\}/g, "$1")
+      .replace(/\\([A-Za-z]+)/g, (_m, w: string) => GREEK[w] ?? w)
+      .replace(/_\{?([A-Za-z0-9]+)\}?/g, "$1")
+      .replace(/\^\{?([A-Za-z0-9]+)\}?/g, "^$1")
+      .replace(/\\%/g, "%")
+      .replace(/[{}]/g, ""));
+}
+
+function renderMarkdown(raw: string, cite: (n: number) => void): ReactNode[] {
+  const text = deLatex(raw);
   const blocks = text.replace(/\r/g, "").split(/\n{2,}/);
   return blocks.map((b, i) => {
     const lines = b.split("\n").filter((l) => l.trim());
